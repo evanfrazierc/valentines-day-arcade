@@ -91,6 +91,7 @@ function initGame() {
 
 function startGame() {
     gameRunning = true;
+    setPlayingMode(true);
     spawnPiece();
     gameLoop();
 }
@@ -348,15 +349,21 @@ function gameLoop() {
 function updateUI() {
     document.getElementById('lines').textContent = `${lines}/${WIN_LINES}`;
     document.getElementById('score').textContent = score;
+    const linesOverlay = document.getElementById('lines-overlay');
+    const scoreOverlay = document.getElementById('score-overlay');
+    if (linesOverlay) linesOverlay.textContent = `${lines}/${WIN_LINES}`;
+    if (scoreOverlay) scoreOverlay.textContent = score;
 }
 
 function gameOver() {
     gameRunning = false;
+    setPlayingMode(false);
     document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
+    setPlayingMode(false);
     showWinScreen(
         "Taylor, we fit together perfectly! 🧩💗",
         restartGame

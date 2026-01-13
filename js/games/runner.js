@@ -86,6 +86,7 @@ function initGame() {
 
 function startGame() {
     gameRunning = true;
+    setPlayingMode(true);
     gameLoop();
 }
 
@@ -272,15 +273,21 @@ function gameLoop() {
 function updateUI() {
     document.getElementById('hearts').textContent = `${heartsCollected}/${WIN_HEARTS}`;
     document.getElementById('distance').textContent = Math.floor(distance) + 'm';
+    const heartsOverlay = document.getElementById('hearts-overlay');
+    const distanceOverlay = document.getElementById('distance-overlay');
+    if (heartsOverlay) heartsOverlay.textContent = `${heartsCollected}/${WIN_HEARTS}`;
+    if (distanceOverlay) distanceOverlay.textContent = Math.floor(distance) + 'm';
 }
 
 function gameOver() {
     gameRunning = false;
+    setPlayingMode(false);
     document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
+    setPlayingMode(false);
     showWinScreen(
         "Emma, running into you was the best thing ever! 💖",
         restartGame

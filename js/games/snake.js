@@ -70,6 +70,7 @@ function initGame() {
 
 function startGame() {
     gameRunning = true;
+    setPlayingMode(true);
     lastUpdate = Date.now();
     gameLoop();
 }
@@ -244,15 +245,21 @@ function gameLoop() {
 function updateUI() {
     document.getElementById('hearts').textContent = `${heartsCollected}/${WIN_HEARTS}`;
     document.getElementById('length').textContent = snake.length;
+    const heartsOverlay = document.getElementById('hearts-overlay');
+    const lengthOverlay = document.getElementById('length-overlay');
+    if (heartsOverlay) heartsOverlay.textContent = `${heartsCollected}/${WIN_HEARTS}`;
+    if (lengthOverlay) lengthOverlay.textContent = snake.length;
 }
 
 function gameOver() {
     gameRunning = false;
+    setPlayingMode(false);
     document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
+    setPlayingMode(false);
     showWinScreen(
         "Sarah, you've captured my heart in every direction! 💕",
         restartGame

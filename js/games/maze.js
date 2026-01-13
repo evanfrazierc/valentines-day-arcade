@@ -219,10 +219,16 @@ function gameLoop() {
 function updateUI() {
     document.getElementById('hearts').textContent = `${heartsCollected}/${TOTAL_HEARTS}`;
     document.getElementById('moves').textContent = moves;
+    const heartsOverlay = document.getElementById('hearts-overlay');
+    const movesOverlay = document.getElementById('moves-overlay');
+    if (heartsOverlay) heartsOverlay.textContent = `${heartsCollected}/${TOTAL_HEARTS}`;
+    if (movesOverlay) movesOverlay.textContent = moves;
+    if (moves === 1) setPlayingMode(true);
 }
 
 function winGame() {
     gameRunning = false;
+    setPlayingMode(false);
     showWinScreen(
         "Chris, I'd navigate any maze to find you! 💘",
         restartGame

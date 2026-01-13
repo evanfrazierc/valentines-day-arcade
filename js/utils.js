@@ -274,3 +274,62 @@ function random(min, max) {
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
+
+// Fullscreen functionality
+function toggleFullscreen() {
+    const elem = document.documentElement;
+    
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        // Enter fullscreen
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+    } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
+// Initialize fullscreen button
+function initFullscreenButton() {
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (!fullscreenBtn) return;
+    
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    
+    // Update button text when fullscreen changes
+    document.addEventListener('fullscreenchange', updateFullscreenButton);
+    document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+}
+
+function updateFullscreenButton() {
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    if (!fullscreenBtn) return;
+    
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+        fullscreenBtn.textContent = '⊗';
+    } else {
+        fullscreenBtn.textContent = '⛶';
+    }
+}
+// Toggle playing mode to hide UI
+function setPlayingMode(isPlaying) {
+    const container = document.querySelector('.game-container');
+    if (container) {
+        if (isPlaying) {
+            container.classList.add('playing');
+        } else {
+            container.classList.remove('playing');
+        }
+    }
+}

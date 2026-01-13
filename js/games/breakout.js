@@ -86,6 +86,7 @@ function initGame() {
 
 function startGame() {
     gameRunning = true;
+    setPlayingMode(true);
     gameLoop();
 }
 
@@ -253,15 +254,21 @@ function gameLoop() {
 function updateUI() {
     document.getElementById('bricks').textContent = bricksRemaining;
     document.getElementById('lives').textContent = lives;
+    const bricksOverlay = document.getElementById('bricks-overlay');
+    const livesOverlay = document.getElementById('lives-overlay');
+    if (bricksOverlay) bricksOverlay.textContent = bricksRemaining;
+    if (livesOverlay) livesOverlay.textContent = lives;
 }
 
 function gameOver() {
     gameRunning = false;
+    setPlayingMode(false);
     document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
+    setPlayingMode(false);
     showWinScreen(
         "Mike, you broke through all my walls! Be my Valentine? ❤️",
         restartGame

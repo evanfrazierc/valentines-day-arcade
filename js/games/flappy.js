@@ -61,6 +61,7 @@ function initGame() {
 
 function startGame() {
     gameRunning = true;
+    setPlayingMode(true);
     gameLoop();
 }
 
@@ -223,15 +224,19 @@ function gameLoop() {
 
 function updateUI() {
     document.getElementById('score').textContent = `${score}/${WIN_SCORE}`;
+    const scoreOverlay = document.getElementById('score-overlay');
+    if (scoreOverlay) scoreOverlay.textContent = `${score}/${WIN_SCORE}`;
 }
 
 function gameOver() {
     gameRunning = false;
+    setPlayingMode(false);
     document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
+    setPlayingMode(false);
     showWinScreen(
         "Jessica, you flew straight into my heart! 🦋💕",
         restartGame
