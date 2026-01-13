@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff1744">
+    <title>Love Snake - For Sarah 💕</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/games.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🐍 Love Snake 💕</h1>
+            <div class="instructions">
+                <h3>How to Play:</h3>
+                <p>🎯 Swipe to change direction</p>
+                <p>💕 Collect 15 hearts to win</p>
+                <p>⚠️ Don't hit walls or yourself!</p>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">Hearts</div>
+                <div class="info-value" id="hearts">0/15</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Length</div>
+                <div class="info-value" id="length">3</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="game-controls">
+            <button class="btn btn-home" onclick="window.location.href='../index.html'">🏠 Home</button>
+        </div>
+    </div>
+
+    <div id="winScreen" class="win-screen">
+        <div class="win-content">
+            <h2>🎉 You Win! 🎉</h2>
+            <div class="win-message" id="winMessage"></div>
+            <button class="btn" id="restartBtn">Play Again</button>
+            <button class="btn btn-home" id="homeBtn">Back to Menu</button>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="game-over-screen">
+        <div class="game-over-content">
+            <h2>💔 Game Over</h2>
+            <p style="margin: 20px 0;">Don't give up! Try again!</p>
+            <button class="btn" onclick="restartGame()">Try Again</button>
+            <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
+        </div>
+    </div>
+
+    <script src="../js/utils.js"></script>
+    <script src="../js/games/snake.js"></script>
+</body>
+</html>

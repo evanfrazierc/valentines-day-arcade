@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff1744">
+    <title>💕 Valentine's Day Arcade 💕</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="hearts-bg" id="heartsBg"></div>
+    
+    <div class="container">
+        <h1>💕 Valentine's Day Arcade 💕</h1>
+        <p class="subtitle">Seven games of love, each one made just for you</p>
+        
+        <div class="game-grid">
+            <a href="games/snake.html" class="game-card">
+                <div class="game-icon">🐍</div>
+                <h2>Love Snake</h2>
+                <p>Guide the snake to collect hearts and grow longer</p>
+                <span class="person-tag">For Sarah</span>
+            </a>
+
+            <a href="games/breakout.html" class="game-card">
+                <div class="game-icon">💔</div>
+                <h2>Heartbreaker</h2>
+                <p>Break through heart-shaped bricks with your paddle</p>
+                <span class="person-tag">For Mike</span>
+            </a>
+
+            <a href="games/runner.html" class="game-card">
+                <div class="game-icon">🏃</div>
+                <h2>Cupid's Rush</h2>
+                <p>Run, jump, and collect hearts along the way</p>
+                <span class="person-tag">For Emma</span>
+            </a>
+
+            <a href="games/jumper.html" class="game-card">
+                <div class="game-icon">⬆️</div>
+                <h2>Love Bounce</h2>
+                <p>Bounce on floating hearts to reach new heights</p>
+                <span class="person-tag">For Alex</span>
+            </a>
+
+            <a href="games/flappy.html" class="game-card">
+                <div class="game-icon">🦋</div>
+                <h2>Flappy Hearts</h2>
+                <p>Tap to fly through obstacles without crashing</p>
+                <span class="person-tag">For Jessica</span>
+            </a>
+
+            <a href="games/maze.html" class="game-card">
+                <div class="game-icon">🎯</div>
+                <h2>Maze of Love</h2>
+                <p>Navigate the maze and find all the hidden hearts</p>
+                <span class="person-tag">For Chris</span>
+            </a>
+
+            <a href="games/tetris.html" class="game-card">
+                <div class="game-icon">🧩</div>
+                <h2>Love Blocks</h2>
+                <p>Stack heart-shaped pieces to clear lines</p>
+                <span class="person-tag">For Taylor</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Animated hearts background
+        const heartsBg = document.getElementById('heartsBg');
+        
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.textContent = '💕';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            heartsBg.appendChild(heart);
+            
+            setTimeout(() => heart.remove(), 5000);
+        }
+        
+        // Create hearts periodically
+        setInterval(createHeart, 300);
+        
+        // Create initial hearts
+        for (let i = 0; i < 10; i++) {
+            createHeart();
+        }
+    </script>
+</body>
+</html>

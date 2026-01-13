@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff1744">
+    <title>Love Bounce - For Alex ⬆️</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/games.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>⬆️ Love Bounce 💕</h1>
+            <div class="instructions">
+                <h3>How to Play:</h3>
+                <p>👆 Tap left/right to move</p>
+                <p>💕 Bounce on hearts to go higher</p>
+                <p>🎯 Reach 2000 points to win!</p>
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">Height</div>
+                <div class="info-value" id="score">0/2000</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="game-controls">
+            <button class="btn btn-home" onclick="window.location.href='../index.html'">🏠 Home</button>
+        </div>
+    </div>
+
+    <div id="winScreen" class="win-screen">
+        <div class="win-content">
+            <h2>🎉 You Win! 🎉</h2>
+            <div class="win-message" id="winMessage"></div>
+            <button class="btn" id="restartBtn">Play Again</button>
+            <button class="btn btn-home" id="homeBtn">Back to Menu</button>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="game-over-screen">
+        <div class="game-over-content">
+            <h2>💔 Game Over</h2>
+            <p style="margin: 20px 0;">Keep bouncing! Try again!</p>
+            <button class="btn" onclick="restartGame()">Try Again</button>
+            <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
+        </div>
+    </div>
+
+    <script src="../js/utils.js"></script>
+    <script src="../js/games/jumper.js"></script>
+</body>
+</html>
