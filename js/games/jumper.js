@@ -3,12 +3,12 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
-const GRAVITY = 0.4;
+const GRAVITY = 0.3;
 const PLAYER_SIZE = 30;
 const PLATFORM_WIDTH = 60;
 const PLATFORM_HEIGHT = 12;
 const JUMP_STRENGTH = -10;
-const WIN_SCORE = 2000;
+const WIN_SCORE = 300;
 
 // Game state
 let player = {
@@ -29,7 +29,40 @@ let gameRunning = false;
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
-// Touch controls
+// Control state
+let tiltX = 0;
+let keysPressed = {};
+
+// Accelerometer controls for mobile
+if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', (event) => {
+        if (gameRunning && event.gamma !== null) {
+            // gamma is the left-to-right tilt in degrees, from -90 to 90
+            // Normalize to a value between -1 and 1
+            tiltX = Math.max(-1, Math.min(1, event.gamma / 30));
+        }
+    });
+}
+
+// Keyboard controls for desktop
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        keysPressed[e.key] = true;
+        
+        if (!gameRunning) {
+            startGame();
+        }
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keysPressed[e.key] = false;
+    }
+});
+
+// Touch controls (backup for devices without accelerometer)
 const controls = new TouchControls(canvas);
 
 controls.on('tap', (pos) => {
@@ -65,6 +98,9 @@ function initGame() {
     player.dy = 0;
     player.dx = 0;
     
+    tiltX = 0;
+    keysPressed = {};
+    
     platforms = [];
     cameraY = 0;
     score = 0;
@@ -72,7 +108,19 @@ function initGame() {
     gameRunning = false;
     
     // Create initial platforms
-    for (let i = 0; i < 12; i++) {
+    // First platform is wide base platform
+    platforms.push({
+        x: 0,
+        y: canvas.height - 100,
+        width: canvas.width,
+        height: PLATFORM_HEIGHT,
+        type: 'normal',
+        direction: 1,
+        speed: 0
+    });
+    
+    // Then add regular platforms
+    for (let i = 1; i < 12; i++) {
         platforms.push({
             x: random(0, canvas.width - PLATFORM_WIDTH),
             y: canvas.height - 100 - i * 60,
@@ -96,6 +144,18 @@ function startGame() {
 }
 
 function update() {
+    // Handle keyboard controls
+    if (keysPressed['ArrowLeft']) {
+        player.dx = -5;
+    } else if (keysPressed['ArrowRight']) {
+        player.dx = 5;
+    }
+    
+    // Handle accelerometer controls
+    if (Math.abs(tiltX) > 0.1) {
+        player.dx = tiltX * 6;
+    }
+    
     // Apply gravity
     player.dy += GRAVITY;
     player.y += player.dy;
@@ -253,7 +313,7 @@ function draw() {
         ctx.textAlign = 'center';
         ctx.fillText('Tap to Start!', canvas.width / 2, canvas.height / 2 - 50);
         ctx.font = '16px Arial';
-        ctx.fillText('Tap left/right sides to move', canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillText('Tilt device or use arrow keys', canvas.width / 2, canvas.height / 2 - 20);
     }
 }
 

@@ -3,11 +3,11 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
-const GRAVITY = 0.5;
-const FLAP_STRENGTH = -9;
+const GRAVITY = 0.25;
+const FLAP_STRENGTH = -7;
 const BIRD_SIZE = 25;
 const PIPE_WIDTH = 60;
-const PIPE_GAP = 150;
+const PIPE_GAP = 180;
 const PIPE_SPEED = 3;
 const WIN_SCORE = 20;
 
@@ -24,6 +24,7 @@ let bird = {
 let pipes = [];
 let score = 0;
 let gameRunning = false;
+let gameStarted = false;
 let pipeTimer = 0;
 
 // Particle system
@@ -32,10 +33,14 @@ const particles = new ParticleSystem(canvas, ctx);
 // Touch controls
 const controls = new TouchControls(canvas);
 
-controls.on('tap', () => {
+controls.on('touchstart', () => {
     if (!gameRunning) {
         startGame();
         return;
+    }
+    
+    if (!gameStarted) {
+        gameStarted = true;
     }
     
     bird.dy = FLAP_STRENGTH;
@@ -54,6 +59,7 @@ function initGame() {
     score = 0;
     pipeTimer = 0;
     gameRunning = false;
+    gameStarted = false;
     
     updateUI();
     draw();
@@ -66,9 +72,12 @@ function startGame() {
 }
 
 function update() {
-    // Apply gravity
-    bird.dy += GRAVITY;
-    bird.y += bird.dy;
+    // Only start physics after first flap
+    if (gameStarted) {
+        // Apply gravity
+        bird.dy += GRAVITY;
+        bird.y += bird.dy;
+    }
     
     // Rotation based on velocity
     bird.rotation = Math.min(Math.max(bird.dy * 3, -30), 90);
@@ -78,6 +87,9 @@ function update() {
         gameOver();
         return;
     }
+    
+    // Only spawn and move pipes after game has started
+    if (!gameStarted) return;
     
     // Spawn pipes
     pipeTimer++;
@@ -116,15 +128,17 @@ function update() {
             updateUI();
         }
         
-        // Check collision with pipes
-        if (bird.x + bird.width > pipes[i].x && bird.x < pipes[i].x + PIPE_WIDTH) {
+        // Check collision with pipes (with forgiving hitbox)
+        const hitboxMargin = 5;
+        if (bird.x + bird.width - hitboxMargin > pipes[i].x + hitboxMargin && 
+            bird.x + hitboxMargin < pipes[i].x + PIPE_WIDTH - hitboxMargin) {
             // Top pipe collision
-            if (bird.y < pipes[i].topHeight) {
+            if (bird.y + hitboxMargin < pipes[i].topHeight) {
                 gameOver();
                 return;
             }
             // Bottom pipe collision
-            if (bird.y + bird.height > pipes[i].bottomY) {
+            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {
                 gameOver();
                 return;
             }

@@ -1,37 +1,83 @@
-// Maze of Love Game - For Chris
+// Tap Hero Rhythm Game - For Chris
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
-const GRID_SIZE = 15;
-const TILE_SIZE = canvas.width / GRID_SIZE;
-const TOTAL_HEARTS = 10;
+const NOTE_SPEED = 3;
+const TARGET_Y = canvas.height - 100;
+const TARGET_HEIGHT = 60;
+const LANE_WIDTH = canvas.width / 3;
+const WIN_SCORE = 30;
+const HIT_WINDOW = 70; // pixels for perfect hit
+const GOOD_WINDOW = 120; // pixels for good hit
 
 // Game state
-let player = { x: 1, y: 1 };
-let hearts = [];
-let heartsCollected = 0;
-let moves = 0;
-let gameRunning = true;
+let notes = [];
+let score = 0;
+let combo = 0;
+let maxCombo = 0;
+let gameRunning = false;
+let gameTime = 0;
+let notesSpawned = 0;
+let totalNotes = 50; // Total notes in the song
 
-// Maze layout (1 = wall, 0 = path)
-let maze = [
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-    [1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],
-    [1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],
-    [1,0,1,0,0,0,0,0,1,0,0,0,1,0,1],
-    [1,0,1,1,1,1,1,0,1,1,1,1,1,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
-    [1,0,1,0,0,0,1,0,0,0,1,0,1,0,1],
-    [1,0,1,0,1,1,1,0,1,0,1,0,1,0,1],
-    [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1],
-    [1,1,1,0,1,0,1,1,1,1,1,0,1,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,1,1,1,1,1,0,1,1,1,1,1,1,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+// Beat pattern for the song (timing in milliseconds)
+// Minimum 700ms between notes to prevent 3 simultaneous notes
+const beatPattern = [
+    { time: 1000, lane: 1 },
+    { time: 1700, lane: 2 },
+    { time: 2400, lane: 0 },
+    { time: 3100, lane: 1 },
+    { time: 3800, lane: 2 },
+    { time: 4500, lane: 0 },
+    { time: 5200, lane: 1 },
+    { time: 5900, lane: 2 },
+    { time: 6600, lane: 0 },
+    { time: 7300, lane: 1 },
+    { time: 8000, lane: 2 },
+    { time: 8700, lane: 0 },
+    { time: 9400, lane: 1 },
+    { time: 10100, lane: 2 },
+    { time: 10800, lane: 0 },
+    { time: 11500, lane: 1 },
+    { time: 12200, lane: 2 },
+    { time: 12900, lane: 0 },
+    { time: 13600, lane: 1 },
+    { time: 14300, lane: 2 },
+    { time: 15000, lane: 0 },
+    { time: 15700, lane: 1 },
+    { time: 16400, lane: 2 },
+    { time: 17100, lane: 0 },
+    { time: 17800, lane: 1 },
+    { time: 18500, lane: 2 },
+    { time: 19200, lane: 0 },
+    { time: 19900, lane: 1 },
+    { time: 20600, lane: 2 },
+    { time: 21300, lane: 0 },
+    { time: 22000, lane: 1 },
+    { time: 22700, lane: 2 },
+    { time: 23400, lane: 0 },
+    { time: 24100, lane: 1 },
+    { time: 24800, lane: 2 },
+    { time: 25500, lane: 0 },
+    { time: 26200, lane: 1 },
+    { time: 26900, lane: 2 },
+    { time: 27600, lane: 0 },
+    { time: 28300, lane: 1 },
+    { time: 29000, lane: 2 },
+    { time: 29700, lane: 0 },
+    { time: 30400, lane: 1 },
+    { time: 31100, lane: 2 },
+    { time: 31800, lane: 0 },
+    { time: 32500, lane: 1 },
+    { time: 33200, lane: 2 },
+    { time: 33900, lane: 0 },
+    { time: 34600, lane: 1 },
+    { time: 35300, lane: 2 }
 ];
+
+let beatIndex = 0;
+let startTime = 0;
 
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
@@ -39,203 +85,285 @@ const particles = new ParticleSystem(canvas, ctx);
 // Touch controls
 const controls = new TouchControls(canvas);
 
-controls.on('swipe', (direction) => {
-    if (!gameRunning) return;
-    
-    let newX = player.x;
-    let newY = player.y;
-    
-    switch(direction) {
-        case 'up': newY--; break;
-        case 'down': newY++; break;
-        case 'left': newX--; break;
-        case 'right': newX++; break;
+controls.on('touchstart', (pos) => {
+    if (!gameRunning) {
+        startGame();
+        return;
     }
     
-    // Check if move is valid
-    if (newX >= 0 && newX < GRID_SIZE && 
-        newY >= 0 && newY < GRID_SIZE && 
-        maze[newY][newX] === 0) {
-        
-        player.x = newX;
-        player.y = newY;
-        moves++;
-        
-        // Check heart collection
-        for (let i = hearts.length - 1; i >= 0; i--) {
-            if (hearts[i].x === player.x && hearts[i].y === player.y && !hearts[i].collected) {
-                hearts[i].collected = true;
-                heartsCollected++;
-                
-                particles.createParticles(
-                    player.x * TILE_SIZE + TILE_SIZE / 2,
-                    player.y * TILE_SIZE + TILE_SIZE / 2,
-                    20,
-                    '#ff4081'
-                );
-                
-                if (heartsCollected >= TOTAL_HEARTS) {
-                    setTimeout(() => winGame(), 500);
-                }
-                
-                updateUI();
-            }
-        }
-        
-        updateUI();
+    // Get the actual canvas rect
+    const rect = canvas.getBoundingClientRect();
+    
+    // Calculate canvas visual bounds based on aspect ratio
+    const visualHeight = rect.height;
+    const visualWidth = visualHeight * (canvas.width / canvas.height);
+    const visualLeft = (rect.width - visualWidth) / 2;
+    
+    // Map screen coordinate to canvas coordinate
+    const relativeX = pos.x - visualLeft;
+    const canvasX = (relativeX / visualWidth) * canvas.width;
+    
+    // Determine which lane was tapped (clamp to 0-2)
+    const lane = Math.max(0, Math.min(2, Math.floor(canvasX / LANE_WIDTH)));
+    tapLane(lane);
+});
+
+controls.on('tap', (pos) => {
+    if (!gameRunning) {
+        startGame();
+        return;
     }
+    
+    const rect = canvas.getBoundingClientRect();
+    const visualHeight = rect.height;
+    const visualWidth = visualHeight * (canvas.width / canvas.height);
+    const visualLeft = (rect.width - visualWidth) / 2;
+    const relativeX = pos.x - visualLeft;
+    const canvasX = (relativeX / visualWidth) * canvas.width;
+    const lane = Math.max(0, Math.min(2, Math.floor(canvasX / LANE_WIDTH)));
+    tapLane(lane);
 });
 
 controls.init();
 
-// Initialize game
-function initGame() {
-    player = { x: 1, y: 1 };
-    heartsCollected = 0;
-    moves = 0;
-    gameRunning = true;
+function tapLane(lane) {
+    // Find the closest note in this lane
+    let closestNote = null;
+    let closestDistance = Infinity;
     
-    // Place hearts in random path locations
-    hearts = [];
-    const pathCells = [];
-    
-    for (let y = 0; y < GRID_SIZE; y++) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-            if (maze[y][x] === 0 && !(x === 1 && y === 1)) {
-                pathCells.push({ x, y });
+    for (let note of notes) {
+        if (note.lane === lane && !note.hit && !note.missed) {
+            const distance = Math.abs(note.y - TARGET_Y);
+            if (distance < GOOD_WINDOW && distance < closestDistance) {
+                closestDistance = distance;
+                closestNote = note;
             }
         }
     }
     
-    // Randomly select locations for hearts
-    for (let i = 0; i < TOTAL_HEARTS; i++) {
-        const randomIndex = Math.floor(Math.random() * pathCells.length);
-        const cell = pathCells.splice(randomIndex, 1)[0];
-        hearts.push({
-            x: cell.x,
-            y: cell.y,
-            collected: false,
-            pulse: 0
-        });
+    if (closestNote) {
+        closestNote.hit = true;
+        
+        // Determine hit quality
+        if (closestDistance < HIT_WINDOW) {
+            // Perfect hit
+            score++;
+            combo++;
+            particles.createParticles(
+                lane * LANE_WIDTH + LANE_WIDTH / 2,
+                TARGET_Y,
+                20,
+                '#ffeb3b'
+            );
+        } else {
+            // Good hit
+            score++;
+            combo++;
+            particles.createParticles(
+                lane * LANE_WIDTH + LANE_WIDTH / 2,
+                TARGET_Y,
+                10,
+                '#ff80ab'
+            );
+        }
+        
+        if (combo > maxCombo) {
+            maxCombo = combo;
+        }
+        
+        if (score >= WIN_SCORE) {
+            winGame();
+        }
+        
+        updateUI();
+    } else {
+        // Missed tap - reset combo
+        if (combo > 0) {
+            combo = 0;
+            updateUI();
+        }
     }
+}
+
+// Initialize game
+function initGame() {
+    notes = [];
+    score = 0;
+    combo = 0;
+    maxCombo = 0;
+    gameRunning = false;
+    gameTime = 0;
+    beatIndex = 0;
+    notesSpawned = 0;
+    startTime = 0;
     
     updateUI();
+    draw();
+}
+
+function startGame() {
+    gameRunning = true;
+    setPlayingMode(true);
+    startTime = Date.now();
     gameLoop();
 }
 
-function draw() {
-    // Clear canvas
-    ctx.fillStyle = '#880e4f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+function update() {
+    gameTime = Date.now() - startTime;
     
-    // Draw maze
-    for (let y = 0; y < GRID_SIZE; y++) {
-        for (let x = 0; x < GRID_SIZE; x++) {
-            if (maze[y][x] === 1) {
-                // Wall
-                ctx.fillStyle = '#c51162';
-                ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                
-                // Wall border
-                ctx.strokeStyle = '#ff1744';
-                ctx.lineWidth = 1;
-                ctx.strokeRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            } else {
-                // Path
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-                ctx.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    // Spawn notes based on beat pattern
+    while (beatIndex < beatPattern.length && 
+           gameTime >= beatPattern[beatIndex].time - 2000) {
+        const beat = beatPattern[beatIndex];
+        notes.push({
+            lane: beat.lane,
+            y: -30,
+            size: 30,
+            hit: false,
+            missed: false
+        });
+        notesSpawned++;
+        beatIndex++;
+    }
+    
+    // Update notes
+    for (let i = notes.length - 1; i >= 0; i--) {
+        if (!notes[i].hit) {
+            notes[i].y += NOTE_SPEED;
+            
+            // Check if note was missed
+            if (notes[i].y > TARGET_Y + GOOD_WINDOW && !notes[i].missed) {
+                notes[i].missed = true;
+                combo = 0;
+                updateUI();
             }
+        }
+        
+        // Remove notes that are off screen
+        if (notes[i].y > canvas.height || notes[i].hit) {
+            notes.splice(i, 1);
         }
     }
     
-    // Draw hearts
-    hearts.forEach(heart => {
-        if (!heart.collected) {
-            heart.pulse = (heart.pulse + 0.1) % (Math.PI * 2);
-            const scale = 1 + Math.sin(heart.pulse) * 0.2;
-            
-            ctx.save();
-            ctx.translate(
-                heart.x * TILE_SIZE + TILE_SIZE / 2,
-                heart.y * TILE_SIZE + TILE_SIZE / 2
-            );
-            ctx.scale(scale, scale);
-            
-            drawHeart(ctx, 0, 0, TILE_SIZE * 0.5, '#ff4081');
-            
-            ctx.restore();
+    // Check if song is over
+    if (beatIndex >= beatPattern.length && notes.length === 0) {
+        if (score >= WIN_SCORE) {
+            winGame();
+        } else {
+            gameOver();
         }
-    });
+    }
+}
+
+function draw() {
+    // Clear canvas with gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, '#880e4f');
+    gradient.addColorStop(1, '#c51162');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw player
-    ctx.save();
-    ctx.translate(
-        player.x * TILE_SIZE + TILE_SIZE / 2,
-        player.y * TILE_SIZE + TILE_SIZE / 2
-    );
-    
-    // Player body
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(0, 0, TILE_SIZE * 0.35, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Player face
-    ctx.fillStyle = '#ff1744';
-    ctx.beginPath();
-    ctx.arc(-4, -3, 2, 0, Math.PI * 2);
-    ctx.arc(4, -3, 2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Smile
-    ctx.strokeStyle = '#ff1744';
+    // Draw lane dividers
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.lineWidth = 2;
+    for (let i = 1; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * LANE_WIDTH, 0);
+        ctx.lineTo(i * LANE_WIDTH, canvas.height);
+        ctx.stroke();
+    }
+    
+    // Draw target line
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.arc(0, 1, 5, 0.2, Math.PI - 0.2);
+    ctx.moveTo(0, TARGET_Y);
+    ctx.lineTo(canvas.width, TARGET_Y);
     ctx.stroke();
     
-    ctx.restore();
+    // Draw target area
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(0, TARGET_Y - TARGET_HEIGHT / 2, canvas.width, TARGET_HEIGHT);
+    
+    // Draw notes
+    notes.forEach(note => {
+        if (!note.hit) {
+            const x = note.lane * LANE_WIDTH + LANE_WIDTH / 2;
+            
+            // Color based on position
+            let color = '#ff4081';
+            const distanceFromTarget = Math.abs(note.y - TARGET_Y);
+            if (distanceFromTarget < HIT_WINDOW) {
+                color = '#ffeb3b'; // Yellow for perfect
+            } else if (distanceFromTarget < GOOD_WINDOW) {
+                color = '#ff80ab'; // Light pink for good
+            }
+            
+            drawHeart(ctx, x, note.y, note.size, color);
+        }
+    });
     
     // Draw particles
     particles.update();
     particles.draw();
     
-    // Draw directional hints
-    if (moves === 0) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.font = 'bold 16px Arial';
+    // Draw combo multiplier
+    if (combo > 1 && gameRunning) {
+        ctx.fillStyle = '#ffeb3b';
+        ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Swipe to move!', canvas.width / 2, 30);
+        ctx.fillText(`${combo}x`, canvas.width / 2, 60);
+    }
+    
+    // Draw start message
+    if (!gameRunning) {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Tap to Start!', canvas.width / 2, canvas.height / 2 - 30);
+        ctx.font = '16px Arial';
+        ctx.fillText('Tap hearts as they hit the line', canvas.width / 2, canvas.height / 2 + 10);
     }
 }
 
 function gameLoop() {
-    draw();
-    if (gameRunning) {
-        requestAnimationFrame(gameLoop);
+    if (!gameRunning) {
+        draw();
+        return;
     }
+    
+    update();
+    draw();
+    
+    requestAnimationFrame(gameLoop);
 }
 
 function updateUI() {
-    document.getElementById('hearts').textContent = `${heartsCollected}/${TOTAL_HEARTS}`;
-    document.getElementById('moves').textContent = moves;
-    const heartsOverlay = document.getElementById('hearts-overlay');
-    const movesOverlay = document.getElementById('moves-overlay');
-    if (heartsOverlay) heartsOverlay.textContent = `${heartsCollected}/${TOTAL_HEARTS}`;
-    if (movesOverlay) movesOverlay.textContent = moves;
-    if (moves === 1) setPlayingMode(true);
+    document.getElementById('score').textContent = `${score}/${WIN_SCORE}`;
+    document.getElementById('combo').textContent = combo;
+    const scoreOverlay = document.getElementById('score-overlay');
+    const comboOverlay = document.getElementById('combo-overlay');
+    if (scoreOverlay) scoreOverlay.textContent = `${score}/${WIN_SCORE}`;
+    if (comboOverlay) comboOverlay.textContent = combo;
+}
+
+function gameOver() {
+    gameRunning = false;
+    setPlayingMode(false);
+    document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Chris, I'd navigate any maze to find you! 💘",
+        "Chris, you hit all the right notes in my heart! 🎵💕",
         restartGame
     );
 }
 
 function restartGame() {
+    document.getElementById('gameOverScreen').classList.remove('show');
     initGame();
 }
 

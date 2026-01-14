@@ -4,11 +4,11 @@ const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
 const GRAVITY = 0.6;
-const JUMP_STRENGTH = -12;
+const JUMP_STRENGTH = -15;
 const PLAYER_SIZE = 30;
 const GROUND_HEIGHT = 100;
 const OBSTACLE_WIDTH = 30;
-const WIN_HEARTS = 100;
+const WIN_HEARTS = 30;
 
 // Game state
 let player = {
@@ -75,7 +75,7 @@ function initGame() {
     hearts = [];
     heartsCollected = 0;
     distance = 0;
-    gameSpeed = 5;
+    gameSpeed = 3.5;
     obstacleTimer = 0;
     heartTimer = 0;
     gameRunning = false;
@@ -94,7 +94,7 @@ function update() {
     distance += gameSpeed / 10;
     
     // Gradually increase speed
-    if (distance % 50 === 0 && gameSpeed < 8) {
+    if (distance % 50 === 0 && gameSpeed < 6) {
         gameSpeed += 0.1;
     }
     
@@ -113,19 +113,17 @@ function update() {
         player.grounded = false;
     }
     
-    // Spawn obstacles
+    // Spawn obstacles - only one at a time
     obstacleTimer++;
-    if (obstacleTimer > 100 / gameSpeed) {
-        if (Math.random() < 0.7) {
-            const height = random(30, 80);
-            obstacles.push({
-                x: canvas.width,
-                y: canvas.height - GROUND_HEIGHT - height,
-                width: OBSTACLE_WIDTH,
-                height: height,
-                type: 'block'
-            });
-        }
+    if (obstacleTimer > 150 / gameSpeed && obstacles.length === 0) {
+        const height = random(30, 80);
+        obstacles.push({
+            x: canvas.width,
+            y: canvas.height - GROUND_HEIGHT - height,
+            width: OBSTACLE_WIDTH,
+            height: height,
+            type: 'block'
+        });
         obstacleTimer = 0;
     }
     

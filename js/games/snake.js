@@ -4,6 +4,7 @@ const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
 const GRID_SIZE = 20;
+const GRID_HEIGHT = Math.floor(canvas.height / (canvas.width / GRID_SIZE));
 const TILE_SIZE = canvas.width / GRID_SIZE;
 const WIN_HEARTS = 15;
 
@@ -79,7 +80,7 @@ function spawnHeart() {
     let validPosition = false;
     while (!validPosition) {
         heart.x = Math.floor(Math.random() * GRID_SIZE);
-        heart.y = Math.floor(Math.random() * GRID_SIZE);
+        heart.y = Math.floor(Math.random() * GRID_HEIGHT);
         
         validPosition = !snake.some(segment => 
             segment.x === heart.x && segment.y === heart.y
@@ -97,7 +98,7 @@ function update() {
     };
     
     // Check wall collision
-    if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
+    if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_HEIGHT) {
         gameOver();
         return;
     }
@@ -145,7 +146,8 @@ function draw() {
         ctx.moveTo(i * TILE_SIZE, 0);
         ctx.lineTo(i * TILE_SIZE, canvas.height);
         ctx.stroke();
-        
+    }
+    for (let i = 0; i <= GRID_HEIGHT; i++) {
         ctx.beginPath();
         ctx.moveTo(0, i * TILE_SIZE);
         ctx.lineTo(canvas.width, i * TILE_SIZE);

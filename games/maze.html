@@ -4,30 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#ff1744">
-    <title>Maze of Love - For Chris 🎯</title>
+    <title>Tap Hero - For Chris 🎵</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/games.css">
 </head>
 <body>
     <div class="game-container">
         <div class="game-header">
-            <h1>🎯 Maze of Love 💕</h1>
+            <h1>🎵 Tap Hero 💕</h1>
             <div class="instructions">
                 <h3>How to Play:</h3>
-                <p>↔️ Swipe to move through the maze</p>
-                <p>💕 Collect all 10 hearts</p>
-                <p>🎯 Find your way to victory!</p>
+                <p>👆 Tap hearts when they reach the line</p>
+                <p>🎯 Hit 30 perfect notes to win</p>
+                <p>💕 Feel the rhythm of love!</p>
             </div>
         </div>
 
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Hearts</div>
-                <div class="info-value" id="hearts">0/10</div>
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score">0/30</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Moves</div>
-                <div class="info-value" id="moves">0</div>
+                <div class="info-label">Combo</div>
+                <div class="info-value" id="combo">0</div>
             </div>
         </div>
 
@@ -35,12 +35,12 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Hearts</div>
-                <div class="info-value" id="hearts-overlay">0/10</div>
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score-overlay">0/30</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Moves</div>
-                <div class="info-value" id="moves-overlay">0</div>
+                <div class="info-label">Combo</div>
+                <div class="info-value" id="combo-overlay">0</div>
             </div>
         </div>
 
@@ -55,6 +55,15 @@
             <div class="win-message" id="winMessage"></div>
             <button class="btn" id="restartBtn">Play Again</button>
             <button class="btn btn-home" id="homeBtn">Back to Menu</button>
+        </div>
+    </div>
+
+    <div id="gameOverScreen" class="game-over-screen">
+        <div class="game-over-content">
+            <h2>💔 Song Ended</h2>
+            <p style="margin: 20px 0;">Keep practicing the rhythm of love!</p>
+            <button class="btn" onclick="restartGame()">Try Again</button>
+            <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
         </div>
     </div>
 
