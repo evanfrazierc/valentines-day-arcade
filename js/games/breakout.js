@@ -85,6 +85,10 @@ function initGame() {
 }
 
 function startGame() {
+    // Reset ball velocity to ensure consistent speed
+    const ballSpeed = 4;
+    ball.dx = ballSpeed;
+    ball.dy = -ballSpeed;
     gameRunning = true;
     setPlayingMode(true);
     gameLoop();
@@ -113,7 +117,7 @@ function update() {
         // Calculate bounce angle based on where ball hits paddle
         const hitPos = (ball.x - paddle.x) / paddle.width;
         const angle = (hitPos - 0.5) * Math.PI / 3; // -60 to 60 degrees
-        const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+        const speed = 4; // Keep constant speed
         
         ball.dx = speed * Math.sin(angle);
         ball.dy = -speed * Math.cos(angle);
