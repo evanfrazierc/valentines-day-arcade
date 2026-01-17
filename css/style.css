@@ -19,6 +19,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
     min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height */
     color: var(--white);
     overflow-x: hidden;
 }
