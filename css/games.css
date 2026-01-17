@@ -5,17 +5,21 @@
     justify-content: flex-start;
     min-height: 100vh;
     min-height: 100dvh; /* Dynamic viewport height */
-    max-height: 100vh;
-    max-height: 100dvh;
     padding: 10px;
     position: relative;
-    overflow: hidden;
     box-sizing: border-box;
 }
 
 .game-container.playing {
     padding: 0;
     justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
 }
 
 .game-container.playing .game-header,
