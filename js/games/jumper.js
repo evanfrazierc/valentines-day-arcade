@@ -32,9 +32,29 @@ const particles = new ParticleSystem(canvas, ctx);
 // Control state
 let tiltX = 0;
 let keysPressed = {};
+let tiltPermissionGranted = false;
 
-// Accelerometer controls for mobile
-if (window.DeviceOrientationEvent) {
+// Request motion permission for iOS
+async function requestMotionPermission() {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            tiltPermissionGranted = (permission === 'granted');
+            if (tiltPermissionGranted) {
+                setupTiltControls();
+            }
+        } catch (error) {
+            console.log('Motion permission error:', error);
+        }
+    } else {
+        // Non-iOS devices don't need permission
+        tiltPermissionGranted = true;
+        setupTiltControls();
+    }
+}
+
+// Setup tilt controls
+function setupTiltControls() {
     window.addEventListener('deviceorientation', (event) => {
         if (gameRunning && event.gamma !== null) {
             // gamma is the left-to-right tilt in degrees, from -90 to 90
@@ -42,6 +62,11 @@ if (window.DeviceOrientationEvent) {
             tiltX = Math.max(-1, Math.min(1, event.gamma / 30));
         }
     });
+}
+
+// Initialize tilt on first interaction
+if (window.DeviceOrientationEvent) {
+    requestMotionPermission();
 }
 
 // Keyboard controls for desktop
@@ -137,10 +162,20 @@ function initGame() {
 }
 
 function startGame() {
-    gameRunning = true;
-    setPlayingMode(true);
-    player.dy = JUMP_STRENGTH;
-    gameLoop();
+    // Request motion permission on iOS if not already granted
+    if (!tiltPermissionGranted && typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        requestMotionPermission().then(() => {
+            gameRunning = true;
+            setPlayingMode(true);
+            player.dy = JUMP_STRENGTH;
+            gameLoop();
+        });
+    } else {
+        gameRunning = true;
+        setPlayingMode(true);
+        player.dy = JUMP_STRENGTH;
+        gameLoop();
+    }
 }
 
 function update() {
