@@ -5,10 +5,13 @@ const ctx = setupCanvas(canvas, 350, 600);
 // Game constants
 const GRAVITY = 0.6;
 const JUMP_STRENGTH = -15;
-const PLAYER_SIZE = 30;
+const PLAYER_SIZE = 50;
 const GROUND_HEIGHT = 100;
 const OBSTACLE_WIDTH = 30;
-const WIN_HEARTS = 30;
+const WIN_VEGGIES = 30;
+const MEAT_EMOJIS = ['🍗', '🍖', '🥩', '🌭'];
+const VEGGIE_EMOJIS = ['🥦', '🥕', '🌽', '🥒', '🥬', '🍅'];
+const DOG_EMOJIS = ['🐕', '🦮'];
 
 // Game state
 let player = {
@@ -18,17 +21,21 @@ let player = {
     height: PLAYER_SIZE,
     dy: 0,
     grounded: true,
-    canDoubleJump: false
+    canDoubleJump: false,
+    rotation: 0
 };
 
 let obstacles = [];
-let hearts = [];
-let heartsCollected = 0;
+let veggies = [];
+let clouds = [];
+let dog = null;
+let veggiesCollected = 0;
 let distance = 0;
 let gameRunning = false;
 let gameSpeed = 5;
 let obstacleTimer = 0;
-let heartTimer = 0;
+let nextObstacleTime = 0;
+let veggieTimer = 0;
 let lastTap = 0;
 
 // Particle system
@@ -50,7 +57,7 @@ controls.on('tap', () => {
     if (timeSinceLast < 300 && player.canDoubleJump) {
         player.dy = JUMP_STRENGTH * 0.9;
         player.canDoubleJump = false;
-        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#ff80ab');
+        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#87CEEB');
     }
     // Single tap for regular jump
     else if (player.grounded) {
@@ -70,14 +77,42 @@ function initGame() {
     player.dy = 0;
     player.grounded = true;
     player.canDoubleJump = false;
+    player.rotation = 0;
     
     obstacles = [];
-    hearts = [];
-    heartsCollected = 0;
+    veggies = [];
+    clouds = [];
+    dog = null;
+    
+    // Create initial clouds
+    for (let i = 0; i < 5; i++) {
+        const cloudSize = random(30, 60);
+        // Generate random cloud shape with 3-5 circles
+        const numCircles = Math.floor(random(3, 6));
+        const circles = [];
+        for (let j = 0; j < numCircles; j++) {
+            circles.push({
+                offsetX: random(0, cloudSize * 0.9),
+                offsetY: random(-cloudSize * 0.2, cloudSize * 0.2),
+                radius: random(cloudSize * 0.4, cloudSize * 0.7)
+            });
+        }
+        
+        clouds.push({
+            x: random(0, canvas.width),
+            y: random(20, canvas.height - GROUND_HEIGHT - 250),
+            size: cloudSize,
+            speed: random(0.3, 0.8),
+            circles: circles
+        });
+    }
+    
+    veggiesCollected = 0;
     distance = 0;
-    gameSpeed = 3.5;
+    gameSpeed = 2.5;
     obstacleTimer = 0;
-    heartTimer = 0;
+    nextObstacleTime = random(80, 150);
+    veggieTimer = 0;
     gameRunning = false;
     
     updateUI();
@@ -95,7 +130,7 @@ function update() {
     
     // Gradually increase speed
     if (distance % 50 === 0 && gameSpeed < 6) {
-        gameSpeed += 0.1;
+        gameSpeed += 0.25;
     }
     
     // Update player
@@ -109,36 +144,75 @@ function update() {
         player.dy = 0;
         player.grounded = true;
         player.canDoubleJump = false;
+        player.rotation = 0; // Reset rotation on landing
     } else {
         player.grounded = false;
+        // Spin while in air
+        player.rotation += 0.15;
     }
     
-    // Spawn obstacles - only one at a time
+    // Spawn obstacles with random timing
     obstacleTimer++;
-    if (obstacleTimer > 150 / gameSpeed && obstacles.length === 0) {
+    if (obstacleTimer >= nextObstacleTime) {
         const height = random(30, 80);
         obstacles.push({
             x: canvas.width,
             y: canvas.height - GROUND_HEIGHT - height,
             width: OBSTACLE_WIDTH,
             height: height,
-            type: 'block'
+            type: 'block',
+            emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)]
         });
         obstacleTimer = 0;
+        // Random delay before next obstacle: shorter at higher speeds
+        const minDelay = Math.max(60, 120 - gameSpeed * 10);
+        const maxDelay = Math.max(100, 200 - gameSpeed * 15);
+        nextObstacleTime = random(minDelay, maxDelay);
     }
     
-    // Spawn hearts
-    heartTimer++;
-    if (heartTimer > 60 / gameSpeed) {
+    // Spawn veggies
+    veggieTimer++;
+    if (veggieTimer > 60 / gameSpeed) {
         if (Math.random() < 0.6) {
-            hearts.push({
-                x: canvas.width,
-                y: random(canvas.height - GROUND_HEIGHT - 200, canvas.height - GROUND_HEIGHT - 50),
-                size: 20,
-                collected: false
-            });
+            // Check if there's an obstacle near the right edge of screen
+            const heartY = random(canvas.height - GROUND_HEIGHT - 200, canvas.height - GROUND_HEIGHT - 50);
+            let canSpawn = true;
+            
+            // Don't spawn if there's an obstacle that would overlap
+            for (let obstacle of obstacles) {
+                // Simple collision check - don't spawn if veggie would collide with nearby obstacle
+                const margin = 40; // Extra clearance around veggie
+                const veggieBox = {
+                    x: canvas.width - margin,
+                    y: heartY - margin,
+                    width: 30 + margin * 2,
+                    height: 30 + margin * 2
+                };
+                
+                // Check if obstacle is close enough to matter (within 250px)
+                if (obstacle.x > canvas.width - 250) {
+                    // Check if veggie and obstacle boxes would overlap
+                    if (veggieBox.x < obstacle.x + obstacle.width &&
+                        veggieBox.x + veggieBox.width > obstacle.x &&
+                        veggieBox.y < obstacle.y + obstacle.height &&
+                        veggieBox.y + veggieBox.height > obstacle.y) {
+                        canSpawn = false;
+                        break;
+                    }
+                }
+            }
+            
+            if (canSpawn) {
+                veggies.push({
+                    x: canvas.width,
+                    y: heartY,
+                    size: 20,
+                    collected: false,
+                    emoji: VEGGIE_EMOJIS[Math.floor(Math.random() * VEGGIE_EMOJIS.length)]
+                });
+            }
         }
-        heartTimer = 0;
+        veggieTimer = 0;
     }
     
     // Update obstacles
@@ -151,36 +225,42 @@ function update() {
             continue;
         }
         
-        // Check collision
-        if (checkCollision(player, obstacles[i])) {
+        // Check collision with more forgiving hitbox
+        const hitboxMargin = 8;
+        if (checkCollision(player, {
+            x: obstacles[i].x + hitboxMargin,
+            y: obstacles[i].y + hitboxMargin,
+            width: obstacles[i].width - hitboxMargin * 2,
+            height: obstacles[i].height - hitboxMargin * 2
+        })) {
             gameOver();
             return;
         }
     }
     
-    // Update hearts
-    for (let i = hearts.length - 1; i >= 0; i--) {
-        hearts[i].x -= gameSpeed;
+    // Update veggies
+    for (let i = veggies.length - 1; i >= 0; i--) {
+        veggies[i].x -= gameSpeed;
         
-        // Remove off-screen hearts
-        if (hearts[i].x + hearts[i].size < 0) {
-            hearts.splice(i, 1);
+        // Remove off-screen veggies
+        if (veggies[i].x + veggies[i].size < 0) {
+            veggies.splice(i, 1);
             continue;
         }
         
         // Check collection
-        if (!hearts[i].collected && checkCollision(player, {
-            x: hearts[i].x - hearts[i].size / 2,
-            y: hearts[i].y - hearts[i].size / 2,
-            width: hearts[i].size,
-            height: hearts[i].size
+        if (!veggies[i].collected && checkCollision(player, {
+            x: veggies[i].x - veggies[i].size / 2,
+            y: veggies[i].y - veggies[i].size / 2,
+            width: veggies[i].size,
+            height: veggies[i].size
         })) {
-            hearts[i].collected = true;
-            heartsCollected++;
+            veggies[i].collected = true;
+            veggiesCollected++;
             
-            particles.createParticles(hearts[i].x, hearts[i].y, 15, '#ff4081');
+            particles.createParticles(veggies[i].x, veggies[i].y, 15, '#4CAF50');
             
-            if (heartsCollected >= WIN_HEARTS) {
+            if (veggiesCollected >= WIN_VEGGIES) {
                 winGame();
                 return;
             }
@@ -188,9 +268,54 @@ function update() {
             updateUI();
         }
         
-        // Remove collected hearts
-        if (hearts[i].collected) {
-            hearts.splice(i, 1);
+        // Remove collected veggies
+        if (veggies[i].collected) {
+            veggies.splice(i, 1);
+        }
+    }
+    
+    // Update clouds
+    for (let i = clouds.length - 1; i >= 0; i--) {
+        clouds[i].x -= clouds[i].speed;
+        
+        // Remove clouds that are off-screen and spawn new ones
+        if (clouds[i].x + clouds[i].size < 0) {
+            const cloudSize = random(30, 60);
+            const numCircles = Math.floor(random(3, 6));
+            const circles = [];
+            for (let j = 0; j < numCircles; j++) {
+                circles.push({
+                    offsetX: random(0, cloudSize * 0.9),
+                    offsetY: random(-cloudSize * 0.2, cloudSize * 0.2),
+                    radius: random(cloudSize * 0.4, cloudSize * 0.7)
+                });
+            }
+            
+            clouds[i].x = canvas.width + random(50, 150);
+            clouds[i].y = random(20, canvas.height - GROUND_HEIGHT - 250);
+            clouds[i].size = cloudSize;
+            clouds[i].circles = circles;
+        }
+    }
+    
+    // Update dog
+    if (dog) {
+        dog.x += dog.speed;
+        
+        // Remove dog when it goes off-screen (left side)
+        if (dog.x < -50) {
+            dog = null;
+        }
+    } else {
+        // Randomly spawn dog (low probability each frame)
+        if (Math.random() < 0.002) {
+            dog = {
+                x: canvas.width + 50,
+                y: canvas.height - GROUND_HEIGHT + 30, // On the ground surface
+                size: 40,
+                speed: -gameSpeed * 2.5, // Negative to move left
+                emoji: DOG_EMOJIS[Math.floor(Math.random() * DOG_EMOJIS.length)]
+            };
         }
     }
     
@@ -200,46 +325,79 @@ function update() {
 function draw() {
     // Clear canvas with gradient sky
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#ff4081');
-    gradient.addColorStop(1, '#880e4f');
+    gradient.addColorStop(0, '#87CEEB'); // Sky blue
+    gradient.addColorStop(1, '#E0F6FF'); // Light blue
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
+    // Draw clouds
+    clouds.forEach(cloud => {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.beginPath();
+        // Draw cloud using its unique circle pattern
+        cloud.circles.forEach(circle => {
+            ctx.arc(
+                cloud.x + circle.offsetX,
+                cloud.y + circle.offsetY,
+                circle.radius,
+                0,
+                Math.PI * 2
+            );
+        });
+        ctx.fill();
+    });
+    
     // Draw ground
-    ctx.fillStyle = '#c51162';
+    ctx.fillStyle = '#8B7355'; // Brown ground
     ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
     
     // Ground detail
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
     for (let i = 0; i < canvas.width; i += 40) {
-        ctx.fillRect(i - (distance * gameSpeed) % 40, canvas.height - GROUND_HEIGHT, 20, 5);
+        ctx.fillRect(i - (distance * gameSpeed * 3) % 40, canvas.height - GROUND_HEIGHT, 20, 5);
     }
     
-    // Draw player
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(player.x, player.y, player.width, player.height);
+    // Draw player with rotation
+    ctx.save();
+    ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
+    ctx.rotate(player.rotation);
     
-    // Player face
-    ctx.fillStyle = '#ff1744';
-    ctx.beginPath();
-    ctx.arc(player.x + 10, player.y + 12, 3, 0, Math.PI * 2);
-    ctx.arc(player.x + 20, player.y + 12, 3, 0, Math.PI * 2);
-    ctx.fill();
+    // Running man emoji - flipped to face right
+    ctx.scale(-1, 1); // Flip horizontally
+    ctx.font = `${player.width}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000000'; // Set color for emoji
+    ctx.fillText('🏃', 0, 0);
     
-    // Draw obstacles
+    ctx.restore();
+    
+    // Draw dog running in opposite direction
+    if (dog) {
+        ctx.font = `${dog.size}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000000';
+        ctx.fillText(dog.emoji, dog.x, dog.y + dog.size / 2);
+    }
+    
+    // Draw obstacles as varied meat emojis
     obstacles.forEach(obstacle => {
-        ctx.fillStyle = '#ff1744';
-        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
-        
-        // Add some detail
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.fillRect(obstacle.x + 5, obstacle.y + 5, obstacle.width - 10, obstacle.height - 10);
+        ctx.font = `${obstacle.height * 1.2}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#000000';
+        ctx.fillText(obstacle.emoji, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
     });
     
-    // Draw hearts
-    hearts.forEach(heart => {
-        if (!heart.collected) {
-            drawHeart(ctx, heart.x, heart.y, heart.size, '#ff80ab');
+    // Draw veggie emojis
+    veggies.forEach(veggie => {
+        if (!veggie.collected) {
+            ctx.font = `${veggie.size * 1.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#000000'; // Set color for emoji
+            ctx.fillText(veggie.emoji, veggie.x + veggie.size / 2, veggie.y + veggie.size / 2);
         }
     });
     
@@ -269,11 +427,11 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('hearts').textContent = `${heartsCollected}/${WIN_HEARTS}`;
+    document.getElementById('veggies').textContent = `${veggiesCollected}/${WIN_VEGGIES}`;
     document.getElementById('distance').textContent = Math.floor(distance) + 'm';
-    const heartsOverlay = document.getElementById('hearts-overlay');
+    const veggiesOverlay = document.getElementById('veggies-overlay');
     const distanceOverlay = document.getElementById('distance-overlay');
-    if (heartsOverlay) heartsOverlay.textContent = `${heartsCollected}/${WIN_HEARTS}`;
+    if (veggiesOverlay) veggiesOverlay.textContent = `${veggiesCollected}/${WIN_VEGGIES}`;
     if (distanceOverlay) distanceOverlay.textContent = Math.floor(distance) + 'm';
 }
 
