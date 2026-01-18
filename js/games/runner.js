@@ -3,7 +3,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
-const GRAVITY = 0.6;
+const GRAVITY = 0.5;
 const JUMP_STRENGTH = -15;
 const PLAYER_SIZE = 50;
 const GROUND_HEIGHT = 100;
@@ -44,7 +44,7 @@ const particles = new ParticleSystem(canvas, ctx);
 // Touch controls
 const controls = new TouchControls(canvas);
 
-controls.on('tap', () => {
+controls.on('touchstart', () => {
     if (!gameRunning) {
         startGame();
         return;
@@ -175,7 +175,7 @@ function update() {
     if (veggieTimer > 60 / gameSpeed) {
         if (Math.random() < 0.6) {
             // Check if there's an obstacle near the right edge of screen
-            const heartY = random(canvas.height - GROUND_HEIGHT - 200, canvas.height - GROUND_HEIGHT - 50);
+            const heartY = random(canvas.height - GROUND_HEIGHT - 200, canvas.height - GROUND_HEIGHT - 100);
             let canSpawn = true;
             
             // Don't spawn if there's an obstacle that would overlap
@@ -248,12 +248,13 @@ function update() {
             continue;
         }
         
-        // Check collection
+        // Check collection with larger, more forgiving hitbox
+        const hitboxSize = veggies[i].size * 1.75; // 75% larger hitbox
         if (!veggies[i].collected && checkCollision(player, {
-            x: veggies[i].x - veggies[i].size / 2,
-            y: veggies[i].y - veggies[i].size / 2,
-            width: veggies[i].size,
-            height: veggies[i].size
+            x: veggies[i].x - hitboxSize / 2,
+            y: veggies[i].y - hitboxSize / 2,
+            width: hitboxSize,
+            height: hitboxSize
         })) {
             veggies[i].collected = true;
             veggiesCollected++;
@@ -347,8 +348,11 @@ function draw() {
         ctx.fill();
     });
     
-    // Draw ground
-    ctx.fillStyle = '#8B7355'; // Brown ground
+    // Draw ground with sand gradient
+    const groundGradient = ctx.createLinearGradient(0, canvas.height - GROUND_HEIGHT, 0, canvas.height);
+    groundGradient.addColorStop(0, '#D4C5A9'); // Slightly darker sand
+    groundGradient.addColorStop(1, '#E8DCC8'); // Light sand
+    ctx.fillStyle = groundGradient;
     ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
     
     // Ground detail
