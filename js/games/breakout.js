@@ -21,6 +21,10 @@ let bricks = [];
 let lives = 3;
 let gameRunning = false;
 let bricksRemaining = 0;
+let animationFrameId = null;
+let currentBallSpeed = 4;
+const BASE_BALL_SPEED = 4;
+const SPEED_INCREASE_PER_HIT = 0.25;
 
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
@@ -56,8 +60,10 @@ function initGame() {
     paddle.x = canvas.width / 2 - PADDLE_WIDTH / 2;
     ball.x = canvas.width / 2;
     ball.y = canvas.height - 60;
-    ball.dx = 4;
-    ball.dy = -4;
+    currentBallSpeed = BASE_BALL_SPEED;
+    const angle = Math.PI / 4; // 45 degrees
+    ball.dx = currentBallSpeed * Math.sin(angle);
+    ball.dy = -currentBallSpeed * Math.cos(angle);
     lives = 3;
     gameRunning = false;
     
@@ -85,10 +91,16 @@ function initGame() {
 }
 
 function startGame() {
-    // Reset ball velocity to ensure consistent speed
-    const ballSpeed = 4;
-    ball.dx = ballSpeed;
-    ball.dy = -ballSpeed;
+    // Cancel any existing game loop to prevent multiple loops
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    
+    // Reset ball velocity with current speed
+    const angle = Math.PI / 4; // 45 degrees
+    ball.dx = currentBallSpeed * Math.sin(angle);
+    ball.dy = -currentBallSpeed * Math.cos(angle);
     gameRunning = true;
     setPlayingMode(true);
     gameLoop();
@@ -114,13 +126,15 @@ function update() {
         ball.x < paddle.x + paddle.width &&
         ball.dy > 0) {
         
+        // Increase ball speed with each hit
+        currentBallSpeed += SPEED_INCREASE_PER_HIT;
+        
         // Calculate bounce angle based on where ball hits paddle
         const hitPos = (ball.x - paddle.x) / paddle.width;
         const angle = (hitPos - 0.5) * Math.PI / 3; // -60 to 60 degrees
-        const speed = 4; // Keep constant speed
         
-        ball.dx = speed * Math.sin(angle);
-        ball.dy = -speed * Math.cos(angle);
+        ball.dx = currentBallSpeed * Math.sin(angle);
+        ball.dy = -currentBallSpeed * Math.cos(angle);
         
         particles.createParticles(ball.x, ball.y, 10, '#ff4081');
     }
@@ -135,11 +149,13 @@ function update() {
             return;
         }
         
-        // Reset ball
+        // Reset ball with base speed
         ball.x = canvas.width / 2;
         ball.y = canvas.height - 60;
-        ball.dx = 4;
-        ball.dy = -4;
+        currentBallSpeed = BASE_BALL_SPEED; // Reset to base speed
+        const angle = Math.PI / 4; // 45 degrees
+        ball.dx = currentBallSpeed * Math.sin(angle);
+        ball.dy = -currentBallSpeed * Math.cos(angle);
         gameRunning = false;
     }
     
@@ -251,7 +267,7 @@ function gameLoop() {
     draw();
     
     if (gameRunning || lives > 0) {
-        requestAnimationFrame(gameLoop);
+        animationFrameId = requestAnimationFrame(gameLoop);
     }
 }
 
