@@ -243,7 +243,7 @@ function update() {
                     player.x + player.width / 2,
                     player.y + player.height,
                     10,
-                    '#ff9fba'
+                    PALETTE.PINK_PASTEL
                 );
             }
         });
@@ -289,8 +289,8 @@ function update() {
 function draw() {
     // Clear canvas with gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#a50b5e');
-    gradient.addColorStop(1, '#672940');
+    gradient.addColorStop(0, PALETTE.RED_DARK);
+    gradient.addColorStop(1, PALETTE.BROWN_MAHOGANY);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
@@ -303,7 +303,7 @@ function draw() {
                 platform.x + platform.width / 2,
                 platform.y + platform.height / 2,
                 platform.width * 0.8,
-                '#ff57a4'
+                PALETTE.PINK_HOT
             );
         } else {
             // Moving platforms - different color
@@ -312,26 +312,26 @@ function draw() {
                 platform.x + platform.width / 2,
                 platform.y + platform.height / 2,
                 platform.width * 0.8,
-                '#ff9fba'
+                PALETTE.PINK_PASTEL
             );
         }
     });
     
     // Draw player
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = PALETTE.WHITE;
     ctx.beginPath();
     ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 2, 0, Math.PI * 2);
     ctx.fill();
     
     // Player face
-    ctx.fillStyle = '#fd3b54';
+    ctx.fillStyle = PALETTE.RED_PRIMARY;
     ctx.beginPath();
     ctx.arc(player.x + player.width / 2 - 6, player.y + player.height / 2 - 4, 3, 0, Math.PI * 2);
     ctx.arc(player.x + player.width / 2 + 6, player.y + player.height / 2 - 4, 3, 0, Math.PI * 2);
     ctx.fill();
     
     // Smile
-    ctx.strokeStyle = '#fd3b54';
+    ctx.strokeStyle = PALETTE.RED_PRIMARY;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(player.x + player.width / 2, player.y + player.height / 2 + 2, 8, 0.2, Math.PI - 0.2);

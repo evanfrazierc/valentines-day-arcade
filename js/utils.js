@@ -211,7 +211,7 @@ function showWinScreen(message, onRestart, onHome) {
 
 // Confetti effect
 function createConfetti() {
-    const colors = ['#fd3b54', '#ff57a4', '#ff9fba', '#d10841', '#a50b5e'];
+    const colors = [PALETTE.RED_PRIMARY, PALETTE.PINK_HOT, PALETTE.PINK_PASTEL, PALETTE.RED_CHERRY, PALETTE.RED_DARK];
     
     for (let i = 0; i < 100; i++) {
         setTimeout(() => {

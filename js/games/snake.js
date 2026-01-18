@@ -134,7 +134,7 @@ function update() {
             (scrap.x + 1) * TILE_SIZE,
             (scrap.y + 1) * TILE_SIZE,
             20,
-            '#c37557'
+            PALETTE.BROWN_CHOCOLATE
         );
         
         if (scrapsCollected >= WIN_SCRAPS) {
@@ -151,7 +151,7 @@ function update() {
 
 function draw() {
     // Clear canvas with hardwood floor color
-    ctx.fillStyle = '#837050';
+    ctx.fillStyle = PALETTE.BROWN_TAN;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw oval rug in center
@@ -167,27 +167,27 @@ function draw() {
     ctx.fill();
     
     // Main rug
-    ctx.fillStyle = '#8e94c5';
+    ctx.fillStyle = PALETTE.PURPLE_MEDIUM;
     ctx.beginPath();
     ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX, rugRadiusY, 0, 0, Math.PI * 2);
     ctx.fill();
     
     // Rug border pattern - light pale pink
-    ctx.strokeStyle = '#ff9fba';
+    ctx.strokeStyle = PALETTE.PINK_PASTEL;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX - 8, rugRadiusY - 8, 0, 0, Math.PI * 2);
     ctx.stroke();
     
     // Inner decorative border
-    ctx.strokeStyle = '#ffd9cc';
+    ctx.strokeStyle = PALETTE.PINK_PALE;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX - 18, rugRadiusY - 18, 0, 0, Math.PI * 2);
     ctx.stroke();
     
     // Valentine's Day heart decorations on rug
-    ctx.fillStyle = '#ff9fba';
+    ctx.fillStyle = PALETTE.PINK_PASTEL;
     const heartSize = TILE_SIZE * 0.8;
     
     // Draw hearts at various positions around the rug - moved towards border
@@ -221,7 +221,7 @@ function draw() {
     const centerSize = TILE_SIZE * 2;
     
     // Outer diamond
-    ctx.strokeStyle = '#ffd9cc';
+    ctx.strokeStyle = PALETTE.PINK_PALE;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(rugCenterX, rugCenterY - centerSize * 0.5);
@@ -232,7 +232,7 @@ function draw() {
     ctx.stroke();
     
     // Inner diamond
-    ctx.strokeStyle = '#ff9fba';
+    ctx.strokeStyle = PALETTE.PINK_PASTEL;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(rugCenterX, rugCenterY - centerSize * 0.3);
@@ -243,13 +243,13 @@ function draw() {
     ctx.stroke();
     
     // Center circle
-    ctx.fillStyle = '#ffd9cc';
+    ctx.fillStyle = PALETTE.PINK_PALE;
     ctx.beginPath();
     ctx.arc(rugCenterX, rugCenterY, centerSize * 0.1, 0, Math.PI * 2);
     ctx.fill();
     
     // Small decorative circles at diamond corners
-    ctx.fillStyle = '#ff9fba';
+    ctx.fillStyle = PALETTE.PINK_PASTEL;
     const circleRadius = centerSize * 0.06;
     [
         { x: rugCenterX, y: rugCenterY - centerSize * 0.5 },
@@ -292,9 +292,9 @@ function draw() {
         const centerY = segment.y * TILE_SIZE + TILE_SIZE / 2;
         
         if (isHead) {
-            ctx.fillStyle = '#945140'; // Saddle brown for head
+            ctx.fillStyle = PALETTE.BROWN_SADDLE; // Saddle brown for head
         } else {
-            ctx.fillStyle = '#000000'; // Black for body
+            ctx.fillStyle = PALETTE.BLACK; // Black for body
         }
         
         // Draw main body
@@ -312,7 +312,7 @@ function draw() {
         const shouldShowBackLegs = isTail && direction.y !== 1; // Hide back legs when moving down
         
         if (shouldShowFrontLegs || shouldShowBackLegs) {
-            ctx.fillStyle = '#9f4f3a'; // Sienna for legs
+            ctx.fillStyle = PALETTE.BROWN_SIENNA; // Sienna for legs
             const legWidth = TILE_SIZE / 6;
             const legHeight = TILE_SIZE / 3;
             
@@ -352,7 +352,7 @@ function draw() {
                 tailDirection.y = -direction.y;
             }
             
-            ctx.fillStyle = '#945140';
+            ctx.fillStyle = PALETTE.BROWN_SADDLE;
             ctx.save();
             ctx.translate(centerX, centerY);
             
@@ -369,7 +369,7 @@ function draw() {
         // Draw floppy ears and face on head
         if (isHead) {
             // Floppy ears
-            ctx.fillStyle = '#000000'; // Black ears
+            ctx.fillStyle = PALETTE.BLACK; // Black ears
             
             if (direction.x !== 0) {
                 // Horizontal movement - ears on top and bottom, angled back
@@ -426,7 +426,7 @@ function draw() {
             }
             
             // Eyes
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = PALETTE.BLACK;
             const eyeSize = TILE_SIZE / 5;
             const noseSize = TILE_SIZE / 6;
             const eyeOffsetX = TILE_SIZE / 3;
@@ -436,7 +436,7 @@ function draw() {
                 // Snout - long brown triangle extending in front of head
                 const snoutLength = TILE_SIZE * 0.8;
                 const snoutWidth = TILE_SIZE * 0.4;
-                ctx.fillStyle = '#945140';
+                ctx.fillStyle = PALETTE.BROWN_SADDLE;
                 ctx.beginPath();
                 if (direction.x > 0) {
                     // Moving right - triangle points right
@@ -453,7 +453,7 @@ function draw() {
                 ctx.fill();
                 
                 // Black nose at tip of snout
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = PALETTE.BLACK;
                 ctx.beginPath();
                 ctx.arc(
                     centerX + (direction.x > 0 ? snoutLength : -snoutLength),
@@ -466,7 +466,7 @@ function draw() {
                 const eyeX = centerX + (direction.x > 0 ? eyeOffsetX : -eyeOffsetX);
                 
                 // Top eye
-                ctx.fillStyle = '#FFF';
+                ctx.fillStyle = PALETTE.WHITE;
                 ctx.beginPath();
                 ctx.arc(
                     eyeX,
@@ -474,12 +474,12 @@ function draw() {
                     eyeSize * 1.5, 0, Math.PI * 2
                 );
                 ctx.fill();
-                ctx.strokeStyle = '#000';
+                ctx.strokeStyle = PALETTE.BLACK;
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
                 // Top pupil
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = PALETTE.BLACK;
                 ctx.beginPath();
                 ctx.arc(
                     eyeX,
@@ -489,7 +489,7 @@ function draw() {
                 ctx.fill();
                 
                 // Bottom eye
-                ctx.fillStyle = '#FFF';
+                ctx.fillStyle = PALETTE.WHITE;
                 ctx.beginPath();
                 ctx.arc(
                     eyeX,
@@ -497,12 +497,12 @@ function draw() {
                     eyeSize * 1.5, 0, Math.PI * 2
                 );
                 ctx.fill();
-                ctx.strokeStyle = '#000';
+                ctx.strokeStyle = PALETTE.BLACK;
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
                 // Bottom pupil
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = PALETTE.BLACK;
                 ctx.beginPath();
                 ctx.arc(
                     eyeX,
@@ -523,7 +523,7 @@ function draw() {
                 // Snout - long brown triangle extending in front of head
                 const snoutLength = TILE_SIZE * 0.8;
                 const snoutWidth = TILE_SIZE * 0.4;
-                ctx.fillStyle = '#945140';
+                ctx.fillStyle = PALETTE.BROWN_SADDLE;
                 ctx.beginPath();
                 if (direction.y > 0) {
                     // Moving down - triangle points down
@@ -540,7 +540,7 @@ function draw() {
                 ctx.fill();
                 
                 // Black nose at tip of snout
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = PALETTE.BLACK;
                 ctx.beginPath();
                 ctx.arc(
                     centerX,
@@ -553,7 +553,7 @@ function draw() {
                 const eyeY = centerY + (direction.y > 0 ? eyeOffsetY : -eyeOffsetY);
                 
                 // Left eye
-                ctx.fillStyle = '#FFF';
+                ctx.fillStyle = PALETTE.WHITE;
                 ctx.beginPath();
                 ctx.arc(
                     segment.x * TILE_SIZE + eyeOffsetX,
@@ -561,12 +561,12 @@ function draw() {
                     eyeSize * 1.5, 0, Math.PI * 2
                 );
                 ctx.fill();
-                ctx.strokeStyle = '#000';
+                ctx.strokeStyle = PALETTE.BLACK;
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
                 // Left pupil
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = PALETTE.BLACK;
                 ctx.beginPath();
                 ctx.arc(
                     segment.x * TILE_SIZE + eyeOffsetX,
@@ -576,7 +576,7 @@ function draw() {
                 ctx.fill();
                 
                 // Right eye
-                ctx.fillStyle = '#FFF';
+                ctx.fillStyle = PALETTE.WHITE;
                 ctx.beginPath();
                 ctx.arc(
                     segment.x * TILE_SIZE + TILE_SIZE - eyeOffsetX,
@@ -584,12 +584,12 @@ function draw() {
                     eyeSize * 1.5, 0, Math.PI * 2
                 );
                 ctx.fill();
-                ctx.strokeStyle = '#000';
+                ctx.strokeStyle = PALETTE.BLACK;
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
                 // Right pupil
-                ctx.fillStyle = '#000';
+                ctx.fillStyle = PALETTE.BLACK;
                 ctx.beginPath();
                 ctx.arc(
                     segment.x * TILE_SIZE + TILE_SIZE - eyeOffsetX,

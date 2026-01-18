@@ -19,7 +19,7 @@ const SHAPES = [
     [[0, 0, 1], [1, 1, 1]]  // J
 ];
 
-const COLORS = ['#fd3b54', '#ff57a4', '#ff9fba', '#d10841', '#a50b5e', '#fe8588', '#ff4c41'];
+const COLORS = [PALETTE.RED_PRIMARY, PALETTE.PINK_HOT, PALETTE.PINK_PASTEL, PALETTE.RED_CHERRY, PALETTE.RED_DARK, PALETTE.CORAL_PINK, PALETTE.RED_VIBRANT];
 
 // Game state
 let board = [];
@@ -244,8 +244,8 @@ function update() {
 function draw() {
     // Clear canvas
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#672940');
-    gradient.addColorStop(1, '#a50b5e');
+    gradient.addColorStop(0, PALETTE.BROWN_MAHOGANY);
+    gradient.addColorStop(1, PALETTE.RED_DARK);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
@@ -327,7 +327,7 @@ function draw() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.fillRect(0, canvas.logicalHeight / 2 - 40, canvas.logicalWidth, 80);
         
-        ctx.fillStyle = '#ffffff';
+        ctx.fillStyle = PALETTE.WHITE;
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('Tap to Start!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);

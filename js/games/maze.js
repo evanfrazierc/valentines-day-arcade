@@ -153,7 +153,7 @@ function tapLane(lane) {
                 lane * LANE_WIDTH + LANE_WIDTH / 2,
                 TARGET_Y,
                 20,
-                '#fbbc2a'
+                PALETTE.YELLOW_GOLD
             );
         } else {
             // Good hit
@@ -163,7 +163,7 @@ function tapLane(lane) {
                 lane * LANE_WIDTH + LANE_WIDTH / 2,
                 TARGET_Y,
                 10,
-                '#ff9fba'
+                PALETTE.PINK_PASTEL
             );
         }
         
@@ -258,8 +258,8 @@ function update() {
 function draw() {
     // Clear canvas with gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#672940');
-    gradient.addColorStop(1, '#a50b5e');
+    gradient.addColorStop(0, PALETTE.BROWN_MAHOGANY);
+    gradient.addColorStop(1, PALETTE.RED_DARK);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
@@ -274,7 +274,7 @@ function draw() {
     }
     
     // Draw target line
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = PALETTE.WHITE;
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, TARGET_Y);
@@ -291,12 +291,12 @@ function draw() {
             const x = note.lane * LANE_WIDTH + LANE_WIDTH / 2;
             
             // Color based on position
-            let color = '#ff57a4';
+            let color = PALETTE.PINK_HOT;
             const distanceFromTarget = Math.abs(note.y - TARGET_Y);
             if (distanceFromTarget < HIT_WINDOW) {
-                color = '#fbbc2a'; // Yellow for perfect
+                color = PALETTE.YELLOW_GOLD; // Yellow for perfect
             } else if (distanceFromTarget < GOOD_WINDOW) {
-                color = '#ff9fba'; // Light pink for good
+                color = PALETTE.PINK_PASTEL; // Light pink for good
             }
             
             drawHeart(ctx, x, note.y, note.size, color);
@@ -309,7 +309,7 @@ function draw() {
     
     // Draw combo multiplier
     if (combo > 1 && gameRunning) {
-        ctx.fillStyle = '#fbbc2a';
+        ctx.fillStyle = PALETTE.YELLOW_GOLD;
         ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'center';
         ctx.fillText(`${combo}x`, canvas.logicalWidth / 2, 60);

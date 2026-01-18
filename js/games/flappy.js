@@ -44,7 +44,7 @@ controls.on('touchstart', () => {
     }
     
     bird.dy = FLAP_STRENGTH;
-    particles.createParticles(bird.x, bird.y + bird.height / 2, 5, '#ff9fba');
+    particles.createParticles(bird.x, bird.y + bird.height / 2, 5, PALETTE.PINK_PASTEL);
 });
 
 controls.init();
@@ -118,7 +118,7 @@ function update() {
         if (!pipes[i].scored && bird.x > pipes[i].x + PIPE_WIDTH) {
             pipes[i].scored = true;
             score++;
-            particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, '#ff57a4');
+            particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, PALETTE.PINK_HOT);
             
             if (score >= WIN_SCORE) {
                 winGame();
@@ -149,13 +149,13 @@ function update() {
 function draw() {
     // Clear canvas with gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#ff9fba');
-    gradient.addColorStop(1, '#ff57a4');
+    gradient.addColorStop(0, PALETTE.PINK_PASTEL);
+    gradient.addColorStop(1, PALETTE.PINK_HOT);
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw ground
-    ctx.fillStyle = '#672940';
+    ctx.fillStyle = PALETTE.BROWN_MAHOGANY;
     ctx.fillRect(0, canvas.logicalHeight - 50, canvas.logicalWidth, 50);
     
     // Ground pattern
@@ -167,26 +167,26 @@ function draw() {
     // Draw pipes
     pipes.forEach(pipe => {
         // Top pipe
-        ctx.fillStyle = '#a50b5e';
+        ctx.fillStyle = PALETTE.RED_DARK;
         ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
         
         // Top pipe cap with hearts
-        ctx.fillStyle = '#fd3b54';
+        ctx.fillStyle = PALETTE.RED_PRIMARY;
         ctx.fillRect(pipe.x - 5, pipe.topHeight - 20, PIPE_WIDTH + 10, 20);
         
         // Small heart decoration
-        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.topHeight - 10, 15, '#ff9fba');
+        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.topHeight - 10, 15, PALETTE.PINK_PASTEL);
         
         // Bottom pipe
-        ctx.fillStyle = '#a50b5e';
+        ctx.fillStyle = PALETTE.RED_DARK;
         ctx.fillRect(pipe.x, pipe.bottomY, PIPE_WIDTH, canvas.logicalHeight - pipe.bottomY - 50);
         
         // Bottom pipe cap with hearts
-        ctx.fillStyle = '#fd3b54';
+        ctx.fillStyle = PALETTE.RED_PRIMARY;
         ctx.fillRect(pipe.x - 5, pipe.bottomY, PIPE_WIDTH + 10, 20);
         
         // Small heart decoration
-        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 10, 15, '#ff9fba');
+        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 10, 15, PALETTE.PINK_PASTEL);
     });
     
     // Draw bird
@@ -195,10 +195,10 @@ function draw() {
     ctx.rotate(bird.rotation * Math.PI / 180);
     
     // Bird body (heart shape)
-    drawHeart(ctx, 0, 0, bird.width, '#ffffff');
+    drawHeart(ctx, 0, 0, bird.width, PALETTE.WHITE);
     
     // Eye
-    ctx.fillStyle = '#000000';
+    ctx.fillStyle = PALETTE.BLACK;
     ctx.beginPath();
     ctx.arc(3, -3, 3, 0, Math.PI * 2);
     ctx.fill();

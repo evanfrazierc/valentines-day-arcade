@@ -53,7 +53,7 @@ controls.on('touchstart', () => {
     if (!player.grounded && player.dy < 0 && player.canDoubleJump) {
         player.dy = JUMP_STRENGTH * 0.9;
         player.canDoubleJump = false;
-        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#8bdf7d');
+        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, PALETTE.GREEN_LIGHT);
     }
     // Regular jump from ground
     else if (player.grounded) {
@@ -253,7 +253,7 @@ function update() {
             veggies[i].collected = true;
             veggiesCollected++;
             
-            particles.createParticles(veggies[i].x, veggies[i].y, 15, '#4aa769');
+            particles.createParticles(veggies[i].x, veggies[i].y, 15, PALETTE.GREEN_MEDIUM);
             
             if (veggiesCollected >= WIN_VEGGIES) {
                 winGame();
@@ -320,8 +320,8 @@ function update() {
 function draw() {
     // Clear canvas with gradient sky - early morning dawn
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#2d383a'); // Dark blue-grey
-    gradient.addColorStop(1, '#fe8a7e'); // Soft pink/coral
+    gradient.addColorStop(0, PALETTE.BLUE_DARKEST); // Dark blue-grey
+    gradient.addColorStop(1, PALETTE.CORAL_LIGHT); // Soft pink/coral
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
@@ -344,8 +344,8 @@ function draw() {
     
     // Draw ground with earthy gradient
     const groundGradient = ctx.createLinearGradient(0, canvas.logicalHeight - GROUND_HEIGHT, 0, canvas.logicalHeight);
-    groundGradient.addColorStop(0, '#672940'); // Deep brown
-    groundGradient.addColorStop(1, '#baae6e'); // Light tan
+    groundGradient.addColorStop(0, PALETTE.BROWN_MAHOGANY); // Deep brown
+    groundGradient.addColorStop(1, PALETTE.BROWN_MEDIUM); // Light tan
     ctx.fillStyle = groundGradient;
     ctx.fillRect(0, canvas.logicalHeight - GROUND_HEIGHT, canvas.logicalWidth, GROUND_HEIGHT);
     
@@ -365,7 +365,7 @@ function draw() {
     ctx.font = `${player.width}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#000000'; // Set color for emoji
+    ctx.fillStyle = PALETTE.BLACK; // Set color for emoji
     ctx.fillText('🏃', 0, 0);
     
     ctx.restore();
@@ -375,7 +375,7 @@ function draw() {
         ctx.font = `${dog.size}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = PALETTE.BLACK;
         ctx.fillText(dog.emoji, dog.x, dog.y + dog.size / 2);
     }
     
@@ -384,7 +384,7 @@ function draw() {
         ctx.font = `${obstacle.height * 1.2}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = PALETTE.BLACK;
         ctx.fillText(obstacle.emoji, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
     });
     
@@ -394,7 +394,7 @@ function draw() {
             ctx.font = `${veggie.size * 1.5}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#000000'; // Set color for emoji
+            ctx.fillStyle = PALETTE.BLACK; // Set color for emoji
             ctx.fillText(veggie.emoji, veggie.x + veggie.size / 2, veggie.y + veggie.size / 2);
         }
     });

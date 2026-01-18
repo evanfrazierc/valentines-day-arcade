@@ -69,7 +69,7 @@ function initGame() {
     
     // Create bricks
     bricks = [];
-    const colors = ['#fd3b54', '#ff57a4', '#ff9fba', '#d10841', '#a50b5e'];
+    const colors = [PALETTE.RED_PRIMARY, PALETTE.PINK_HOT, PALETTE.PINK_PASTEL, PALETTE.RED_CHERRY, PALETTE.RED_DARK];
     
     for (let row = 0; row < BRICK_ROWS; row++) {
         bricks[row] = [];
@@ -136,7 +136,7 @@ function update() {
         ball.dx = currentBallSpeed * Math.sin(angle);
         ball.dy = -currentBallSpeed * Math.cos(angle);
         
-        particles.createParticles(ball.x, ball.y, 10, '#ff57a4');
+        particles.createParticles(ball.x, ball.y, 10, PALETTE.PINK_HOT);
     }
     
     // Ball falls below paddle
@@ -215,32 +215,32 @@ function draw() {
     });
     
     // Draw paddle
-    ctx.fillStyle = '#ff57a4';
+    ctx.fillStyle = PALETTE.PINK_HOT;
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
     
     // Add gradient
     const gradient = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
-    gradient.addColorStop(0, '#ff9fba');
-    gradient.addColorStop(1, '#ff57a4');
+    gradient.addColorStop(0, PALETTE.PINK_PASTEL);
+    gradient.addColorStop(1, PALETTE.PINK_HOT);
     ctx.fillStyle = gradient;
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
     
     // Round corners
-    ctx.fillStyle = '#ff9fba';
+    ctx.fillStyle = PALETTE.PINK_PASTEL;
     ctx.beginPath();
     ctx.arc(paddle.x + 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
     ctx.arc(paddle.x + paddle.width - 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
     ctx.fill();
     
     // Draw ball
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = PALETTE.WHITE;
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
     ctx.fill();
     
     // Ball glow
     ctx.shadowBlur = 15;
-    ctx.shadowColor = '#ff57a4';
+    ctx.shadowColor = PALETTE.PINK_HOT;
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
     ctx.fill();
