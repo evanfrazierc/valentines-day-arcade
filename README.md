@@ -6,8 +6,8 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 
 1. **Love Snake** (For Sarah) - Classic snake game with heart collection
 2. **Heartbreaker** (For Mike) - Breakout with heart-shaped bricks
-3. **Cupid's Rush** (For Emma) - Endless runner with obstacles
-4. **Love Bounce** (For Alex) - Doodle Jump style bouncing game
+3. **Super Veggie Bro** (For Emma) - Endless runner collecting veggies while avoiding meat
+4. **Love Bounce** (For Alex) - Doodle Jump style bouncing game with tilt controls
 5. **Flappy Hearts** (For Jessica) - Flappy Bird clone with hearts
 6. **Maze of Love** (For Chris) - Navigate a maze collecting hearts
 7. **Love Blocks** (For Taylor) - Tetris with heart-shaped pieces
@@ -15,12 +15,15 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 ## 📱 Features
 
 - ✨ Fully mobile-optimized with touch controls
-- 🎨 Beautiful Valentine's Day theming
+- 🎨 Beautiful Valentine's Day theming with custom visuals
 - 💕 Personalized win messages for each person
 - 🎯 Simple, classic arcade gameplay
 - 📏 Responsive design for all screen sizes
 - ⚡ Fast loading with vanilla JavaScript
 - 🏆 Each game takes 2-5 minutes to complete
+- 🎮 iOS motion controls support (Love Bounce)
+- 🥦 Custom emoji-based graphics (Super Veggie Bro)
+- ☁️ Dynamic environmental effects (clouds, animated backgrounds)
 
 ## 🚀 Deployment
 
@@ -45,10 +48,16 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 
 ## 🎮 Controls
 
-All games use touch controls:
-- **Tap**: Select/Action/Jump
-- **Swipe**: Directional movement
-- **Drag**: Move paddle/character
+All games use intuitive touch controls:
+- **Tap/Touch**: Select, action, jump, or double jump
+- **Swipe**: Directional movement (Snake, Maze)
+- **Drag**: Move paddle or character
+- **Tilt**: Device motion controls (Love Bounce on iOS - requires permission)
+
+### Super Veggie Bro Specific Controls
+- **Tap**: Jump (instant response)
+- **Tap while airborne**: Double jump (works during upward momentum)
+- Goal: Collect 30 veggies while avoiding meat obstacles
 
 ## 💻 Local Development
 

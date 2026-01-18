@@ -1,4 +1,4 @@
-// Cupid's Rush Game - For Emma
+// Cupid's Rush Game - For Ryan
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -36,7 +36,6 @@ let gameSpeed = 5;
 let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
-let lastTap = 0;
 
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
@@ -50,23 +49,18 @@ controls.on('touchstart', () => {
         return;
     }
     
-    const now = Date.now();
-    const timeSinceLast = now - lastTap;
-    
-    // Double tap for double jump
-    if (timeSinceLast < 300 && player.canDoubleJump) {
+    // Double jump - available while rising and if not used yet
+    if (!player.grounded && player.dy < 0 && player.canDoubleJump) {
         player.dy = JUMP_STRENGTH * 0.9;
         player.canDoubleJump = false;
-        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#87CEEB');
+        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#90EE90');
     }
-    // Single tap for regular jump
+    // Regular jump from ground
     else if (player.grounded) {
         player.dy = JUMP_STRENGTH;
         player.grounded = false;
         player.canDoubleJump = true;
     }
-    
-    lastTap = now;
 });
 
 controls.init();
@@ -348,10 +342,10 @@ function draw() {
         ctx.fill();
     });
     
-    // Draw ground with sand gradient
+    // Draw ground with earthy gradient
     const groundGradient = ctx.createLinearGradient(0, canvas.height - GROUND_HEIGHT, 0, canvas.height);
-    groundGradient.addColorStop(0, '#D4C5A9'); // Slightly darker sand
-    groundGradient.addColorStop(1, '#E8DCC8'); // Light sand
+    groundGradient.addColorStop(0, '#6B4423'); // Deep brown
+    groundGradient.addColorStop(1, '#C9A876'); // Light tan
     ctx.fillStyle = groundGradient;
     ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
     
@@ -449,7 +443,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Emma, running into you was the best thing ever! 💖",
+        "Ryan, running into you was the best thing ever! 💖",
         restartGame
     );
 }
