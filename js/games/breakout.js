@@ -310,6 +310,7 @@ function draw() {
                 
                 // Draw cat emoji if brick has cat
                 if (brick.hasCat) {
+                    ctx.fillStyle = '#000000';
                     ctx.font = '16px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -321,6 +322,7 @@ function draw() {
     
     // Draw falling cats
     fallingCats.forEach(cat => {
+        ctx.fillStyle = '#000000';
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';

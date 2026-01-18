@@ -252,7 +252,7 @@ function update() {
             platform.y += diff;
         });
         
-        // Move wine bottles down with camera
+        // Move wine glasses down with camera
         wines.forEach(wine => {
             wine.y += diff;
         });
@@ -399,15 +399,17 @@ function draw() {
     
     // Draw platforms as clouds
     platforms.forEach(platform => {
+        ctx.fillStyle = '#FFFFFF';
         ctx.font = `${PLATFORM_HEIGHT * 5}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('☁️', platform.x + platform.width / 2, platform.y + platform.height / 2);
     });
     
-    // Draw wine bottles
+    // Draw wine glasses
     wines.forEach(wine => {
         if (!wine.collected) {
+            ctx.fillStyle = '#8B0000';
             ctx.font = '24px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -419,6 +421,7 @@ function draw() {
     ctx.save();
     ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
     ctx.rotate(player.rotation);
+    ctx.fillStyle = '#FFD700';
     ctx.font = `${PLAYER_SIZE}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
