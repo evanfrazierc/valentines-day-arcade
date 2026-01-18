@@ -149,8 +149,10 @@ function update() {
     obstacleTimer++;
     if (obstacleTimer >= nextObstacleTime) {
         const height = random(50, 90);
+        // Spawn further right to account for emoji size extending beyond obstacle bounds
+        const spawnOffset = height * 0.6; // Half of emoji width extension
         obstacles.push({
-            x: canvas.logicalWidth,
+            x: canvas.logicalWidth + spawnOffset,
             y: canvas.logicalHeight - GROUND_HEIGHT - height,
             width: OBSTACLE_WIDTH,
             height: height,
@@ -213,8 +215,9 @@ function update() {
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= gameSpeed;
         
-        // Remove off-screen obstacles
-        if (obstacles[i].x + obstacles[i].width < 0) {
+        // Remove off-screen obstacles - account for emoji size extending beyond width
+        const emojiExtension = obstacles[i].height * 0.6; // Extra space for emoji
+        if (obstacles[i].x + obstacles[i].width + emojiExtension < 0) {
             obstacles.splice(i, 1);
             continue;
         }
@@ -381,11 +384,15 @@ function draw() {
     
     // Draw obstacles as varied meat emojis
     obstacles.forEach(obstacle => {
-        ctx.font = `${obstacle.height * 1.2}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = PALETTE.BLACK;
-        ctx.fillText(obstacle.emoji, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
+        // Only draw if on screen (with margin for emoji size)
+        const emojiExtension = obstacle.height * 0.6;
+        if (obstacle.x + obstacle.width + emojiExtension >= 0 && obstacle.x - emojiExtension <= canvas.logicalWidth) {
+            ctx.font = `${obstacle.height * 1.2}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = PALETTE.BLACK;
+            ctx.fillText(obstacle.emoji, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
+        }
     });
     
     // Draw veggie emojis

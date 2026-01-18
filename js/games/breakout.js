@@ -1,4 +1,4 @@
-// Heartbreaker Game - For Juliette
+// Kitty Catcher Game - For Juliette
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -13,12 +13,18 @@ const BRICK_HEIGHT = 20;
 const BRICK_PADDING = 5;
 const BRICK_OFFSET_TOP = 60;
 const BRICK_OFFSET_LEFT = 10;
+const CATS_TO_RESCUE = 5;
+const CAT_FALL_SPEED = 2;
+const CAT_EMOJIS = ['🐱', '😺', '😸', '😹', '😻', '😼', '😽', '🙀', '😿', '😾', '🐈', '🐈‍⬛'];
 
 // Game state
 let paddle = { x: canvas.logicalWidth / 2 - PADDLE_WIDTH / 2, y: canvas.logicalHeight - 40, width: PADDLE_WIDTH, height: PADDLE_HEIGHT };
 let ball = { x: canvas.logicalWidth / 2, y: canvas.logicalHeight - 60, dx: 4, dy: -4, radius: BALL_RADIUS };
+let ballTrail = []; // For motion blur effect
 let bricks = [];
+let fallingCats = [];
 let lives = 3;
+let catsRescued = 0;
 let gameRunning = false;
 let bricksRemaining = 0;
 let animationFrameId = null;
@@ -65,23 +71,57 @@ function initGame() {
     ball.dx = currentBallSpeed * Math.sin(angle);
     ball.dy = -currentBallSpeed * Math.cos(angle);
     lives = 3;
+    catsRescued = 0;
+    fallingCats = [];
     gameRunning = false;
     
     // Create bricks
     bricks = [];
     const colors = [PALETTE.RED_PRIMARY, PALETTE.PINK_HOT, PALETTE.PINK_PASTEL, PALETTE.RED_CHERRY, PALETTE.RED_DARK];
     
+    // Determine which bricks will have cats (concentrated in top rows)
+    const totalBricks = BRICK_ROWS * BRICK_COLS;
+    const catBrickCount = Math.max(5, Math.floor(totalBricks * 0.3)); // 30% have cats, minimum 5
+    const catIndices = [];
+    
+    // Weight cat placement toward top rows
+    // Row 0 (top): 50% chance, Row 1: 40%, Row 2: 30%, Row 3: 20%, Row 4: 10%
+    const rowWeights = [0.50, 0.40, 0.30, 0.20, 0.10];
+    
+    let brickIndex = 0;
+    for (let row = 0; row < BRICK_ROWS; row++) {
+        for (let col = 0; col < BRICK_COLS; col++) {
+            if (catIndices.length < catBrickCount && Math.random() < rowWeights[row]) {
+                catIndices.push(brickIndex);
+            }
+            brickIndex++;
+        }
+    }
+    
+    // If we didn't get enough cats, add more to top rows
+    while (catIndices.length < catBrickCount) {
+        const idx = Math.floor(Math.random() * BRICK_COLS * 2); // Only top 2 rows
+        if (!catIndices.includes(idx)) {
+            catIndices.push(idx);
+        }
+    }
+    
+    brickIndex = 0;
     for (let row = 0; row < BRICK_ROWS; row++) {
         bricks[row] = [];
         for (let col = 0; col < BRICK_COLS; col++) {
+            const hasCat = catIndices.includes(brickIndex);
             bricks[row][col] = {
                 x: BRICK_OFFSET_LEFT + col * (BRICK_WIDTH + BRICK_PADDING),
                 y: BRICK_OFFSET_TOP + row * (BRICK_HEIGHT + BRICK_PADDING),
                 width: BRICK_WIDTH,
                 height: BRICK_HEIGHT,
                 color: colors[row % colors.length],
-                visible: true
+                visible: true,
+                hasCat: hasCat,
+                catEmoji: hasCat ? CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)] : null
             };
+            brickIndex++;
         }
     }
     
@@ -107,6 +147,12 @@ function startGame() {
 }
 
 function update() {
+    // Add current ball position to trail
+    ballTrail.push({ x: ball.x, y: ball.y });
+    if (ballTrail.length > 8) {
+        ballTrail.shift(); // Keep only last 8 positions
+    }
+    
     // Move ball
     ball.x += ball.dx;
     ball.y += ball.dy;
@@ -159,6 +205,33 @@ function update() {
         gameRunning = false;
     }
     
+    // Update falling cats
+    for (let i = fallingCats.length - 1; i >= 0; i--) {
+        const cat = fallingCats[i];
+        cat.y += CAT_FALL_SPEED;
+        
+        // Check if paddle caught the cat
+        if (cat.y + 20 >= paddle.y && 
+            cat.y <= paddle.y + paddle.height &&
+            cat.x + 15 >= paddle.x && 
+            cat.x <= paddle.x + paddle.width) {
+            catsRescued++;
+            fallingCats.splice(i, 1);
+            particles.createParticles(cat.x + 15, cat.y + 10, 20, PALETTE.YELLOW_GOLD);
+            updateUI();
+            
+            // Check win condition
+            if (catsRescued >= CATS_TO_RESCUE) {
+                winGame();
+                return;
+            }
+        }
+        // Cat fell off screen
+        else if (cat.y > canvas.logicalHeight) {
+            fallingCats.splice(i, 1);
+        }
+    }
+    
     // Brick collision
     for (let row = 0; row < BRICK_ROWS; row++) {
         for (let col = 0; col < BRICK_COLS; col++) {
@@ -173,6 +246,15 @@ function update() {
                 brick.visible = false;
                 bricksRemaining--;
                 
+                // If brick has a cat, make it fall
+                if (brick.hasCat) {
+                    fallingCats.push({
+                        x: brick.x + brick.width / 2 - 15,
+                        y: brick.y + brick.height,
+                        emoji: brick.catEmoji
+                    });
+                }
+                
                 particles.createParticles(
                     brick.x + brick.width / 2,
                     brick.y + brick.height / 2,
@@ -182,8 +264,9 @@ function update() {
                 
                 updateUI();
                 
-                if (bricksRemaining === 0) {
-                    winGame();
+                // Check lose condition: no more bricks but haven't rescued 5 cats
+                if (bricksRemaining === 0 && catsRescued < CATS_TO_RESCUE) {
+                    gameOver();
                     return;
                 }
                 
@@ -195,23 +278,53 @@ function update() {
 
 function draw() {
     // Clear canvas
-    ctx.fillStyle = 'rgba(103, 41, 64, 0.1)';
+    ctx.fillStyle = 'rgb(103, 41, 64)';
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
-    // Draw bricks
+    // Draw bricks (rectangles)
     bricks.forEach(row => {
         row.forEach(brick => {
             if (brick.visible) {
-                // Draw heart-shaped brick
-                ctx.save();
-                ctx.translate(brick.x + brick.width / 2, brick.y + brick.height / 2);
+                // Draw rounded rectangle brick
+                const radius = 6;
+                ctx.fillStyle = brick.color;
+                ctx.beginPath();
+                ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
+                ctx.fill();
                 
-                // Draw heart
-                drawHeart(ctx, 0, 0, brick.width * 0.8, brick.color);
+                // Add subtle gradient overlay
+                const gradient = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + brick.height);
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
+                ctx.fill();
                 
-                ctx.restore();
+                // Add glossy border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
+                ctx.stroke();
+                
+                // Draw cat emoji if brick has cat
+                if (brick.hasCat) {
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(brick.catEmoji, brick.x + brick.width / 2, brick.y + brick.height / 2);
+                }
             }
         });
+    });
+    
+    // Draw falling cats
+    fallingCats.forEach(cat => {
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(cat.emoji, cat.x + 15, cat.y);
     });
     
     // Draw paddle
@@ -231,6 +344,15 @@ function draw() {
     ctx.arc(paddle.x + 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
     ctx.arc(paddle.x + paddle.width - 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
     ctx.fill();
+    
+    // Draw ball trail (motion blur)
+    for (let i = 0; i < ballTrail.length; i++) {
+        const alpha = (i + 1) / ballTrail.length * 0.3; // Fade from 0 to 0.3
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(ballTrail[i].x, ballTrail[i].y, ball.radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
     
     // Draw ball
     ctx.fillStyle = PALETTE.WHITE;
@@ -272,11 +394,11 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('bricks').textContent = bricksRemaining;
+    document.getElementById('cats').textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
     document.getElementById('lives').textContent = lives;
-    const bricksOverlay = document.getElementById('bricks-overlay');
+    const catsOverlay = document.getElementById('cats-overlay');
     const livesOverlay = document.getElementById('lives-overlay');
-    if (bricksOverlay) bricksOverlay.textContent = bricksRemaining;
+    if (catsOverlay) catsOverlay.textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
     if (livesOverlay) livesOverlay.textContent = lives;
 }
 
@@ -290,7 +412,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Juliette, you broke through all my walls! Be my Valentine? ❤️",
+        "You rescued all 5 cats! You're purr-fect! 🐱💕",
         restartGame
     );
 }

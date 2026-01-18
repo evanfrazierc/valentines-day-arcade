@@ -267,6 +267,10 @@ function draw() {
     ctx.fillRect(canvas.logicalWidth * 0.1, 0, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
     ctx.fillRect(canvas.logicalWidth * 0.75, 0, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
     
+    // Table legs/shadow at bottom to mirror top legs
+    ctx.fillRect(canvas.logicalWidth * 0.1, canvas.logicalHeight * 0.9, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
+    ctx.fillRect(canvas.logicalWidth * 0.75, canvas.logicalHeight * 0.9, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
+    
     // Draw grid
     ctx.strokeStyle = 'rgba(139, 69, 19, 0.15)';
     ctx.lineWidth = 1;
@@ -283,7 +287,37 @@ function draw() {
         ctx.stroke();
     }
     
-    // Draw wiener dog (snake)
+    // Draw wiener dog (snake) - draw legs first so body covers them when overlapping
+    // First pass: Draw all legs
+    snake.forEach((segment, index) => {
+        const isFirstBody = index === 1;
+        const isTail = index === snake.length - 1;
+        
+        // Draw legs only on first body segment (index 1) and tail segment
+        if (isFirstBody || isTail) {
+            ctx.fillStyle = PALETTE.BROWN_SIENNA; // Sienna for legs
+            const legWidth = TILE_SIZE / 6;
+            const legHeight = TILE_SIZE / 3;
+            
+            // Left leg
+            ctx.fillRect(
+                segment.x * TILE_SIZE + TILE_SIZE / 4 - legWidth / 2,
+                segment.y * TILE_SIZE + TILE_SIZE - 2,
+                legWidth,
+                legHeight
+            );
+            
+            // Right leg
+            ctx.fillRect(
+                segment.x * TILE_SIZE + 3 * TILE_SIZE / 4 - legWidth / 2,
+                segment.y * TILE_SIZE + TILE_SIZE - 2,
+                legWidth,
+                legHeight
+            );
+        }
+    });
+    
+    // Second pass: Draw body segments (will cover legs naturally when overlapping)
     snake.forEach((segment, index) => {
         // Wiener dog brown/tan coloring
         const isHead = index === 0;
@@ -304,34 +338,6 @@ function draw() {
             TILE_SIZE,
             TILE_SIZE
         );
-        
-        // Draw legs only on first body segment (index 1) and tail segment
-        // Hide back legs when moving down, hide front legs when moving up
-        const isFirstBody = index === 1;
-        const shouldShowFrontLegs = isFirstBody && direction.y !== -1; // Hide front legs when moving up
-        const shouldShowBackLegs = isTail && direction.y !== 1; // Hide back legs when moving down
-        
-        if (shouldShowFrontLegs || shouldShowBackLegs) {
-            ctx.fillStyle = PALETTE.BROWN_SIENNA; // Sienna for legs
-            const legWidth = TILE_SIZE / 6;
-            const legHeight = TILE_SIZE / 3;
-            
-            // Left/Top legs
-            ctx.fillRect(
-                segment.x * TILE_SIZE + TILE_SIZE / 4 - legWidth / 2,
-                segment.y * TILE_SIZE + TILE_SIZE - 2,
-                legWidth,
-                legHeight
-            );
-            
-            // Right/Bottom legs
-            ctx.fillRect(
-                segment.x * TILE_SIZE + 3 * TILE_SIZE / 4 - legWidth / 2,
-                segment.y * TILE_SIZE + TILE_SIZE - 2,
-                legWidth,
-                legHeight
-            );
-        }
         
         // Draw wagging tail on last segment
         if (isTail) {
