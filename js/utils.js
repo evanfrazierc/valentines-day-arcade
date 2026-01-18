@@ -36,9 +36,9 @@ class TouchControls {
         
         if (this.callbacks.touchstart) {
             const rect = this.canvas.getBoundingClientRect();
-            // Map from display coordinates to canvas coordinates
-            const scaleX = this.canvas.width / rect.width;
-            const scaleY = this.canvas.height / rect.height;
+            // Map from display coordinates to logical canvas coordinates
+            const scaleX = (this.canvas.logicalWidth || this.canvas.width) / rect.width;
+            const scaleY = (this.canvas.logicalHeight || this.canvas.height) / rect.height;
             this.callbacks.touchstart({
                 x: (touch.clientX - rect.left) * scaleX,
                 y: (touch.clientY - rect.top) * scaleY
@@ -52,9 +52,9 @@ class TouchControls {
         
         if (this.callbacks.touchmove) {
             const rect = this.canvas.getBoundingClientRect();
-            // Map from display coordinates to canvas coordinates
-            const scaleX = this.canvas.width / rect.width;
-            const scaleY = this.canvas.height / rect.height;
+            // Map from display coordinates to logical canvas coordinates
+            const scaleX = (this.canvas.logicalWidth || this.canvas.width) / rect.width;
+            const scaleY = (this.canvas.logicalHeight || this.canvas.height) / rect.height;
             this.callbacks.touchmove({
                 x: (touch.clientX - rect.left) * scaleX,
                 y: (touch.clientY - rect.top) * scaleY
@@ -77,9 +77,9 @@ class TouchControls {
         
         if (this.callbacks.touchstart) {
             const rect = this.canvas.getBoundingClientRect();
-            // Map from display coordinates to canvas coordinates
-            const scaleX = this.canvas.width / rect.width;
-            const scaleY = this.canvas.height / rect.height;
+            // Map from display coordinates to logical canvas coordinates
+            const scaleX = (this.canvas.logicalWidth || this.canvas.width) / rect.width;
+            const scaleY = (this.canvas.logicalHeight || this.canvas.height) / rect.height;
             this.callbacks.touchstart({
                 x: (e.clientX - rect.left) * scaleX,
                 y: (e.clientY - rect.top) * scaleY
@@ -90,9 +90,9 @@ class TouchControls {
     handleMouseMove(e) {
         if (e.buttons === 1 && this.callbacks.touchmove) {
             const rect = this.canvas.getBoundingClientRect();
-            // Map from display coordinates to canvas coordinates
-            const scaleX = this.canvas.width / rect.width;
-            const scaleY = this.canvas.height / rect.height;
+            // Map from display coordinates to logical canvas coordinates
+            const scaleX = (this.canvas.logicalWidth || this.canvas.width) / rect.width;
+            const scaleY = (this.canvas.logicalHeight || this.canvas.height) / rect.height;
             this.callbacks.touchmove({
                 x: (e.clientX - rect.left) * scaleX,
                 y: (e.clientY - rect.top) * scaleY
