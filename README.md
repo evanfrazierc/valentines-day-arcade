@@ -83,7 +83,10 @@ Each game can be customized by editing:
 - Person's name in the HTML file
 - Win message in the JavaScript file
 - Difficulty by adjusting game parameters
-- Colors in `css/style.css` using CSS variables
+- Colors - **IMPORTANT**: See [COLOR_SYSTEM.md](COLOR_SYSTEM.md) for the 84-color palette system
+  - All colors must come from `js/colors.js`
+  - Use CSS variables in `css/style.css` for theme colors
+  - Never hardcode colors outside the defined palette
 
 ## 📦 Tech Stack
 
