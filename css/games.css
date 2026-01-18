@@ -12,7 +12,6 @@
 
 .game-container.playing {
     padding: 0;
-    justify-content: center;
     position: fixed;
     top: 0;
     left: 0;
@@ -20,6 +19,8 @@
     height: 100vh;
     height: 100dvh;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .game-container.playing .game-header,
@@ -29,14 +30,15 @@
 }
 
 .game-container.playing canvas {
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important; /* Dynamic viewport height for mobile */
-    max-width: 100vw;
-    max-height: 100vh;
-    max-height: 100dvh;
+    width: 100% !important;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 0;
     border-radius: 0;
     border: none;
+    flex: 1 1 0;
+    object-fit: contain;
+    order: 2;
 }
 
 canvas {
@@ -75,97 +77,51 @@ canvas {
 }
 
 .game-stats-overlay {
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
     display: none;
-    gap: 15px;
+    gap: 10px;
     z-index: 50;
     pointer-events: none;
 }
 
 .game-container.playing .game-stats-overlay {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 8px 10px;
+    background: rgba(103, 41, 64, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    min-height: 45px;
+    order: 1;
 }
 
 .info-item {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px 20px;
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
+    background: rgba(0, 0, 0, 0.155);
+    padding: 6px 14px;
+    border-radius: 8px;
+    backdrop-filter: blur(5px);
+    min-width: 70px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .info-label {
-    font-size: 0.8rem;
+    font-size: clamp(0.85rem, 2.5vw, 1rem);
     opacity: 0.8;
-    color: #3d3b38;
+    color: var(--pink-pastel);
     text-align: center;
+    line-height: 1.2;
 }
 
 .info-value {
-    font-size: 1.5rem;
+    font-size: clamp(1.4rem, 4vw, 1.8rem);
     font-weight: bold;
-    color: #ffa170;
+    color: var(--pink-pastel);
     text-align: center;
-}
-
-/* Game-specific scoreboard colors */
-.snake-game .info-value {
-    color: #c37557; /* Chocolate brown to match wiener dog */
-}
-
-.breakout-game .info-value {
-    color: #ff57a4; /* Pink to match hearts */
-}
-
-.runner-game .info-value {
-    color: #4aa769; /* Green to match veggies */
-}
-
-.jumper-game .info-value {
-    color: #ff57a4; /* Hot pink for love bounce */
-}
-
-.flappy-game .info-value {
-    color: #fd3b54; /* Red for flappy hearts */
-}
-
-.maze-game .info-value {
-    color: #9c5fd0; /* Purple for maze */
-}
-
-.tetris-game .info-value {
-    color: #ff57a4; /* Pink for tetris blocks */
-}
-
-/* Game-specific label colors */
-.snake-game .info-label {
-    color: #945140; /* Saddle brown for wiener dog theme */
-}
-
-.breakout-game .info-label {
-    color: #d10841; /* Darker pink to match breakout values */
-}
-
-.runner-game .info-label {
-    color: #15a44d; /* Darker green for veggies */
-}
-
-.jumper-game .info-label {
-    color: #d10841; /* Darker hot pink to match jumper values */
-}
-
-.flappy-game .info-label {
-    color: #d10841; /* Darker red to match flappy values */
-}
-
-.maze-game .info-label {
-    color: #6456b7; /* Darker purple for maze */
-}
-
-.tetris-game .info-label {
-    color: #a50b5e; /* Darker pink to match tetris values */
+    line-height: 1.2;
 }
 
 .game-controls {
@@ -270,7 +226,7 @@ canvas {
 }
 
 .instructions {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.155);
     backdrop-filter: blur(10px);
     padding: 10px;
     border-radius: 10px;
@@ -294,8 +250,15 @@ canvas {
         font-size: 1.5rem;
     }
     
-    .info-value {
-        font-size: 1.2rem;
+    .game-container.playing .game-stats-overlay {
+        padding: 6px 8px;
+        gap: 6px;
+        min-height: 40px;
+    }
+    
+    .info-item {
+        padding: 5px 10px;
+        min-width: 55px;
     }
     
     .win-content {
@@ -308,6 +271,19 @@ canvas {
     
     .win-message {
         font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container.playing .game-stats-overlay {
+        padding: 5px 6px;
+        gap: 5px;
+        min-height: 38px;
+    }
+    
+    .info-item {
+        padding: 4px 8px;
+        min-width: 50px;
     }
 }
 

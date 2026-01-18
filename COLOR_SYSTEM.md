@@ -25,22 +25,42 @@ const [color1, color2, color3] = getColors('RED_PRIMARY', 'BLUE_PASTEL', 'GREEN_
 
 ### In CSS
 
-Reference the colors defined in `css/style.css` CSS variables, which are mapped to the palette:
+**ALWAYS use CSS custom properties** defined in `css/style.css`, which are mapped to the palette:
 
 ```css
 .my-element {
-    color: var(--primary);      /* #fd3b54 - RED_PRIMARY */
-    background: var(--secondary); /* #ff57a4 - PINK_HOT */
+    color: var(--primary);      /* RED_PRIMARY */
+    background: var(--secondary); /* PINK_HOT */
 }
 ```
 
-Or use the hex values directly (though CSS variables are preferred):
+The `:root` selector in `css/style.css` contains all available CSS custom properties mapped to palette colors:
 
 ```css
-.my-element {
-    color: #fd3b54; /* RED_PRIMARY */
+:root {
+    /* Primary Colors from 84-color palette */
+    --primary: #fd3b54;        /* RED_PRIMARY */
+    --secondary: #ff57a4;      /* PINK_HOT */
+    --accent: #ff9fba;         /* PINK_PASTEL */
+    --dark: #672940;           /* BROWN_MAHOGANY */
+    --light: #ffd9cc;          /* PINK_PALE */
+    --white: #ffffff;          /* WHITE */
+    
+    /* Additional palette colors for game-specific use */
+    --gray-darkest: #3d3b38;   /* GRAY_DARKEST */
+    --orange-light: #ffa170;   /* ORANGE_LIGHT */
+    --brown-chocolate: #c37557; /* BROWN_CHOCOLATE */
+    --brown-saddle: #945140;   /* BROWN_SADDLE */
+    --green-medium: #4aa769;   /* GREEN_MEDIUM */
+    --green-forest: #15a44d;   /* GREEN_FOREST */
+    --red-cherry: #d10841;     /* RED_CHERRY */
+    --red-dark: #a50b5e;       /* RED_DARK */
+    --purple-vibrant: #9c5fd0; /* PURPLE_VIBRANT */
+    --purple-darker: #6456b7;  /* PURPLE_DARKER */
 }
 ```
+
+**DO NOT** hardcode hex values in CSS - always use `var(--custom-property)`. This ensures that if we update a color in the palette, it updates everywhere automatically.
 
 ## Available Colors
 
