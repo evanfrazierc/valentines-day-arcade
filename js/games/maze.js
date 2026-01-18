@@ -1,4 +1,4 @@
-// Tap Hero Rhythm Game - For Chris
+// Tap Hero Rhythm Game - For Harrison
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -357,7 +357,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Chris, you hit all the right notes in my heart! 🎵💕",
+        "Harrison, you hit all the right notes in my heart! 🎵💕",
         restartGame
     );
 }

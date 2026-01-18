@@ -1,4 +1,4 @@
-// Flappy Hearts Game - For Jessica
+// Flappy Hearts Game - For Karen
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -252,7 +252,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Jessica, you flew straight into my heart! 🦋💕",
+        "Karen, you flew straight into my heart! 🦋💕",
         restartGame
     );
 }

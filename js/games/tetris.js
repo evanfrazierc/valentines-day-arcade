@@ -1,4 +1,4 @@
-// Love Blocks Game - For Taylor
+// Love Blocks Game - For Megan
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 300, 600);
 
@@ -365,7 +365,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Taylor, we fit together perfectly! 🧩💗",
+        "Megan, we fit together perfectly! 🧩💗",
         restartGame
     );
 }

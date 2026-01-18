@@ -1,4 +1,4 @@
-// Love Bounce Game - For Alex
+// Love Bounce Game - For Joe
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -380,7 +380,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Alex, you make my heart bounce with joy! 💓",
+        "Joe, you make my heart bounce with joy! 💓",
         restartGame
     );
 }

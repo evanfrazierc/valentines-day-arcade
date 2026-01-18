@@ -4,13 +4,13 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 
 ## 🎮 Games
 
-1. **Love Snake** (For Sarah) - Classic snake game with heart collection
-2. **Heartbreaker** (For Mike) - Breakout with heart-shaped bricks
-3. **Super Veggie Bro** (For Emma) - Endless runner collecting veggies while avoiding meat
-4. **Love Bounce** (For Alex) - Doodle Jump style bouncing game with tilt controls
-5. **Flappy Hearts** (For Jessica) - Flappy Bird clone with hearts
-6. **Maze of Love** (For Chris) - Navigate a maze collecting hearts
-7. **Love Blocks** (For Taylor) - Tetris with heart-shaped pieces
+1. **Go Long, Gaston** (For Sarah) - Wiener dog collecting dinner scraps
+2. **Heartbreaker** (For Juliette) - Breakout with heart-shaped bricks
+3. **Super Veggie Bro** (For Ryan) - Endless runner collecting veggies while avoiding meat
+4. **Love Bounce** (For Joe) - Doodle Jump style bouncing game with tilt controls
+5. **Flappy Hearts** (For Karen) - Flappy Bird clone with hearts
+6. **Maze of Love** (For Harrison) - Navigate a maze collecting hearts
+7. **Love Blocks** (For Megan) - Tetris with heart-shaped pieces
 
 ## 📱 Features
 

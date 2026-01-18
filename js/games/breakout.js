@@ -1,4 +1,4 @@
-// Heartbreaker Game - For Mike
+// Heartbreaker Game - For Juliette
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -290,7 +290,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Mike, you broke through all my walls! Be my Valentine? ❤️",
+        "Juliette, you broke through all my walls! Be my Valentine? ❤️",
         restartGame
     );
 }
