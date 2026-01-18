@@ -323,10 +323,10 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with gradient sky
+    // Clear canvas with gradient sky - early morning dawn
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#87CEEB'); // Sky blue
-    gradient.addColorStop(1, '#E0F6FF'); // Light blue
+    gradient.addColorStop(0, '#2c3e50'); // Dark blue-grey
+    gradient.addColorStop(1, '#ff9a9e'); // Soft pink/coral
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
