@@ -16,7 +16,7 @@ const DOG_EMOJIS = ['🐕', '🦮'];
 // Game state
 let player = {
     x: 80,
-    y: canvas.height - GROUND_HEIGHT - PLAYER_SIZE,
+    y: canvas.logicalHeight - GROUND_HEIGHT - PLAYER_SIZE,
     width: PLAYER_SIZE,
     height: PLAYER_SIZE,
     dy: 0,
@@ -53,7 +53,7 @@ controls.on('touchstart', () => {
     if (!player.grounded && player.dy < 0 && player.canDoubleJump) {
         player.dy = JUMP_STRENGTH * 0.9;
         player.canDoubleJump = false;
-        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#90EE90');
+        particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, '#8bdf7d');
     }
     // Regular jump from ground
     else if (player.grounded) {
@@ -67,7 +67,7 @@ controls.init();
 
 // Initialize game
 function initGame() {
-    player.y = canvas.height - GROUND_HEIGHT - PLAYER_SIZE;
+    player.y = canvas.logicalHeight - GROUND_HEIGHT - PLAYER_SIZE;
     player.dy = 0;
     player.grounded = true;
     player.canDoubleJump = false;
@@ -93,8 +93,8 @@ function initGame() {
         }
         
         clouds.push({
-            x: random(0, canvas.width),
-            y: random(20, canvas.height - GROUND_HEIGHT - 250),
+            x: random(0, canvas.logicalWidth),
+            y: random(20, canvas.logicalHeight - GROUND_HEIGHT - 250),
             size: cloudSize,
             speed: random(0.3, 0.8),
             circles: circles
@@ -132,7 +132,7 @@ function update() {
     player.y += player.dy;
     
     // Ground collision
-    const groundY = canvas.height - GROUND_HEIGHT - PLAYER_SIZE;
+    const groundY = canvas.logicalHeight - GROUND_HEIGHT - PLAYER_SIZE;
     if (player.y >= groundY) {
         player.y = groundY;
         player.dy = 0;
@@ -148,10 +148,10 @@ function update() {
     // Spawn obstacles with random timing
     obstacleTimer++;
     if (obstacleTimer >= nextObstacleTime) {
-        const height = random(30, 80);
+        const height = random(50, 90);
         obstacles.push({
-            x: canvas.width,
-            y: canvas.height - GROUND_HEIGHT - height,
+            x: canvas.logicalWidth,
+            y: canvas.logicalHeight - GROUND_HEIGHT - height,
             width: OBSTACLE_WIDTH,
             height: height,
             type: 'block',
@@ -169,7 +169,7 @@ function update() {
     if (veggieTimer > 60 / gameSpeed) {
         if (Math.random() < 0.6) {
             // Check if there's an obstacle near the right edge of screen
-            const heartY = random(canvas.height - GROUND_HEIGHT - 200, canvas.height - GROUND_HEIGHT - 100);
+            const heartY = random(canvas.logicalHeight - GROUND_HEIGHT - 200, canvas.logicalHeight - GROUND_HEIGHT - 100);
             let canSpawn = true;
             
             // Don't spawn if there's an obstacle that would overlap
@@ -177,14 +177,14 @@ function update() {
                 // Simple collision check - don't spawn if veggie would collide with nearby obstacle
                 const margin = 40; // Extra clearance around veggie
                 const veggieBox = {
-                    x: canvas.width - margin,
+                    x: canvas.logicalWidth - margin,
                     y: heartY - margin,
                     width: 30 + margin * 2,
                     height: 30 + margin * 2
                 };
                 
                 // Check if obstacle is close enough to matter (within 250px)
-                if (obstacle.x > canvas.width - 250) {
+                if (obstacle.x > canvas.logicalWidth - 250) {
                     // Check if veggie and obstacle boxes would overlap
                     if (veggieBox.x < obstacle.x + obstacle.width &&
                         veggieBox.x + veggieBox.width > obstacle.x &&
@@ -198,7 +198,7 @@ function update() {
             
             if (canSpawn) {
                 veggies.push({
-                    x: canvas.width,
+                    x: canvas.logicalWidth,
                     y: heartY,
                     size: 20,
                     collected: false,
@@ -253,7 +253,7 @@ function update() {
             veggies[i].collected = true;
             veggiesCollected++;
             
-            particles.createParticles(veggies[i].x, veggies[i].y, 15, '#4CAF50');
+            particles.createParticles(veggies[i].x, veggies[i].y, 15, '#4aa769');
             
             if (veggiesCollected >= WIN_VEGGIES) {
                 winGame();
@@ -286,8 +286,8 @@ function update() {
                 });
             }
             
-            clouds[i].x = canvas.width + random(50, 150);
-            clouds[i].y = random(20, canvas.height - GROUND_HEIGHT - 250);
+            clouds[i].x = canvas.logicalWidth + random(50, 150);
+            clouds[i].y = random(20, canvas.logicalHeight - GROUND_HEIGHT - 250);
             clouds[i].size = cloudSize;
             clouds[i].circles = circles;
         }
@@ -305,8 +305,8 @@ function update() {
         // Randomly spawn dog (low probability each frame)
         if (Math.random() < 0.002) {
             dog = {
-                x: canvas.width + 50,
-                y: canvas.height - GROUND_HEIGHT + 30, // On the ground surface
+                x: canvas.logicalWidth + 50,
+                y: canvas.logicalHeight - GROUND_HEIGHT + 30, // On the ground surface
                 size: 40,
                 speed: -gameSpeed * 2.5, // Negative to move left
                 emoji: DOG_EMOJIS[Math.floor(Math.random() * DOG_EMOJIS.length)]
@@ -319,11 +319,11 @@ function update() {
 
 function draw() {
     // Clear canvas with gradient sky - early morning dawn
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#2c3e50'); // Dark blue-grey
-    gradient.addColorStop(1, '#ff9a9e'); // Soft pink/coral
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    gradient.addColorStop(0, '#2d383a'); // Dark blue-grey
+    gradient.addColorStop(1, '#fe8a7e'); // Soft pink/coral
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw clouds
     clouds.forEach(cloud => {
@@ -343,16 +343,16 @@ function draw() {
     });
     
     // Draw ground with earthy gradient
-    const groundGradient = ctx.createLinearGradient(0, canvas.height - GROUND_HEIGHT, 0, canvas.height);
-    groundGradient.addColorStop(0, '#6B4423'); // Deep brown
-    groundGradient.addColorStop(1, '#C9A876'); // Light tan
+    const groundGradient = ctx.createLinearGradient(0, canvas.logicalHeight - GROUND_HEIGHT, 0, canvas.logicalHeight);
+    groundGradient.addColorStop(0, '#672940'); // Deep brown
+    groundGradient.addColorStop(1, '#baae6e'); // Light tan
     ctx.fillStyle = groundGradient;
-    ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
+    ctx.fillRect(0, canvas.logicalHeight - GROUND_HEIGHT, canvas.logicalWidth, GROUND_HEIGHT);
     
     // Ground detail
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    for (let i = 0; i < canvas.width; i += 40) {
-        ctx.fillRect(i - (distance * gameSpeed * 3) % 40, canvas.height - GROUND_HEIGHT, 20, 5);
+    for (let i = 0; i < canvas.logicalWidth; i += 40) {
+        ctx.fillRect(i - (distance * gameSpeed * 3) % 40, canvas.logicalHeight - GROUND_HEIGHT, 20, 5);
     }
     
     // Draw player with rotation
@@ -408,7 +408,7 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Start Running!', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('Tap to Start Running!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
     }
 }
 

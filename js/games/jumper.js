@@ -12,8 +12,8 @@ const WIN_SCORE = 300;
 
 // Game state
 let player = {
-    x: canvas.width / 2 - PLAYER_SIZE / 2,
-    y: canvas.height - 150,
+    x: canvas.logicalWidth / 2 - PLAYER_SIZE / 2,
+    y: canvas.logicalHeight - 150,
     width: PLAYER_SIZE,
     height: PLAYER_SIZE,
     dy: 0,
@@ -97,7 +97,7 @@ controls.on('tap', (pos) => {
     }
     
     // Tap left or right side to move
-    if (pos.x < canvas.width / 2) {
+    if (pos.x < canvas.logicalWidth / 2) {
         player.dx = -5;
     } else {
         player.dx = 5;
@@ -106,7 +106,7 @@ controls.on('tap', (pos) => {
 
 controls.on('touchstart', (pos) => {
     if (gameRunning) {
-        if (pos.x < canvas.width / 2) {
+        if (pos.x < canvas.logicalWidth / 2) {
             player.dx = -5;
         } else {
             player.dx = 5;
@@ -118,8 +118,8 @@ controls.init();
 
 // Initialize game
 function initGame() {
-    player.x = canvas.width / 2 - PLAYER_SIZE / 2;
-    player.y = canvas.height - 150;
+    player.x = canvas.logicalWidth / 2 - PLAYER_SIZE / 2;
+    player.y = canvas.logicalHeight - 150;
     player.dy = 0;
     player.dx = 0;
     
@@ -136,8 +136,8 @@ function initGame() {
     // First platform is wide base platform
     platforms.push({
         x: 0,
-        y: canvas.height - 100,
-        width: canvas.width,
+        y: canvas.logicalHeight - 100,
+        width: canvas.logicalWidth,
         height: PLATFORM_HEIGHT,
         type: 'normal',
         direction: 1,
@@ -147,8 +147,8 @@ function initGame() {
     // Then add regular platforms
     for (let i = 1; i < 12; i++) {
         platforms.push({
-            x: random(0, canvas.width - PLATFORM_WIDTH),
-            y: canvas.height - 100 - i * 60,
+            x: random(0, canvas.logicalWidth - PLATFORM_WIDTH),
+            y: canvas.logicalHeight - 100 - i * 60,
             width: PLATFORM_WIDTH,
             height: PLATFORM_HEIGHT,
             type: Math.random() < 0.8 ? 'normal' : 'moving',
@@ -201,16 +201,16 @@ function update() {
     
     // Wrap around screen
     if (player.x + player.width < 0) {
-        player.x = canvas.width;
-    } else if (player.x > canvas.width) {
+        player.x = canvas.logicalWidth;
+    } else if (player.x > canvas.logicalWidth) {
         player.x = -player.width;
     }
     
     // Move camera up when player is in upper half
-    if (player.y < canvas.height / 2) {
-        const diff = canvas.height / 2 - player.y;
+    if (player.y < canvas.logicalHeight / 2) {
+        const diff = canvas.logicalHeight / 2 - player.y;
         cameraY += diff;
-        player.y = canvas.height / 2;
+        player.y = canvas.logicalHeight / 2;
         
         // Move platforms down
         platforms.forEach(platform => {
@@ -243,7 +243,7 @@ function update() {
                     player.x + player.width / 2,
                     player.y + player.height,
                     10,
-                    '#ff80ab'
+                    '#ff9fba'
                 );
             }
         });
@@ -254,20 +254,20 @@ function update() {
         if (platform.type === 'moving') {
             platform.x += platform.speed * platform.direction;
             
-            if (platform.x <= 0 || platform.x + platform.width >= canvas.width) {
+            if (platform.x <= 0 || platform.x + platform.width >= canvas.logicalWidth) {
                 platform.direction *= -1;
             }
         }
     });
     
     // Remove platforms that are off screen (bottom)
-    platforms = platforms.filter(platform => platform.y < canvas.height + 50);
+    platforms = platforms.filter(platform => platform.y < canvas.logicalHeight + 50);
     
     // Add new platforms at top
     while (platforms.length < 12) {
         const lastPlatform = platforms[0];
         platforms.unshift({
-            x: random(0, canvas.width - PLATFORM_WIDTH),
+            x: random(0, canvas.logicalWidth - PLATFORM_WIDTH),
             y: lastPlatform.y - random(50, 80),
             width: PLATFORM_WIDTH,
             height: PLATFORM_HEIGHT,
@@ -278,7 +278,7 @@ function update() {
     }
     
     // Check if player fell off screen
-    if (player.y > canvas.height) {
+    if (player.y > canvas.logicalHeight) {
         gameOver();
         return;
     }
@@ -288,11 +288,11 @@ function update() {
 
 function draw() {
     // Clear canvas with gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#c51162');
-    gradient.addColorStop(1, '#880e4f');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    gradient.addColorStop(0, '#a50b5e');
+    gradient.addColorStop(1, '#672940');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw platforms
     platforms.forEach(platform => {
@@ -303,7 +303,7 @@ function draw() {
                 platform.x + platform.width / 2,
                 platform.y + platform.height / 2,
                 platform.width * 0.8,
-                '#ff4081'
+                '#ff57a4'
             );
         } else {
             // Moving platforms - different color
@@ -312,7 +312,7 @@ function draw() {
                 platform.x + platform.width / 2,
                 platform.y + platform.height / 2,
                 platform.width * 0.8,
-                '#ff80ab'
+                '#ff9fba'
             );
         }
     });
@@ -324,14 +324,14 @@ function draw() {
     ctx.fill();
     
     // Player face
-    ctx.fillStyle = '#ff1744';
+    ctx.fillStyle = '#fd3b54';
     ctx.beginPath();
     ctx.arc(player.x + player.width / 2 - 6, player.y + player.height / 2 - 4, 3, 0, Math.PI * 2);
     ctx.arc(player.x + player.width / 2 + 6, player.y + player.height / 2 - 4, 3, 0, Math.PI * 2);
     ctx.fill();
     
     // Smile
-    ctx.strokeStyle = '#ff1744';
+    ctx.strokeStyle = '#fd3b54';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(player.x + player.width / 2, player.y + player.height / 2 + 2, 8, 0.2, Math.PI - 0.2);
@@ -346,9 +346,9 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Start!', canvas.width / 2, canvas.height / 2 - 50);
+        ctx.fillText('Tap to Start!', canvas.logicalWidth / 2, canvas.logicalHeight / 2 - 50);
         ctx.font = '16px Arial';
-        ctx.fillText('Tilt device or use arrow keys', canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillText('Tilt device or use arrow keys', canvas.logicalWidth / 2, canvas.logicalHeight / 2 - 20);
     }
 }
 

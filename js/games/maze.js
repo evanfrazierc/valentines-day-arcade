@@ -4,9 +4,9 @@ const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
 const NOTE_SPEED = 3;
-const TARGET_Y = canvas.height - 100;
+const TARGET_Y = canvas.logicalHeight - 100;
 const TARGET_HEIGHT = 60;
-const LANE_WIDTH = canvas.width / 3;
+const LANE_WIDTH = canvas.logicalWidth / 3;
 const WIN_SCORE = 30;
 const HIT_WINDOW = 70; // pixels for perfect hit
 const GOOD_WINDOW = 120; // pixels for good hit
@@ -96,12 +96,12 @@ controls.on('touchstart', (pos) => {
     
     // Calculate canvas visual bounds based on aspect ratio
     const visualHeight = rect.height;
-    const visualWidth = visualHeight * (canvas.width / canvas.height);
+    const visualWidth = visualHeight * (canvas.logicalWidth / canvas.logicalHeight);
     const visualLeft = (rect.width - visualWidth) / 2;
     
     // Map screen coordinate to canvas coordinate
     const relativeX = pos.x - visualLeft;
-    const canvasX = (relativeX / visualWidth) * canvas.width;
+    const canvasX = (relativeX / visualWidth) * canvas.logicalWidth;
     
     // Determine which lane was tapped (clamp to 0-2)
     const lane = Math.max(0, Math.min(2, Math.floor(canvasX / LANE_WIDTH)));
@@ -116,10 +116,10 @@ controls.on('tap', (pos) => {
     
     const rect = canvas.getBoundingClientRect();
     const visualHeight = rect.height;
-    const visualWidth = visualHeight * (canvas.width / canvas.height);
+    const visualWidth = visualHeight * (canvas.logicalWidth / canvas.logicalHeight);
     const visualLeft = (rect.width - visualWidth) / 2;
     const relativeX = pos.x - visualLeft;
-    const canvasX = (relativeX / visualWidth) * canvas.width;
+    const canvasX = (relativeX / visualWidth) * canvas.logicalWidth;
     const lane = Math.max(0, Math.min(2, Math.floor(canvasX / LANE_WIDTH)));
     tapLane(lane);
 });
@@ -153,7 +153,7 @@ function tapLane(lane) {
                 lane * LANE_WIDTH + LANE_WIDTH / 2,
                 TARGET_Y,
                 20,
-                '#ffeb3b'
+                '#fbbc2a'
             );
         } else {
             // Good hit
@@ -163,7 +163,7 @@ function tapLane(lane) {
                 lane * LANE_WIDTH + LANE_WIDTH / 2,
                 TARGET_Y,
                 10,
-                '#ff80ab'
+                '#ff9fba'
             );
         }
         
@@ -240,7 +240,7 @@ function update() {
         }
         
         // Remove notes that are off screen
-        if (notes[i].y > canvas.height || notes[i].hit) {
+        if (notes[i].y > canvas.logicalHeight || notes[i].hit) {
             notes.splice(i, 1);
         }
     }
@@ -257,11 +257,11 @@ function update() {
 
 function draw() {
     // Clear canvas with gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#880e4f');
-    gradient.addColorStop(1, '#c51162');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    gradient.addColorStop(0, '#672940');
+    gradient.addColorStop(1, '#a50b5e');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw lane dividers
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
@@ -269,7 +269,7 @@ function draw() {
     for (let i = 1; i < 3; i++) {
         ctx.beginPath();
         ctx.moveTo(i * LANE_WIDTH, 0);
-        ctx.lineTo(i * LANE_WIDTH, canvas.height);
+        ctx.lineTo(i * LANE_WIDTH, canvas.logicalHeight);
         ctx.stroke();
     }
     
@@ -278,12 +278,12 @@ function draw() {
     ctx.lineWidth = 4;
     ctx.beginPath();
     ctx.moveTo(0, TARGET_Y);
-    ctx.lineTo(canvas.width, TARGET_Y);
+    ctx.lineTo(canvas.logicalWidth, TARGET_Y);
     ctx.stroke();
     
     // Draw target area
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.fillRect(0, TARGET_Y - TARGET_HEIGHT / 2, canvas.width, TARGET_HEIGHT);
+    ctx.fillRect(0, TARGET_Y - TARGET_HEIGHT / 2, canvas.logicalWidth, TARGET_HEIGHT);
     
     // Draw notes
     notes.forEach(note => {
@@ -291,12 +291,12 @@ function draw() {
             const x = note.lane * LANE_WIDTH + LANE_WIDTH / 2;
             
             // Color based on position
-            let color = '#ff4081';
+            let color = '#ff57a4';
             const distanceFromTarget = Math.abs(note.y - TARGET_Y);
             if (distanceFromTarget < HIT_WINDOW) {
-                color = '#ffeb3b'; // Yellow for perfect
+                color = '#fbbc2a'; // Yellow for perfect
             } else if (distanceFromTarget < GOOD_WINDOW) {
-                color = '#ff80ab'; // Light pink for good
+                color = '#ff9fba'; // Light pink for good
             }
             
             drawHeart(ctx, x, note.y, note.size, color);
@@ -309,10 +309,10 @@ function draw() {
     
     // Draw combo multiplier
     if (combo > 1 && gameRunning) {
-        ctx.fillStyle = '#ffeb3b';
+        ctx.fillStyle = '#fbbc2a';
         ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`${combo}x`, canvas.width / 2, 60);
+        ctx.fillText(`${combo}x`, canvas.logicalWidth / 2, 60);
     }
     
     // Draw start message
@@ -320,9 +320,9 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Start!', canvas.width / 2, canvas.height / 2 - 30);
+        ctx.fillText('Tap to Start!', canvas.logicalWidth / 2, canvas.logicalHeight / 2 - 30);
         ctx.font = '16px Arial';
-        ctx.fillText('Tap hearts as they hit the line', canvas.width / 2, canvas.height / 2 + 10);
+        ctx.fillText('Tap hearts as they hit the line', canvas.logicalWidth / 2, canvas.logicalHeight / 2 + 10);
     }
 }
 

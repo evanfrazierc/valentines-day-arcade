@@ -14,7 +14,7 @@ const WIN_SCORE = 20;
 // Game state
 let bird = {
     x: 80,
-    y: canvas.height / 2,
+    y: canvas.logicalHeight / 2,
     width: BIRD_SIZE,
     height: BIRD_SIZE,
     dy: 0,
@@ -44,14 +44,14 @@ controls.on('touchstart', () => {
     }
     
     bird.dy = FLAP_STRENGTH;
-    particles.createParticles(bird.x, bird.y + bird.height / 2, 5, '#ff80ab');
+    particles.createParticles(bird.x, bird.y + bird.height / 2, 5, '#ff9fba');
 });
 
 controls.init();
 
 // Initialize game
 function initGame() {
-    bird.y = canvas.height / 2;
+    bird.y = canvas.logicalHeight / 2;
     bird.dy = 0;
     bird.rotation = 0;
     
@@ -83,7 +83,7 @@ function update() {
     bird.rotation = Math.min(Math.max(bird.dy * 3, -30), 90);
     
     // Check ground and ceiling collision
-    if (bird.y + bird.height > canvas.height - 50 || bird.y < 0) {
+    if (bird.y + bird.height > canvas.logicalHeight - 50 || bird.y < 0) {
         gameOver();
         return;
     }
@@ -94,9 +94,9 @@ function update() {
     // Spawn pipes
     pipeTimer++;
     if (pipeTimer > 90) {
-        const gapY = random(100, canvas.height - 150 - PIPE_GAP);
+        const gapY = random(100, canvas.logicalHeight - 150 - PIPE_GAP);
         pipes.push({
-            x: canvas.width,
+            x: canvas.logicalWidth,
             topHeight: gapY,
             bottomY: gapY + PIPE_GAP,
             scored: false
@@ -118,7 +118,7 @@ function update() {
         if (!pipes[i].scored && bird.x > pipes[i].x + PIPE_WIDTH) {
             pipes[i].scored = true;
             score++;
-            particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, '#ff4081');
+            particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, '#ff57a4');
             
             if (score >= WIN_SCORE) {
                 winGame();
@@ -148,45 +148,45 @@ function update() {
 
 function draw() {
     // Clear canvas with gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#ff80ab');
-    gradient.addColorStop(1, '#ff4081');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    gradient.addColorStop(0, '#ff9fba');
+    gradient.addColorStop(1, '#ff57a4');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw ground
-    ctx.fillStyle = '#880e4f';
-    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+    ctx.fillStyle = '#672940';
+    ctx.fillRect(0, canvas.logicalHeight - 50, canvas.logicalWidth, 50);
     
     // Ground pattern
     ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    for (let i = 0; i < canvas.width; i += 30) {
-        ctx.fillRect(i, canvas.height - 50, 15, 50);
+    for (let i = 0; i < canvas.logicalWidth; i += 30) {
+        ctx.fillRect(i, canvas.logicalHeight - 50, 15, 50);
     }
     
     // Draw pipes
     pipes.forEach(pipe => {
         // Top pipe
-        ctx.fillStyle = '#c51162';
+        ctx.fillStyle = '#a50b5e';
         ctx.fillRect(pipe.x, 0, PIPE_WIDTH, pipe.topHeight);
         
         // Top pipe cap with hearts
-        ctx.fillStyle = '#ff1744';
+        ctx.fillStyle = '#fd3b54';
         ctx.fillRect(pipe.x - 5, pipe.topHeight - 20, PIPE_WIDTH + 10, 20);
         
         // Small heart decoration
-        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.topHeight - 10, 15, '#ff80ab');
+        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.topHeight - 10, 15, '#ff9fba');
         
         // Bottom pipe
-        ctx.fillStyle = '#c51162';
-        ctx.fillRect(pipe.x, pipe.bottomY, PIPE_WIDTH, canvas.height - pipe.bottomY - 50);
+        ctx.fillStyle = '#a50b5e';
+        ctx.fillRect(pipe.x, pipe.bottomY, PIPE_WIDTH, canvas.logicalHeight - pipe.bottomY - 50);
         
         // Bottom pipe cap with hearts
-        ctx.fillStyle = '#ff1744';
+        ctx.fillStyle = '#fd3b54';
         ctx.fillRect(pipe.x - 5, pipe.bottomY, PIPE_WIDTH + 10, 20);
         
         // Small heart decoration
-        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 10, 15, '#ff80ab');
+        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 10, 15, '#ff9fba');
     });
     
     // Draw bird
@@ -220,7 +220,7 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Start Flying!', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('Tap to Start Flying!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
     }
 }
 

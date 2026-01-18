@@ -2,10 +2,10 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
-// Game constants
+// Game constants - use logical dimensions for game calculations
 const GRID_SIZE = 20;
-const GRID_HEIGHT = Math.floor(canvas.height / (canvas.width / GRID_SIZE));
-const TILE_SIZE = canvas.width / GRID_SIZE;
+const GRID_HEIGHT = Math.floor(canvas.logicalHeight / (canvas.logicalWidth / GRID_SIZE));
+const TILE_SIZE = canvas.logicalWidth / GRID_SIZE;
 const WIN_SCRAPS = 15;
 const DINNER_SCRAPS = ['🍕', '🌭', '🍔'];
 
@@ -134,7 +134,7 @@ function update() {
             (scrap.x + 1) * TILE_SIZE,
             (scrap.y + 1) * TILE_SIZE,
             20,
-            '#D2691E'
+            '#c37557'
         );
         
         if (scrapsCollected >= WIN_SCRAPS) {
@@ -150,9 +150,122 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with neutral light green background
-    ctx.fillStyle = '#D4E8D4';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Clear canvas with hardwood floor color
+    ctx.fillStyle = '#837050';
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
+    
+    // Draw oval rug in center
+    const rugCenterX = canvas.logicalWidth / 2;
+    const rugCenterY = canvas.logicalHeight / 2;
+    const rugRadiusX = canvas.logicalWidth * 0.4;
+    const rugRadiusY = canvas.logicalHeight * 0.35;
+    
+    // Rug shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(rugCenterX + 3, rugCenterY + 3, rugRadiusX, rugRadiusY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Main rug
+    ctx.fillStyle = '#8e94c5';
+    ctx.beginPath();
+    ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX, rugRadiusY, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Rug border pattern - light pale pink
+    ctx.strokeStyle = '#ff9fba';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX - 8, rugRadiusY - 8, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Inner decorative border
+    ctx.strokeStyle = '#ffd9cc';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX - 18, rugRadiusY - 18, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    
+    // Valentine's Day heart decorations on rug
+    ctx.fillStyle = '#ff9fba';
+    const heartSize = TILE_SIZE * 0.8;
+    
+    // Draw hearts at various positions around the rug - moved towards border
+    const heartPositions = [
+        { x: rugCenterX, y: rugCenterY - rugRadiusY * 0.7 }, // top
+        { x: rugCenterX, y: rugCenterY + rugRadiusY * 0.7 }, // bottom
+        { x: rugCenterX - rugRadiusX * 0.7, y: rugCenterY }, // left
+        { x: rugCenterX + rugRadiusX * 0.7, y: rugCenterY }, // right
+        { x: rugCenterX - rugRadiusX * 0.55, y: rugCenterY - rugRadiusY * 0.55 }, // top-left
+        { x: rugCenterX + rugRadiusX * 0.55, y: rugCenterY - rugRadiusY * 0.55 }, // top-right
+        { x: rugCenterX - rugRadiusX * 0.55, y: rugCenterY + rugRadiusY * 0.55 }, // bottom-left
+        { x: rugCenterX + rugRadiusX * 0.55, y: rugCenterY + rugRadiusY * 0.55 }  // bottom-right
+    ];
+    
+    heartPositions.forEach(pos => {
+        // Draw properly proportioned heart shape
+        ctx.save();
+        ctx.translate(pos.x, pos.y);
+        ctx.beginPath();
+        ctx.moveTo(0, heartSize * 0.3);
+        // Left curve
+        ctx.bezierCurveTo(-heartSize * 0.5, -heartSize * 0.1, -heartSize * 0.5, -heartSize * 0.5, 0, -heartSize * 0.2);
+        // Right curve
+        ctx.bezierCurveTo(heartSize * 0.5, -heartSize * 0.5, heartSize * 0.5, -heartSize * 0.1, 0, heartSize * 0.3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    });
+    
+    // Geometric designs in center of rug
+    const centerSize = TILE_SIZE * 2;
+    
+    // Outer diamond
+    ctx.strokeStyle = '#ffd9cc';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(rugCenterX, rugCenterY - centerSize * 0.5);
+    ctx.lineTo(rugCenterX + centerSize * 0.5, rugCenterY);
+    ctx.lineTo(rugCenterX, rugCenterY + centerSize * 0.5);
+    ctx.lineTo(rugCenterX - centerSize * 0.5, rugCenterY);
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Inner diamond
+    ctx.strokeStyle = '#ff9fba';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(rugCenterX, rugCenterY - centerSize * 0.3);
+    ctx.lineTo(rugCenterX + centerSize * 0.3, rugCenterY);
+    ctx.lineTo(rugCenterX, rugCenterY + centerSize * 0.3);
+    ctx.lineTo(rugCenterX - centerSize * 0.3, rugCenterY);
+    ctx.closePath();
+    ctx.stroke();
+    
+    // Center circle
+    ctx.fillStyle = '#ffd9cc';
+    ctx.beginPath();
+    ctx.arc(rugCenterX, rugCenterY, centerSize * 0.1, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Small decorative circles at diamond corners
+    ctx.fillStyle = '#ff9fba';
+    const circleRadius = centerSize * 0.06;
+    [
+        { x: rugCenterX, y: rugCenterY - centerSize * 0.5 },
+        { x: rugCenterX + centerSize * 0.5, y: rugCenterY },
+        { x: rugCenterX, y: rugCenterY + centerSize * 0.5 },
+        { x: rugCenterX - centerSize * 0.5, y: rugCenterY }
+    ].forEach(pos => {
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, circleRadius, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    
+    // Table legs/shadow at top to suggest being under table
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(canvas.logicalWidth * 0.1, 0, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
+    ctx.fillRect(canvas.logicalWidth * 0.75, 0, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
     
     // Draw grid
     ctx.strokeStyle = 'rgba(139, 69, 19, 0.15)';
@@ -160,13 +273,13 @@ function draw() {
     for (let i = 0; i <= GRID_SIZE; i++) {
         ctx.beginPath();
         ctx.moveTo(i * TILE_SIZE, 0);
-        ctx.lineTo(i * TILE_SIZE, canvas.height);
+        ctx.lineTo(i * TILE_SIZE, canvas.logicalHeight);
         ctx.stroke();
     }
     for (let i = 0; i <= GRID_HEIGHT; i++) {
         ctx.beginPath();
         ctx.moveTo(0, i * TILE_SIZE);
-        ctx.lineTo(canvas.width, i * TILE_SIZE);
+        ctx.lineTo(canvas.logicalWidth, i * TILE_SIZE);
         ctx.stroke();
     }
     
@@ -179,7 +292,7 @@ function draw() {
         const centerY = segment.y * TILE_SIZE + TILE_SIZE / 2;
         
         if (isHead) {
-            ctx.fillStyle = '#8B4513'; // Saddle brown for head
+            ctx.fillStyle = '#945140'; // Saddle brown for head
         } else {
             ctx.fillStyle = '#000000'; // Black for body
         }
@@ -193,9 +306,13 @@ function draw() {
         );
         
         // Draw legs only on first body segment (index 1) and tail segment
+        // Hide back legs when moving down, hide front legs when moving up
         const isFirstBody = index === 1;
-        if (isFirstBody || isTail) {
-            ctx.fillStyle = '#A0522D'; // Sienna for legs
+        const shouldShowFrontLegs = isFirstBody && direction.y !== -1; // Hide front legs when moving up
+        const shouldShowBackLegs = isTail && direction.y !== 1; // Hide back legs when moving down
+        
+        if (shouldShowFrontLegs || shouldShowBackLegs) {
+            ctx.fillStyle = '#9f4f3a'; // Sienna for legs
             const legWidth = TILE_SIZE / 6;
             const legHeight = TILE_SIZE / 3;
             
@@ -235,7 +352,7 @@ function draw() {
                 tailDirection.y = -direction.y;
             }
             
-            ctx.fillStyle = '#8B4513';
+            ctx.fillStyle = '#945140';
             ctx.save();
             ctx.translate(centerX, centerY);
             
@@ -319,7 +436,7 @@ function draw() {
                 // Snout - long brown triangle extending in front of head
                 const snoutLength = TILE_SIZE * 0.8;
                 const snoutWidth = TILE_SIZE * 0.4;
-                ctx.fillStyle = '#8B4513';
+                ctx.fillStyle = '#945140';
                 ctx.beginPath();
                 if (direction.x > 0) {
                     // Moving right - triangle points right
@@ -406,7 +523,7 @@ function draw() {
                 // Snout - long brown triangle extending in front of head
                 const snoutLength = TILE_SIZE * 0.8;
                 const snoutWidth = TILE_SIZE * 0.4;
-                ctx.fillStyle = '#8B4513';
+                ctx.fillStyle = '#945140';
                 ctx.beginPath();
                 if (direction.y > 0) {
                     // Moving down - triangle points down
@@ -512,7 +629,7 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Swipe or Tap to Start!', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('Swipe or Tap to Start!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
     }
 }
 

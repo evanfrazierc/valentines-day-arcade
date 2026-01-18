@@ -211,7 +211,7 @@ function showWinScreen(message, onRestart, onHome) {
 
 // Confetti effect
 function createConfetti() {
-    const colors = ['#ff1744', '#ff4081', '#ff80ab', '#f50057', '#c51162'];
+    const colors = ['#fd3b54', '#ff57a4', '#ff9fba', '#d10841', '#a50b5e'];
     
     for (let i = 0; i < 100; i++) {
         setTimeout(() => {
@@ -244,13 +244,27 @@ function setupCanvas(canvas, width, height) {
         canvasWidth = canvasHeight / aspectRatio;
     }
     
-    // Set canvas to logical dimensions (not DPR adjusted)
-    canvas.width = width;
-    canvas.height = height;
+    // Get device pixel ratio for high-DPI displays (Retina, iPad, etc.)
+    const dpr = window.devicePixelRatio || 1;
+    
+    // Store logical dimensions on canvas for game code to reference
+    canvas.logicalWidth = width;
+    canvas.logicalHeight = height;
+    
+    // Set canvas to high resolution for sharp rendering
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
     canvas.style.width = canvasWidth + 'px';
     canvas.style.height = canvasHeight + 'px';
     
     const ctx = canvas.getContext('2d');
+    
+    // Scale context to account for high DPI
+    ctx.scale(dpr, dpr);
+    
+    // Enable better text rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     
     return ctx;
 }

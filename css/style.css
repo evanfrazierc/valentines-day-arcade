@@ -1,11 +1,11 @@
 :root {
-    --primary: #ff1744;
-    --secondary: #ff4081;
-    --accent: #ff80ab;
-    --dark: #880e4f;
-    --light: #fce4ec;
+    --primary: #fd3b54;
+    --secondary: #ff57a4;
+    --accent: #ff9fba;
+    --dark: #672940;
+    --light: #ffd9cc;
     --white: #ffffff;
-    --shadow: rgba(136, 14, 79, 0.3);
+    --shadow: rgba(103, 41, 64, 0.3);
 }
 
 * {

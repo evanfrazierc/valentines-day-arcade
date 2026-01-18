@@ -15,8 +15,8 @@ const BRICK_OFFSET_TOP = 60;
 const BRICK_OFFSET_LEFT = 10;
 
 // Game state
-let paddle = { x: canvas.width / 2 - PADDLE_WIDTH / 2, y: canvas.height - 40, width: PADDLE_WIDTH, height: PADDLE_HEIGHT };
-let ball = { x: canvas.width / 2, y: canvas.height - 60, dx: 4, dy: -4, radius: BALL_RADIUS };
+let paddle = { x: canvas.logicalWidth / 2 - PADDLE_WIDTH / 2, y: canvas.logicalHeight - 40, width: PADDLE_WIDTH, height: PADDLE_HEIGHT };
+let ball = { x: canvas.logicalWidth / 2, y: canvas.logicalHeight - 60, dx: 4, dy: -4, radius: BALL_RADIUS };
 let bricks = [];
 let lives = 3;
 let gameRunning = false;
@@ -42,7 +42,7 @@ controls.on('touchstart', (pos) => {
 
 controls.on('touchmove', (pos) => {
     if (isDragging) {
-        paddle.x = clamp(pos.x - PADDLE_WIDTH / 2, 0, canvas.width - PADDLE_WIDTH);
+        paddle.x = clamp(pos.x - PADDLE_WIDTH / 2, 0, canvas.logicalWidth - PADDLE_WIDTH);
     }
 });
 
@@ -57,9 +57,9 @@ controls.init();
 // Initialize game
 function initGame() {
     // Reset paddle and ball
-    paddle.x = canvas.width / 2 - PADDLE_WIDTH / 2;
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height - 60;
+    paddle.x = canvas.logicalWidth / 2 - PADDLE_WIDTH / 2;
+    ball.x = canvas.logicalWidth / 2;
+    ball.y = canvas.logicalHeight - 60;
     currentBallSpeed = BASE_BALL_SPEED;
     const angle = Math.PI / 4; // 45 degrees
     ball.dx = currentBallSpeed * Math.sin(angle);
@@ -69,7 +69,7 @@ function initGame() {
     
     // Create bricks
     bricks = [];
-    const colors = ['#ff1744', '#ff4081', '#ff80ab', '#f50057', '#c51162'];
+    const colors = ['#fd3b54', '#ff57a4', '#ff9fba', '#d10841', '#a50b5e'];
     
     for (let row = 0; row < BRICK_ROWS; row++) {
         bricks[row] = [];
@@ -112,7 +112,7 @@ function update() {
     ball.y += ball.dy;
     
     // Wall collision
-    if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
+    if (ball.x + ball.radius > canvas.logicalWidth || ball.x - ball.radius < 0) {
         ball.dx = -ball.dx;
     }
     
@@ -136,11 +136,11 @@ function update() {
         ball.dx = currentBallSpeed * Math.sin(angle);
         ball.dy = -currentBallSpeed * Math.cos(angle);
         
-        particles.createParticles(ball.x, ball.y, 10, '#ff4081');
+        particles.createParticles(ball.x, ball.y, 10, '#ff57a4');
     }
     
     // Ball falls below paddle
-    if (ball.y - ball.radius > canvas.height) {
+    if (ball.y - ball.radius > canvas.logicalHeight) {
         lives--;
         updateUI();
         
@@ -150,8 +150,8 @@ function update() {
         }
         
         // Reset ball with base speed
-        ball.x = canvas.width / 2;
-        ball.y = canvas.height - 60;
+        ball.x = canvas.logicalWidth / 2;
+        ball.y = canvas.logicalHeight - 60;
         currentBallSpeed = BASE_BALL_SPEED; // Reset to base speed
         const angle = Math.PI / 4; // 45 degrees
         ball.dx = currentBallSpeed * Math.sin(angle);
@@ -195,8 +195,8 @@ function update() {
 
 function draw() {
     // Clear canvas
-    ctx.fillStyle = 'rgba(136, 14, 79, 0.1)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(103, 41, 64, 0.1)';
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw bricks
     bricks.forEach(row => {
@@ -215,18 +215,18 @@ function draw() {
     });
     
     // Draw paddle
-    ctx.fillStyle = '#ff4081';
+    ctx.fillStyle = '#ff57a4';
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
     
     // Add gradient
     const gradient = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
-    gradient.addColorStop(0, '#ff80ab');
-    gradient.addColorStop(1, '#ff4081');
+    gradient.addColorStop(0, '#ff9fba');
+    gradient.addColorStop(1, '#ff57a4');
     ctx.fillStyle = gradient;
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
     
     // Round corners
-    ctx.fillStyle = '#ff80ab';
+    ctx.fillStyle = '#ff9fba';
     ctx.beginPath();
     ctx.arc(paddle.x + 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
     ctx.arc(paddle.x + paddle.width - 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
@@ -240,7 +240,7 @@ function draw() {
     
     // Ball glow
     ctx.shadowBlur = 15;
-    ctx.shadowColor = '#ff4081';
+    ctx.shadowColor = '#ff57a4';
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
     ctx.fill();
@@ -255,7 +255,7 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Launch!', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('Tap to Launch!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
     }
 }
 

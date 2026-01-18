@@ -5,7 +5,7 @@ const ctx = setupCanvas(canvas, 300, 600);
 // Game constants
 const ROWS = 20;
 const COLS = 10;
-const BLOCK_SIZE = canvas.width / COLS;
+const BLOCK_SIZE = canvas.logicalWidth / COLS;
 const WIN_LINES = 10;
 
 // Tetromino shapes (heart-themed variations)
@@ -19,7 +19,7 @@ const SHAPES = [
     [[0, 0, 1], [1, 1, 1]]  // J
 ];
 
-const COLORS = ['#ff1744', '#ff4081', '#ff80ab', '#f50057', '#c51162', '#ff5252', '#ff6e40'];
+const COLORS = ['#fd3b54', '#ff57a4', '#ff9fba', '#d10841', '#a50b5e', '#fe8588', '#ff4c41'];
 
 // Game state
 let board = [];
@@ -243,11 +243,11 @@ function update() {
 
 function draw() {
     // Clear canvas
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    gradient.addColorStop(0, '#880e4f');
-    gradient.addColorStop(1, '#c51162');
+    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    gradient.addColorStop(0, '#672940');
+    gradient.addColorStop(1, '#a50b5e');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw grid
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
@@ -255,13 +255,13 @@ function draw() {
     for (let y = 0; y <= ROWS; y++) {
         ctx.beginPath();
         ctx.moveTo(0, y * BLOCK_SIZE);
-        ctx.lineTo(canvas.width, y * BLOCK_SIZE);
+        ctx.lineTo(canvas.logicalWidth, y * BLOCK_SIZE);
         ctx.stroke();
     }
     for (let x = 0; x <= COLS; x++) {
         ctx.beginPath();
         ctx.moveTo(x * BLOCK_SIZE, 0);
-        ctx.lineTo(x * BLOCK_SIZE, canvas.height);
+        ctx.lineTo(x * BLOCK_SIZE, canvas.logicalHeight);
         ctx.stroke();
     }
     
@@ -325,12 +325,12 @@ function draw() {
     // Draw start message
     if (!gameRunning) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(0, canvas.height / 2 - 40, canvas.width, 80);
+        ctx.fillRect(0, canvas.logicalHeight / 2 - 40, canvas.logicalWidth, 80);
         
         ctx.fillStyle = '#ffffff';
         ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Start!', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('Tap to Start!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
     }
 }
 

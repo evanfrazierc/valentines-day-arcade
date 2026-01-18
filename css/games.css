@@ -99,71 +99,73 @@ canvas {
 .info-label {
     font-size: 0.8rem;
     opacity: 0.8;
-    color: #333;
+    color: #3d3b38;
+    text-align: center;
 }
 
 .info-value {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #FFA07A;
+    color: #ffa170;
+    text-align: center;
 }
 
 /* Game-specific scoreboard colors */
 .snake-game .info-value {
-    color: #D2691E; /* Chocolate brown to match wiener dog */
+    color: #c37557; /* Chocolate brown to match wiener dog */
 }
 
 .breakout-game .info-value {
-    color: #ff4081; /* Pink to match hearts */
+    color: #ff57a4; /* Pink to match hearts */
 }
 
 .runner-game .info-value {
-    color: #4CAF50; /* Green to match veggies */
+    color: #4aa769; /* Green to match veggies */
 }
 
 .jumper-game .info-value {
-    color: #ff69b4; /* Hot pink for love bounce */
+    color: #ff57a4; /* Hot pink for love bounce */
 }
 
 .flappy-game .info-value {
-    color: #ff1744; /* Red for flappy hearts */
+    color: #fd3b54; /* Red for flappy hearts */
 }
 
 .maze-game .info-value {
-    color: #9C27B0; /* Purple for maze */
+    color: #9c5fd0; /* Purple for maze */
 }
 
 .tetris-game .info-value {
-    color: #E91E63; /* Pink for tetris blocks */
+    color: #ff57a4; /* Pink for tetris blocks */
 }
 
 /* Game-specific label colors */
 .snake-game .info-label {
-    color: #8B4513; /* Saddle brown for wiener dog theme */
+    color: #945140; /* Saddle brown for wiener dog theme */
 }
 
 .breakout-game .info-label {
-    color: #d81b60; /* Darker pink for hearts */
+    color: #d10841; /* Darker pink to match breakout values */
 }
 
 .runner-game .info-label {
-    color: #2E7D32; /* Darker green for veggies */
+    color: #15a44d; /* Darker green for veggies */
 }
 
 .jumper-game .info-label {
-    color: #c2185b; /* Darker hot pink for love bounce */
+    color: #d10841; /* Darker hot pink to match jumper values */
 }
 
 .flappy-game .info-label {
-    color: #d32f2f; /* Darker red for flappy hearts */
+    color: #d10841; /* Darker red to match flappy values */
 }
 
 .maze-game .info-label {
-    color: #7B1FA2; /* Darker purple for maze */
+    color: #6456b7; /* Darker purple for maze */
 }
 
 .tetris-game .info-label {
-    color: #c2185b; /* Darker pink for tetris blocks */
+    color: #a50b5e; /* Darker pink to match tetris values */
 }
 
 .game-controls {
