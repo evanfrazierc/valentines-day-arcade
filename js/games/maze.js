@@ -101,40 +101,39 @@ function loadAudio() {
         backgroundMusic = new Audio('../audio/tap-hero-music.wav');
         backgroundMusic.loop = false;
         backgroundMusic.volume = 0.6;
-        
-        hitPerfectSound = new Audio('../audio/hit-perfect.wav');
-        hitPerfectSound.volume = 0.7;
-        
-        hitGoodSound = new Audio('../audio/hit-good.wav');
-        hitGoodSound.volume = 0.6;
-        
-        hitMissSound = new Audio('../audio/hit-miss.wav');
-        hitMissSound.volume = 0.5;
-        
-        // Test if audio can be loaded
-        backgroundMusic.addEventListener('canplaythrough', () => {
-            audioEnabled = true;
-        }, { once: true });
-        
-        // Preload audio
         backgroundMusic.load();
-        hitPerfectSound.load();
-        hitGoodSound.load();
-        hitMissSound.load();
+        
+        const createSoundPool = (src, volume, poolSize = 3) => {
+            const pool = [];
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio(src);
+                audio.volume = volume;
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
+        
+        hitPerfectSound = createSoundPool('../audio/hit-perfect.wav', 0.7);
+        hitGoodSound = createSoundPool('../audio/hit-good.wav', 0.6);
+        hitMissSound = createSoundPool('../audio/hit-miss.wav', 0.5);
+        
+        audioEnabled = true;
     } catch (error) {
         console.log('Audio files not found - game will run without sound');
         audioEnabled = false;
     }
 }
 
-// Play a sound effect (with cloning for overlapping sounds)
-function playSound(audio) {
-    if (!audioEnabled || !audio) return;
+// Play a sound effect (uses sound pooling for overlapping sounds)
+function playSound(pool) {
+    if (!audioEnabled || !pool) return;
     try {
-        // Clone the audio to allow overlapping sounds
-        const sound = audio.cloneNode();
-        sound.volume = audio.volume;
-        sound.play().catch(err => console.log('Audio play failed:', err));
+        const sound = pool.find(audio => audio.paused || audio.ended);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(err => {});
+        }
     } catch (error) {
         // Silently fail if audio doesn't work
     }

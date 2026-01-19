@@ -31,22 +31,31 @@ let pipeTimer = 0;
 let groundOffset = 0;
 
 // Audio
-let flapSound = null;
-let scoreSound = null;
-let hitSound = null;
 let audioEnabled = false;
+let soundPool = {
+    flap: [],
+    score: [],
+    hit: []
+};
 
-// Load audio files
+// Load audio files with sound pooling for better performance
 function loadAudio() {
     try {
-        flapSound = new Audio('../audio/flap.wav');
-        flapSound.volume = 0.5;
+        // Create a pool of audio elements for each sound to avoid cloning overhead
+        const createSoundPool = (src, volume, poolSize = 3) => {
+            const pool = [];
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio(src);
+                audio.volume = volume;
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
         
-        scoreSound = new Audio('../audio/score.wav');
-        scoreSound.volume = 0.6;
-        
-        hitSound = new Audio('../audio/hit.wav');
-        hitSound.volume = 0.7;
+        soundPool.flap = createSoundPool('../audio/flap.wav', 0.5, 5);
+        soundPool.score = createSoundPool('../audio/score.wav', 0.6);
+        soundPool.hit = createSoundPool('../audio/hit.wav', 0.7);
         
         // Enable audio after first user interaction (browser requirement)
         const enableAudio = () => {
@@ -54,25 +63,23 @@ function loadAudio() {
         };
         
         // Test if audio can be loaded
-        flapSound.addEventListener('canplaythrough', enableAudio, { once: true });
-        
-        // Preload audio
-        flapSound.load();
-        scoreSound.load();
-        hitSound.load();
+        soundPool.flap[0].addEventListener('canplaythrough', enableAudio, { once: true });
     } catch (error) {
         console.log('Audio files not found - game will run without sound');
         audioEnabled = false;
     }
 }
 
-// Play a sound effect (with cloning for overlapping sounds)
-function playSound(audio) {
-    if (!audioEnabled || !audio) return;
+// Play a sound effect from the pool
+function playSound(poolName) {
+    if (!audioEnabled || !soundPool[poolName]) return;
     try {
-        const sound = audio.cloneNode();
-        sound.volume = audio.volume;
-        sound.play().catch(err => {});
+        // Find an available sound in the pool (one that's not playing)
+        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(err => {});
+        }
     } catch (error) {
         // Silently fail if audio doesn't work
     }
@@ -93,14 +100,14 @@ controls.on('touchstart', () => {
     if (!gameRunning) {
         startGame();
         return;
-    }
+    }'flap'
     
     if (!gameStarted) {
         gameStarted = true;
     }
     
     bird.dy = FLAP_STRENGTH;
-    playSound(flapSound);
+    playSound('flap');
     particles.createParticles(bird.x, bird.y + bird.height / 2, 5, PALETTE.PINK_PASTEL);
 });
 
@@ -147,14 +154,14 @@ function update() {
         // Apply gravity
         bird.dy += GRAVITY;
         bird.y += bird.dy;
-    }
+    }'hit'
     
     // Rotation based on velocity
     bird.rotation = Math.min(Math.max(bird.dy * 3, -30), 90);
     
     // Check ground and ceiling collision
     if (bird.y + bird.height > canvas.logicalHeight - 50 || bird.y < 0) {
-        playSound(hitSound);
+        playSound('hit');
         gameOver();
         return;
     }
@@ -201,14 +208,14 @@ function update() {
         // Remove off-screen pipes
         if (pipes[i].x + PIPE_WIDTH < 0) {
             pipes.splice(i, 1);
-            continue;
+            continue;'score'
         }
         
         // Check if bird passed pipe (score)
         if (!pipes[i].scored && bird.x > pipes[i].x + PIPE_WIDTH) {
             pipes[i].scored = true;
             score++;
-            playSound(scoreSound);
+            playSound('score');
             particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, PALETTE.PINK_HOT);
             
             if (score >= WIN_SCORE) {
@@ -218,19 +225,19 @@ function update() {
             
             updateUI();
         }
-        
+        'hit'
         // Check collision with pipes (with forgiving hitbox)
         const hitboxMargin = 5;
         if (bird.x + bird.width - hitboxMargin > pipes[i].x + hitboxMargin && 
             bird.x + hitboxMargin < pipes[i].x + PIPE_WIDTH - hitboxMargin) {
-            // Top pipe collision
+            // Top pipe collision'hit'
             if (bird.y + hitboxMargin < pipes[i].topHeight) {
-                playSound(hitSound);
+                playSound('hit');
                 gameOver();
                 return;
             }
             // Bottom pipe collision
-            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {                playSound(hitSound);                gameOver();
+            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {                playSound('hit');                gameOver();
                 return;
             }
         }

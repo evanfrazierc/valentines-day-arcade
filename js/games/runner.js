@@ -38,39 +38,44 @@ let nextObstacleTime = 0;
 let veggieTimer = 0;
 
 // Audio
-let jumpSound = null;
-let collectSound = null;
-let hitSound = null;
+let soundPool = {
+    jump: [],
+    collect: [],
+    hit: []
+};
 let audioEnabled = false;
 
 function loadAudio() {
     try {
-        jumpSound = new Audio('../audio/runner-jump.wav');
-        jumpSound.volume = 0.5;
+        const createSoundPool = (src, volume, poolSize = 3) => {
+            const pool = [];
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio(src);
+                audio.volume = volume;
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
         
-        collectSound = new Audio('../audio/runner-collect.wav');
-        collectSound.volume = 0.6;
+        soundPool.jump = createSoundPool('../audio/runner-jump.wav', 0.5);
+        soundPool.collect = createSoundPool('../audio/runner-collect.wav', 0.6);
+        soundPool.hit = createSoundPool('../audio/runner-obstacle.wav', 0.7);
         
-        hitSound = new Audio('../audio/runner-obstacle.wav');
-        hitSound.volume = 0.7;
-        
-        const enableAudio = () => { audioEnabled = true; };
-        jumpSound.addEventListener('canplaythrough', enableAudio, { once: true });
-        
-        jumpSound.load();
-        collectSound.load();
-        hitSound.load();
+        audioEnabled = true;
     } catch (error) {
         audioEnabled = false;
     }
 }
 
-function playSound(audio) {
-    if (!audioEnabled || !audio) return;
+function playSound(poolName) {
+    if (!audioEnabled) return;
     try {
-        const sound = audio.cloneNode();
-        sound.volume = audio.volume;
-        sound.play().catch(err => {});
+        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(err => {});
+        }
     } catch (error) {}
 }
 
@@ -267,7 +272,7 @@ function update() {
             width: obstacles[i].width - hitboxMargin * 2,
             height: obstacles[i].height - hitboxMargin * 2
         })) {
-            playSound(hitSound);
+            playSound('hit');
             gameOver();
             return;
         }
@@ -294,7 +299,7 @@ function update() {
             veggies[i].collected = true;
             veggiesCollected++;
             
-            playSound(collectSound);
+            playSound('collect');
             particles.createParticles(veggies[i].x, veggies[i].y, 15, PALETTE.GREEN_MEDIUM);
             
             if (veggiesCollected >= WIN_VEGGIES) {

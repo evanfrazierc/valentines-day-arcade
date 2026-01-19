@@ -21,34 +21,42 @@ let lastUpdate = 0;
 let tailWagTime = 0; // For tail wagging animation
 
 // Audio
-let eatSound = null;
-let crashSound = null;
+let soundPool = {
+    eat: [],
+    crash: []
+};
 let audioEnabled = false;
 
 function loadAudio() {
     try {
-        eatSound = new Audio('../audio/snake-eat.wav');
-        eatSound.volume = 0.6;
+        const createSoundPool = (src, volume, poolSize = 3) => {
+            const pool = [];
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio(src);
+                audio.volume = volume;
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
         
-        crashSound = new Audio('../audio/snake-crash.wav');
-        crashSound.volume = 0.7;
+        soundPool.eat = createSoundPool('../audio/snake-eat.wav', 0.6);
+        soundPool.crash = createSoundPool('../audio/snake-crash.wav', 0.7);
         
-        const enableAudio = () => { audioEnabled = true; };
-        eatSound.addEventListener('canplaythrough', enableAudio, { once: true });
-        
-        eatSound.load();
-        crashSound.load();
+        audioEnabled = true;
     } catch (error) {
         audioEnabled = false;
     }
 }
 
-function playSound(audio) {
-    if (!audioEnabled || !audio) return;
+function playSound(poolName) {
+    if (!audioEnabled) return;
     try {
-        const sound = audio.cloneNode();
-        sound.volume = audio.volume;
-        sound.play().catch(err => {});
+        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(err => {});
+        }
     } catch (error) {}
 }
 
@@ -149,14 +157,14 @@ function update() {
     
     // Check wall collision
     if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_HEIGHT) {
-        playSound(crashSound);
+        playSound('crash');
         gameOver();
         return;
     }
     
     // Check self collision
     if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-        playSound(crashSound);
+        playSound('crash');
         gameOver();
         return;
     }
@@ -167,7 +175,7 @@ function update() {
     if (!scrap.falling && (head.x === scrap.x || head.x === scrap.x + 1) &&
         (head.y === scrap.y || head.y === scrap.y + 1)) {
         scrapsCollected++;
-        playSound(eatSound);
+        playSound('eat');
         particles.createParticles(
             (scrap.x + 1) * TILE_SIZE,
             (scrap.y + 1) * TILE_SIZE,

@@ -32,39 +32,44 @@ let maxScore = 0;
 let gameRunning = false;
 
 // Audio
-let jumpSound = null;
-let collectSound = null;
-let fallSound = null;
+let soundPool = {
+    jump: [],
+    collect: [],
+    fall: []
+};
 let audioEnabled = false;
 
 function loadAudio() {
     try {
-        jumpSound = new Audio('../audio/jumper-jump.wav');
-        jumpSound.volume = 0.5;
+        const createSoundPool = (src, volume, poolSize = 3) => {
+            const pool = [];
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio(src);
+                audio.volume = volume;
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
         
-        collectSound = new Audio('../audio/jumper-land.wav'); // Use land sound for scoring
-        collectSound.volume = 0.6;
+        soundPool.jump = createSoundPool('../audio/jumper-jump.wav', 0.5);
+        soundPool.collect = createSoundPool('../audio/jumper-land.wav', 0.6);
+        soundPool.fall = createSoundPool('../audio/jumper-fall.wav', 0.7);
         
-        fallSound = new Audio('../audio/jumper-fall.wav');
-        fallSound.volume = 0.7;
-        
-        const enableAudio = () => { audioEnabled = true; };
-        jumpSound.addEventListener('canplaythrough', enableAudio, { once: true });
-        
-        jumpSound.load();
-        collectSound.load();
-        fallSound.load();
+        audioEnabled = true;
     } catch (error) {
         audioEnabled = false;
     }
 }
 
-function playSound(audio) {
-    if (!audioEnabled || !audio) return;
+function playSound(poolName) {
+    if (!audioEnabled) return;
     try {
-        const sound = audio.cloneNode();
-        sound.volume = audio.volume;
-        sound.play().catch(err => {});
+        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(err => {});
+        }
     } catch (error) {}
 }
 
@@ -332,7 +337,7 @@ function update() {
                 player.dy > 0) {
                 
                 player.dy = JUMP_STRENGTH;
-                playSound(jumpSound);
+                playSound('jump');
                 
                 // Activate spin for this jump if wine was collected
                 if (player.willSpinNextJump) {
@@ -395,7 +400,7 @@ function update() {
     
     // Check if player fell off screen
     if (player.y > canvas.logicalHeight) {
-        playSound(fallSound);
+        playSound('fall');
         gameOver();
         return;
     }

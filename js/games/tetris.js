@@ -35,39 +35,44 @@ let dropInterval = 60;
 let fastDrop = false;
 
 // Audio
-let rotateSound = null;
-let dropSound = null;
-let lineSound = null;
+let soundPool = {
+    rotate: [],
+    drop: [],
+    line: []
+};
 let audioEnabled = false;
 
 function loadAudio() {
     try {
-        rotateSound = new Audio('../audio/tetris-rotate.wav');
-        rotateSound.volume = 0.3;
+        const createSoundPool = (src, volume, poolSize = 3) => {
+            const pool = [];
+            for (let i = 0; i < poolSize; i++) {
+                const audio = new Audio(src);
+                audio.volume = volume;
+                audio.load();
+                pool.push(audio);
+            }
+            return pool;
+        };
         
-        dropSound = new Audio('../audio/tetris-drop.wav');
-        dropSound.volume = 0.5;
+        soundPool.rotate = createSoundPool('../audio/tetris-rotate.wav', 0.3);
+        soundPool.drop = createSoundPool('../audio/tetris-drop.wav', 0.5);
+        soundPool.line = createSoundPool('../audio/tetris-line.wav', 0.7);
         
-        lineSound = new Audio('../audio/tetris-line.wav');
-        lineSound.volume = 0.7;
-        
-        const enableAudio = () => { audioEnabled = true; };
-        rotateSound.addEventListener('canplaythrough', enableAudio, { once: true });
-        
-        rotateSound.load();
-        dropSound.load();
-        lineSound.load();
+        audioEnabled = true;
     } catch (error) {
         audioEnabled = false;
     }
 }
 
-function playSound(audio) {
-    if (!audioEnabled || !audio) return;
+function playSound(poolName) {
+    if (!audioEnabled) return;
     try {
-        const sound = audio.cloneNode();
-        sound.volume = audio.volume;
-        sound.play().catch(err => {});
+        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
+        if (sound) {
+            sound.currentTime = 0;
+            sound.play().catch(err => {});
+        }
     } catch (error) {}
 }
 
@@ -205,7 +210,7 @@ function rotatePiece() {
     
     if (!checkCollision(0, 0, newRotation)) {
         currentRotation = newRotation;
-        playSound(rotateSound);
+        playSound('rotate');
         particles.createParticles(
             (currentX + 1) * BLOCK_SIZE,
             (currentY + 1) * BLOCK_SIZE,
@@ -230,7 +235,7 @@ function lockPiece() {
     }
     
     clearLines();
-    playSound(dropSound);
+    playSound('drop');
     spawnPiece();
     fastDrop = false;
 }
@@ -240,7 +245,7 @@ function clearLines() {
     
     for (let y = ROWS - 1; y >= 0; y--) {
         if (board[y].every(cell => cell !== 0)) {
-            playSound(lineSound);
+            playSound('line');
             // Create particles for cleared line
             for (let x = 0; x < COLS; x++) {
                 particles.createParticles(
