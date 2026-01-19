@@ -89,12 +89,12 @@ const particles = new ParticleSystem(canvas, ctx);
 const controls = new TouchControls(canvas);
 let isDragging = false;
 
-controls.on('touchstart', (pos) => {
+controls.on('touchstart', async (pos) => {
     isDragging = true;
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            audioContext.resume(); // No await - mobile browsers handle this better without blocking
+            audioContext.resume().then(() => {});
         }
         // Play silent sound to unlock audio on iOS
         const oscillator = audioContext.createOscillator();
