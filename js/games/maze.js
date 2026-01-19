@@ -36,6 +36,7 @@ let audioContext = null;
 let hitPerfectSound = null;
 let hitGoodSound = null;
 let hitMissSound = null;
+let emptyTapSound = null;
 let audioEnabled = false;
 
 // Beat pattern for the song (75 BPM = 800ms per beat)
@@ -98,6 +99,7 @@ const beatPattern = [
 
 let beatIndex = 0;
 let startTime = 0;
+let lastEmptyTapTime = 0; // Prevent multiple empty tap sounds
 
 // Load audio files
 async function loadAudio() {
@@ -125,6 +127,7 @@ async function loadAudio() {
         hitPerfectSound = await loadSound('../audio/hit-perfect.wav');
         hitGoodSound = await loadSound('../audio/hit-good.wav');
         hitMissSound = await loadSound('../audio/hit-miss.wav');
+        emptyTapSound = await loadSound('../audio/tap-empty.wav');
     }
     
     audioEnabled = true;
@@ -139,18 +142,21 @@ async function loadAudio() {
 // Play a sound effect (uses Web Audio API for overlapping sounds)
 function playSound(poolName) {
     if (!audioEnabled || !audioContext) return;
+    
+    let buffer;
+    if (poolName === 'perfect') buffer = hitPerfectSound;
+    else if (poolName === 'good') buffer = hitGoodSound;
+    else if (poolName === 'miss') buffer = hitMissSound;
+    else if (poolName === 'empty') buffer = emptyTapSound;
+    
+    if (!buffer) return; // Sound not loaded yet
+    
     try {
-        let buffer;
-        if (poolName === 'perfect') buffer = hitPerfectSound;
-        else if (poolName === 'good') buffer = hitGoodSound;
-        else if (poolName === 'miss') buffer = hitMissSound;
-        else return;
-        
         const source = audioContext.createBufferSource();
         source.buffer = buffer;
         
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = poolName === 'perfect' ? 0.7 : poolName === 'good' ? 0.6 : 0.5;
+        gainNode.gain.value = poolName === 'perfect' ? 0.8 : poolName === 'good' ? 0.7 : poolName === 'empty' ? 0.3 : 0.6;
         
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
@@ -188,44 +194,6 @@ canvas.addEventListener('touchstart', (e) => {
         tapLane(lane);
     }
 }, { passive: false });
-
-controls.on('touchstart', (pos) => {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioContext.state === 'suspended') {
-            audioContext.resume();
-        }
-        // Play silent sound to unlock audio on iOS
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        gainNode.gain.value = 0;
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.start(0);
-        oscillator.stop(0.001);
-        setTimeout(() => loadAudio(), 100);
-    }
-    if (!gameRunning) {
-        startGame();
-        return;
-    }
-    
-    // Get the actual canvas rect
-    const rect = canvas.getBoundingClientRect();
-    
-    // Calculate canvas visual bounds based on aspect ratio
-    const visualHeight = rect.height;
-    const visualWidth = visualHeight * (canvas.logicalWidth / canvas.logicalHeight);
-    const visualLeft = (rect.width - visualWidth) / 2;
-    
-    // Map screen coordinate to canvas coordinate
-    const relativeX = pos.x - visualLeft;
-    const canvasX = (relativeX / visualWidth) * canvas.logicalWidth;
-    
-    // Determine which lane was tapped (clamp to 0-2)
-    const lane = Math.max(0, Math.min(2, Math.floor(canvasX / LANE_WIDTH)));
-    tapLane(lane);
-});
 
 controls.on('tap', (pos) => {
     if (!audioContext) {
@@ -350,6 +318,13 @@ function tapLane(lane) {
         }
         
         updateUI();
+    } else if (gameRunning) {
+        // Empty tap during gameplay - play soft feedback (debounced)
+        const now = Date.now();
+        if (now - lastEmptyTapTime > 100) { // Prevent multiple sounds within 100ms
+            playSound('empty');
+            lastEmptyTapTime = now;
+        }
     }
     // Note: Don't reset combo for empty taps, only when notes are missed
 }
@@ -667,7 +642,7 @@ function draw() {
     // Draw hit feedback
     if (feedbackText && gameRunning && Date.now() - feedbackTime < 500) {
         ctx.fillStyle = feedbackColor;
-        ctx.font = 'bold 40px "Brush Script MT"';
+        ctx.font = 'bold 40px Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(feedbackText, canvas.logicalWidth / 2, 60);
     }
