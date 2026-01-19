@@ -433,6 +433,5 @@ function restartGame() {
     initGame();
 }
 
-// Load audio and start the game
-loadAudio();
+// Initialize the game (audio loads on first user interaction)
 initGame();
