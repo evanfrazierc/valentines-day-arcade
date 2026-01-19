@@ -272,15 +272,50 @@ function setupCanvas(canvas, width, height) {
 // Draw a heart shape
 function drawHeart(ctx, x, y, size, color) {
     ctx.save();
-    ctx.fillStyle = color;
+    
+    // Create heart path
     ctx.beginPath();
     ctx.moveTo(x, y + size / 4);
     ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + size / 4);
     ctx.bezierCurveTo(x - size / 2, y + size / 2, x, y + size * 0.75, x, y + size);
     ctx.bezierCurveTo(x, y + size * 0.75, x + size / 2, y + size / 2, x + size / 2, y + size / 4);
     ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + size / 4);
+    
+    // Add subtle shadow
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+    ctx.shadowBlur = size * 0.2;
+    ctx.shadowOffsetY = size * 0.1;
+    
+    // Create gradient fill
+    const gradient = ctx.createLinearGradient(x, y, x, y + size);
+    gradient.addColorStop(0, color);
+    gradient.addColorStop(1, shadeColor(color, -30));
+    ctx.fillStyle = gradient;
     ctx.fill();
+    
+    // Remove shadow for highlight
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Add inner highlight
+    ctx.globalAlpha = 0.3;
+    ctx.beginPath();
+    ctx.ellipse(x - size * 0.15, y + size * 0.2, size * 0.15, size * 0.1, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'white';
+    ctx.fill();
+    
     ctx.restore();
+}
+
+// Helper function to darken/lighten colors
+function shadeColor(color, percent) {
+    const num = parseInt(color.slice(1), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.max(0, Math.min(255, (num >> 16) + amt));
+    const G = Math.max(0, Math.min(255, (num >> 8 & 0x00FF) + amt));
+    const B = Math.max(0, Math.min(255, (num & 0x0000FF) + amt));
+    return '#' + (0x1000000 + (R << 16) + (G << 8) + B).toString(16).slice(1);
 }
 
 // Simple collision detection

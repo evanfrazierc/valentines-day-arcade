@@ -8,8 +8,8 @@ const TARGET_Y = canvas.logicalHeight - 100;
 const TARGET_HEIGHT = 60;
 const LANE_WIDTH = canvas.logicalWidth / 3;
 const WIN_SCORE = 30;
-const HIT_WINDOW = 70; // pixels for perfect hit
-const GOOD_WINDOW = 120; // pixels for good hit
+const HIT_WINDOW = 10; // pixels for perfect hit
+const GOOD_WINDOW = 80; // pixels for good hit
 
 // Game state
 let notes = [];
@@ -20,6 +20,15 @@ let gameRunning = false;
 let gameTime = 0;
 let notesSpawned = 0;
 let totalNotes = 50; // Total notes in the song
+let feedbackText = '';
+let feedbackTime = 0;
+let feedbackColor = '';
+let shakeIntensity = 0;
+let shakeTime = 0;
+let equalizerBars = [];
+const NUM_BARS = 30;
+let waveOffset = 0;
+let waveSpeed = 0.08;
 
 // Beat pattern for the song (timing in milliseconds)
 // Minimum 700ms between notes to prevent 3 simultaneous notes
@@ -149,6 +158,26 @@ controls.on('tap', (pos) => {
 
 controls.init();
 
+// Perspective helpers
+function getLaneXAtY(lane, y) {
+    // Create perspective: top is narrower (50% width), bottom is full width
+    const perspectiveFactor = 0.5 + (y / canvas.logicalHeight) * 0.5; // 0.5 to 1.0
+    const topWidth = canvas.logicalWidth * 0.5;
+    const bottomWidth = canvas.logicalWidth;
+    const currentWidth = topWidth + (bottomWidth - topWidth) * (y / canvas.logicalHeight);
+    const leftOffset = (canvas.logicalWidth - currentWidth) / 2;
+    
+    const laneWidth = currentWidth / 3;
+    return leftOffset + lane * laneWidth + laneWidth / 2;
+}
+
+function getLaneWidthAtY(y) {
+    const topWidth = canvas.logicalWidth * 0.5;
+    const bottomWidth = canvas.logicalWidth;
+    const currentWidth = topWidth + (bottomWidth - topWidth) * (y / canvas.logicalHeight);
+    return currentWidth / 3;
+}
+
 function tapLane(lane) {
     // Find the closest note in this lane
     let closestNote = null;
@@ -172,16 +201,34 @@ function tapLane(lane) {
             // Perfect hit
             score++;
             combo++;
+            feedbackText = 'Perfect!';
+            feedbackColor = PALETTE.YELLOW_LIGHT;
+            feedbackTime = Date.now();
+            // Boost equalizer on perfect hit
+            waveSpeed = 0.16; // Speed up wave
+            waveOffset += 0.5; // Jump wave forward
+            equalizerBars.forEach(bar => {
+                bar.targetHeight = Math.min(1.0, bar.targetHeight + 0.3);
+            });
             particles.createParticles(
                 lane * LANE_WIDTH + LANE_WIDTH / 2,
                 TARGET_Y,
                 20,
-                PALETTE.YELLOW_GOLD
+                PALETTE.YELLOW_LIGHT
             );
         } else {
             // Good hit
             score++;
             combo++;
+            feedbackText = 'Nice!';
+            feedbackColor = PALETTE.PINK_PASTEL;
+            feedbackTime = Date.now();
+            // Boost equalizer on good hit
+            waveSpeed = 0.12; // Speed up wave slightly
+            waveOffset += 0.3; // Jump wave forward
+            equalizerBars.forEach(bar => {
+                bar.targetHeight = Math.min(1.0, bar.targetHeight + 0.2);
+            });
             particles.createParticles(
                 lane * LANE_WIDTH + LANE_WIDTH / 2,
                 TARGET_Y,
@@ -199,13 +246,8 @@ function tapLane(lane) {
         }
         
         updateUI();
-    } else {
-        // Missed tap - reset combo
-        if (combo > 0) {
-            combo = 0;
-            updateUI();
-        }
     }
+    // Note: Don't reset combo for empty taps, only when notes are missed
 }
 
 // Initialize game
@@ -218,6 +260,22 @@ function initGame() {
     gameTime = 0;
     beatIndex = 0;
     notesSpawned = 0;
+    feedbackText = '';
+    feedbackTime = 0;
+    feedbackColor = '';
+    shakeIntensity = 0;
+    shakeTime = 0;
+    waveOffset = 0;
+    
+    // Initialize equalizer bars
+    equalizerBars = [];
+    for (let i = 0; i < NUM_BARS; i++) {
+        equalizerBars.push({
+            height: Math.random() * 0.6 + 0.3,
+            targetHeight: Math.random() * 0.6 + 0.3,
+            color: `hsl(${(i / NUM_BARS) * 360}, 70%, 50%)`
+        });
+    }
     startTime = 0;
     
     updateUI();
@@ -249,21 +307,40 @@ function update() {
         beatIndex++;
     }
     
+    // Update equalizer bars with wave pattern
+    waveOffset += waveSpeed;
+    waveSpeed = Math.max(0.08, waveSpeed * 0.98); // Gradually slow back to base speed
+    equalizerBars.forEach((bar, i) => {
+        // Create wave pattern using sine waves
+        const wave1 = Math.sin((i / NUM_BARS) * Math.PI * 2 + waveOffset) * 0.15;
+        const wave2 = Math.sin((i / NUM_BARS) * Math.PI * 4 + waveOffset * 1.5) * 0.1;
+        bar.targetHeight = 0.5 + wave1 + wave2;
+        
+        // Fast interpolation for smooth wave motion
+        bar.height += (bar.targetHeight - bar.height) * 0.6;
+    });
+    
     // Update notes
     for (let i = notes.length - 1; i >= 0; i--) {
-        if (!notes[i].hit) {
+        if (!notes[i].hit && !notes[i].missed) {
             notes[i].y += NOTE_SPEED;
             
             // Check if note was missed
-            if (notes[i].y > TARGET_Y + GOOD_WINDOW && !notes[i].missed) {
+            if (notes[i].y > TARGET_Y + GOOD_WINDOW) {
                 notes[i].missed = true;
                 combo = 0;
+                feedbackText = 'Missed';
+                feedbackColor = PALETTE.RED_PRIMARY;
+                feedbackTime = Date.now();
+                shakeIntensity = 10;
+                shakeTime = Date.now();
                 updateUI();
             }
         }
         
-        // Remove notes that are off screen
-        if (notes[i].y > canvas.logicalHeight || notes[i].hit) {
+        // Remove notes that are off screen or have been processed
+        // Allow notes to go past screen to trigger missed state
+        if (notes[i].y > canvas.logicalHeight + 50 || notes[i].hit || notes[i].missed) {
             notes.splice(i, 1);
         }
     }
@@ -279,50 +356,189 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with gradient
+    // Apply screen shake
+    ctx.save();
+    if (shakeIntensity > 0) {
+        const elapsed = Date.now() - shakeTime;
+        const decay = Math.max(0, 1 - elapsed / 300); // Shake for 300ms
+        shakeIntensity = 10 * decay;
+        
+        const shakeX = (Math.random() - 0.5) * shakeIntensity * 2;
+        const shakeY = (Math.random() - 0.5) * shakeIntensity * 2;
+        ctx.translate(shakeX, shakeY);
+    }
+    
+    // Clear canvas with dark club atmosphere
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, PALETTE.BROWN_MAHOGANY);
-    gradient.addColorStop(1, PALETTE.RED_DARK);
+    gradient.addColorStop(0, '#0a0a0a'); // Very dark at top
+    gradient.addColorStop(0.6, '#1a1a1a'); // Dark gray
+    gradient.addColorStop(1, '#2a2a2a'); // Slightly lighter at bottom
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
-    // Draw lane dividers
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2;
-    for (let i = 1; i < 3; i++) {
+    // Draw equalizer visualization
+    const maxEqualizerHeight = canvas.logicalHeight * 0.8; // 80% of screen
+    const barWidth = canvas.logicalWidth / NUM_BARS;
+    
+    equalizerBars.forEach((bar, i) => {
+        const x = i * barWidth;
+        const height = bar.height * maxEqualizerHeight;
+        const y = canvas.logicalHeight - height;
+        
+        // Draw bar with gradient
+        const barGradient = ctx.createLinearGradient(x, y, x, canvas.logicalHeight);
+        barGradient.addColorStop(0, bar.color);
+        barGradient.addColorStop(1, '#000000');
+        ctx.fillStyle = barGradient;
+        ctx.fillRect(x, y, barWidth - 2, height);
+        
+        // Add glow effect at top
+        ctx.fillStyle = `${bar.color}88`;
+        ctx.fillRect(x, y, barWidth - 2, 3);
+    });
+    
+    // Add stage lights effect (spotlights from top)
+    const spotlightGradient = ctx.createRadialGradient(
+        canvas.logicalWidth / 2, -50, 0,
+        canvas.logicalWidth / 2, 200, 200
+    );
+    spotlightGradient.addColorStop(0, 'rgba(255, 200, 100, 0.1)');
+    spotlightGradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
+    ctx.fillStyle = spotlightGradient;
+    ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
+    
+    // Draw guitar neck with perspective
+    const topWidth = canvas.logicalWidth * 0.5;
+    const bottomWidth = canvas.logicalWidth;
+    const topOffset = (canvas.logicalWidth - topWidth) / 2;
+    const bottomOffset = (canvas.logicalWidth - bottomWidth) / 2;
+    
+    // Draw fretboard background with wood texture
+    // Base wood color with rich gradient
+    const fretboardGradient = ctx.createLinearGradient(canvas.logicalWidth / 2 - 50, 0, canvas.logicalWidth / 2 + 50, 0);
+    fretboardGradient.addColorStop(0, '#3d2817');
+    fretboardGradient.addColorStop(0.3, '#5a3f2a');
+    fretboardGradient.addColorStop(0.5, '#6b4423');
+    fretboardGradient.addColorStop(0.7, '#5a3f2a');
+    fretboardGradient.addColorStop(1, '#3d2817');
+    ctx.fillStyle = fretboardGradient;
+    ctx.beginPath();
+    ctx.moveTo(topOffset, 0);
+    ctx.lineTo(canvas.logicalWidth - topOffset, 0);
+    ctx.lineTo(canvas.logicalWidth - bottomOffset, canvas.logicalHeight);
+    ctx.lineTo(bottomOffset, canvas.logicalHeight);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Add wood grain texture with horizontal lines
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+    ctx.lineWidth = 1;
+    for (let y = 0; y < canvas.logicalHeight; y += 3) {
+        const currentWidth = topWidth + (bottomWidth - topWidth) * (y / canvas.logicalHeight);
+        const currentOffset = (canvas.logicalWidth - currentWidth) / 2;
+        const grain = Math.sin(y * 0.1) * 2;
         ctx.beginPath();
-        ctx.moveTo(i * LANE_WIDTH, 0);
-        ctx.lineTo(i * LANE_WIDTH, canvas.logicalHeight);
+        ctx.moveTo(currentOffset + grain, y);
+        ctx.lineTo(canvas.logicalWidth - currentOffset + grain, y);
         ctx.stroke();
     }
     
-    // Draw target line
+    // Add darker wood grain variation
+    ctx.strokeStyle = 'rgba(80, 50, 20, 0.2)';
+    for (let y = 0; y < canvas.logicalHeight; y += 8) {
+        const currentWidth = topWidth + (bottomWidth - topWidth) * (y / canvas.logicalHeight);
+        const currentOffset = (canvas.logicalWidth - currentWidth) / 2;
+        const grain = Math.sin(y * 0.05) * 3;
+        ctx.beginPath();
+        ctx.moveTo(currentOffset + grain, y);
+        ctx.lineTo(canvas.logicalWidth - currentOffset + grain, y);
+        ctx.stroke();
+    }
+    
+    // Add highlighting on edges for depth
+    ctx.strokeStyle = 'rgba(120, 80, 40, 0.3)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(topOffset, 0);
+    ctx.lineTo(bottomOffset, canvas.logicalHeight);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(canvas.logicalWidth - topOffset, 0);
+    ctx.lineTo(canvas.logicalWidth - bottomOffset, canvas.logicalHeight);
+    ctx.stroke();
+    
+    // Draw lane dividers (strings)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 2;
+    for (let i = 1; i < 3; i++) {
+        const topX = topOffset + (topWidth / 3) * i;
+        const bottomX = bottomOffset + (bottomWidth / 3) * i;
+        ctx.beginPath();
+        ctx.moveTo(topX, 0);
+        ctx.lineTo(bottomX, canvas.logicalHeight);
+        ctx.stroke();
+    }
+    
+    // Draw frets (horizontal lines)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 3;
+    for (let i = 1; i < 8; i++) {
+        const y = (canvas.logicalHeight / 8) * i;
+        const currentWidth = topWidth + (bottomWidth - topWidth) * (y / canvas.logicalHeight);
+        const leftX = (canvas.logicalWidth - currentWidth) / 2;
+        ctx.beginPath();
+        ctx.moveTo(leftX, y);
+        ctx.lineTo(leftX + currentWidth, y);
+        ctx.stroke();
+    }
+    
+    // Draw target line with perspective
+    const targetWidth = topWidth + (bottomWidth - topWidth) * (TARGET_Y / canvas.logicalHeight);
+    const targetOffset = (canvas.logicalWidth - targetWidth) / 2;
+    
     ctx.strokeStyle = PALETTE.WHITE;
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(0, TARGET_Y);
-    ctx.lineTo(canvas.logicalWidth, TARGET_Y);
+    ctx.moveTo(targetOffset, TARGET_Y);
+    ctx.lineTo(canvas.logicalWidth - targetOffset, TARGET_Y);
     ctx.stroke();
     
     // Draw target area
+    const targetTopY = TARGET_Y - TARGET_HEIGHT / 2;
+    const targetBottomY = TARGET_Y + TARGET_HEIGHT / 2;
+    const targetTopWidth = topWidth + (bottomWidth - topWidth) * (targetTopY / canvas.logicalHeight);
+    const targetBottomWidth = topWidth + (bottomWidth - topWidth) * (targetBottomY / canvas.logicalHeight);
+    const targetTopOffset = (canvas.logicalWidth - targetTopWidth) / 2;
+    const targetBottomOffset = (canvas.logicalWidth - targetBottomWidth) / 2;
+    
     ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    ctx.fillRect(0, TARGET_Y - TARGET_HEIGHT / 2, canvas.logicalWidth, TARGET_HEIGHT);
+    ctx.beginPath();
+    ctx.moveTo(targetTopOffset, targetTopY);
+    ctx.lineTo(canvas.logicalWidth - targetTopOffset, targetTopY);
+    ctx.lineTo(canvas.logicalWidth - targetBottomOffset, targetBottomY);
+    ctx.lineTo(targetBottomOffset, targetBottomY);
+    ctx.closePath();
+    ctx.fill();
     
     // Draw notes
     notes.forEach(note => {
         if (!note.hit) {
-            const x = note.lane * LANE_WIDTH + LANE_WIDTH / 2;
+            const x = getLaneXAtY(note.lane, note.y);
+            
+            // Scale note size based on perspective
+            const perspectiveFactor = 0.5 + (note.y / canvas.logicalHeight) * 0.5;
+            const size = note.size * perspectiveFactor;
             
             // Color based on position
             let color = PALETTE.PINK_HOT;
             const distanceFromTarget = Math.abs(note.y - TARGET_Y);
             if (distanceFromTarget < HIT_WINDOW) {
-                color = PALETTE.YELLOW_GOLD; // Yellow for perfect
+                color = PALETTE.YELLOW_LIGHT; // Yellow for perfect
             } else if (distanceFromTarget < GOOD_WINDOW) {
                 color = PALETTE.PINK_PASTEL; // Light pink for good
             }
             
-            drawHeart(ctx, x, note.y, note.size, color);
+            drawHeart(ctx, x, note.y, size, color);
         }
     });
     
@@ -330,12 +546,12 @@ function draw() {
     particles.update();
     particles.draw();
     
-    // Draw combo multiplier
-    if (combo > 1 && gameRunning) {
-        ctx.fillStyle = PALETTE.YELLOW_GOLD;
-        ctx.font = 'bold 30px Arial';
+    // Draw hit feedback
+    if (feedbackText && gameRunning && Date.now() - feedbackTime < 500) {
+        ctx.fillStyle = feedbackColor;
+        ctx.font = '35px "Brush Script MT", cursive';
         ctx.textAlign = 'center';
-        ctx.fillText(`${combo}x`, canvas.logicalWidth / 2, 60);
+        ctx.fillText(feedbackText, canvas.logicalWidth / 2, 60);
     }
     
     // Draw start message
@@ -347,6 +563,9 @@ function draw() {
         ctx.font = '16px Arial';
         ctx.fillText('Tap hearts as they hit the line', canvas.logicalWidth / 2, canvas.logicalHeight / 2 + 10);
     }
+    
+    // Restore context from shake
+    ctx.restore();
 }
 
 function gameLoop() {
