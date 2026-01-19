@@ -184,7 +184,8 @@ function initGame() {
                 color: colors[row % colors.length],
                 visible: true,
                 hasCat: hasCat,
-                catEmoji: hasCat ? CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)] : null
+                catEmoji: hasCat ? CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)] : null,
+                catAnimOffset: hasCat ? Math.random() * Math.PI * 2 : 0
             };
             brickIndex++;
         }
@@ -226,6 +227,17 @@ function update() {
     if (ball.x + ball.radius > canvas.logicalWidth || ball.x - ball.radius < 0) {
         ball.dx = -ball.dx;
         playSound('wall');
+        
+        // Prevent shallow angles - ensure minimum vertical speed
+        const minVerticalSpeed = currentBallSpeed * 0.3;
+        if (Math.abs(ball.dy) < minVerticalSpeed) {
+            ball.dy = ball.dy > 0 ? minVerticalSpeed : -minVerticalSpeed;
+            // Adjust dx to maintain overall speed
+            const speed = Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+            const ratio = currentBallSpeed / speed;
+            ball.dx *= ratio;
+            ball.dy *= ratio;
+        }
     }
     
     if (ball.y - ball.radius < 0) {
@@ -348,44 +360,81 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas
-    ctx.fillStyle = 'rgb(103, 41, 64)';
+    // Clear canvas with gradient background
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    bgGradient.addColorStop(0, '#4A1942'); // Deep purple
+    bgGradient.addColorStop(0.5, '#67294C'); // Rose
+    bgGradient.addColorStop(1, '#2A1A3D'); // Dark purple
+    ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw bricks (rectangles)
     bricks.forEach(row => {
         row.forEach(brick => {
             if (brick.visible) {
-                // Draw rounded rectangle brick
+                // Draw rounded rectangle brick with shadow
                 const radius = 6;
+                
+                // Add glow for bricks with cats
+                if (brick.hasCat) {
+                    ctx.save();
+                    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+                    ctx.shadowBlur = 15;
+                    ctx.fillStyle = brick.color;
+                    ctx.beginPath();
+                    ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
+                    ctx.fill();
+                    ctx.restore();
+                }
+                
+                // Shadow
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.beginPath();
+                ctx.roundRect(brick.x + 2, brick.y + 2, brick.width, brick.height, radius);
+                ctx.fill();
+                
+                // Main brick color
                 ctx.fillStyle = brick.color;
                 ctx.beginPath();
                 ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
                 ctx.fill();
                 
-                // Add subtle gradient overlay
+                // Add subtle gradient overlay for 3D effect
                 const gradient = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + brick.height);
-                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.1)');
+                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)'); // Lighter top
+                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)'); // Slightly darker bottom
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
                 ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
                 ctx.fill();
                 
-                // Add glossy border
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.lineWidth = 1.5;
+                // Add subtle border
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
                 ctx.beginPath();
                 ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
                 ctx.stroke();
                 
                 // Draw cat emoji if brick has cat
                 if (brick.hasCat) {
+                    // Calculate slight movement animation
+                    const time = Date.now() * 0.002;
+                    const offsetX = Math.sin(time + brick.catAnimOffset) * 2;
+                    const offsetY = Math.cos(time * 1.5 + brick.catAnimOffset) * 1.5;
+                    
+                    // White background circle for better visibility
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.beginPath();
+                    ctx.arc(brick.x + brick.width / 2 + offsetX, brick.y + brick.height / 2 + offsetY, 12, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Draw cat emoji larger
                     ctx.fillStyle = '#000000';
-                    ctx.font = '16px Arial';
+                    ctx.font = '20px Arial';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText(brick.catEmoji, brick.x + brick.width / 2, brick.y + brick.height / 2);
+                    ctx.fillText(brick.catEmoji, brick.x + brick.width / 2 + offsetX, brick.y + brick.height / 2 + offsetY);
                 }
             }
         });
