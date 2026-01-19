@@ -32,9 +32,14 @@ let waveSpeed = 0.08;
 
 // Audio
 let backgroundMusic = null;
-let hitPerfectSound = null;
-let hitGoodSound = null;
-let hitMissSound = null;
+let hitPerfectSound = [];
+let hitGoodSound = [];
+let hitMissSound = [];
+let soundPoolIndex = {
+    perfect: 0,
+    good: 0,
+    miss: 0
+};
 let audioEnabled = false;
 
 // Beat pattern for the song (timing in milliseconds)
@@ -126,14 +131,20 @@ function loadAudio() {
 }
 
 // Play a sound effect (uses sound pooling for overlapping sounds)
-function playSound(pool) {
-    if (!audioEnabled || !pool) return;
+function playSound(poolName) {
+    if (!audioEnabled) return;
     try {
-        const sound = pool.find(audio => audio.paused || audio.ended);
-        if (sound) {
-            sound.currentTime = 0;
-            sound.play().catch(err => {});
-        }
+        let pool;
+        if (poolName === 'perfect') pool = hitPerfectSound;
+        else if (poolName === 'good') pool = hitGoodSound;
+        else if (poolName === 'miss') pool = hitMissSound;
+        else return;
+        
+        const sound = pool[soundPoolIndex[poolName]];
+        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        
+        sound.currentTime = 0;
+        sound.play().catch(err => {});
     } catch (error) {
         // Silently fail if audio doesn't work
     }
@@ -255,7 +266,7 @@ function tapLane(lane) {
             feedbackText = 'Perfect!';
             feedbackColor = PALETTE.YELLOW_LIGHT;
             feedbackTime = Date.now();
-            playSound(hitPerfectSound);
+            playSound('perfect');
             // Boost equalizer on perfect hit
             waveSpeed = 0.16; // Speed up wave
             waveOffset += 0.5; // Jump wave forward
@@ -275,7 +286,7 @@ function tapLane(lane) {
             feedbackText = 'Nice!';
             feedbackColor = PALETTE.PINK_PASTEL;
             feedbackTime = Date.now();
-            playSound(hitGoodSound);
+            playSound('good');
             // Boost equalizer on good hit
             waveSpeed = 0.12; // Speed up wave slightly
             waveOffset += 0.3; // Jump wave forward
@@ -392,7 +403,7 @@ function update() {
                 feedbackText = 'Missed';
                 feedbackColor = PALETTE.RED_PRIMARY;
                 feedbackTime = Date.now();
-                playSound(hitMissSound);
+                playSound('miss');
                 shakeIntensity = 10;
                 shakeTime = Date.now();
                 updateUI();

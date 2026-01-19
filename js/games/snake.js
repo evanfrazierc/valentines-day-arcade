@@ -25,6 +25,10 @@ let soundPool = {
     eat: [],
     crash: []
 };
+let soundPoolIndex = {
+    eat: 0,
+    crash: 0
+};
 let audioEnabled = false;
 
 function loadAudio() {
@@ -52,11 +56,12 @@ function loadAudio() {
 function playSound(poolName) {
     if (!audioEnabled) return;
     try {
-        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
-        if (sound) {
-            sound.currentTime = 0;
-            sound.play().catch(err => {});
-        }
+        const pool = soundPool[poolName];
+        const sound = pool[soundPoolIndex[poolName]];
+        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        
+        sound.currentTime = 0;
+        sound.play().catch(err => {});
     } catch (error) {}
 }
 

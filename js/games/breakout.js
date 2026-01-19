@@ -40,6 +40,13 @@ let soundPool = {
     lose: [],
     catchCat: []
 };
+let soundPoolIndex = {
+    paddle: 0,
+    brick: 0,
+    wall: 0,
+    lose: 0,
+    catchCat: 0
+};
 let audioEnabled = false;
 
 // Load audio files
@@ -56,9 +63,9 @@ function loadAudio() {
             return pool;
         };
         
-        soundPool.paddle = createSoundPool('../audio/breakout-paddle.wav', 0.5);
-        soundPool.brick = createSoundPool('../audio/breakout-brick.wav', 0.6);
-        soundPool.wall = createSoundPool('../audio/breakout-wall.wav', 0.4);
+        soundPool.paddle = createSoundPool('../audio/breakout-paddle.wav', 0.5, 5);
+        soundPool.brick = createSoundPool('../audio/breakout-brick.wav', 0.6, 4);
+        soundPool.wall = createSoundPool('../audio/breakout-wall.wav', 0.4, 6);
         soundPool.lose = createSoundPool('../audio/breakout-lose.wav', 0.7);
         soundPool.catchCat = createSoundPool('../audio/meow.wav', 0.6);
         
@@ -73,11 +80,12 @@ function loadAudio() {
 function playSound(poolName) {
     if (!audioEnabled) return;
     try {
-        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
-        if (sound) {
-            sound.currentTime = 0;
-            sound.play().catch(err => {});
-        }
+        const pool = soundPool[poolName];
+        const sound = pool[soundPoolIndex[poolName]];
+        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        
+        sound.currentTime = 0;
+        sound.play().catch(err => {});
     } catch (error) {
         // Silently fail
     }

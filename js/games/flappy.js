@@ -37,6 +37,11 @@ let soundPool = {
     score: [],
     hit: []
 };
+let soundPoolIndex = {
+    flap: 0,
+    score: 0,
+    hit: 0
+};
 
 // Load audio files with sound pooling for better performance
 function loadAudio() {
@@ -74,12 +79,13 @@ function loadAudio() {
 function playSound(poolName) {
     if (!audioEnabled || !soundPool[poolName]) return;
     try {
-        // Find an available sound in the pool (one that's not playing)
-        const sound = soundPool[poolName].find(audio => audio.paused || audio.ended);
-        if (sound) {
-            sound.currentTime = 0;
-            sound.play().catch(err => {});
-        }
+        // Use round-robin to cycle through pool (much faster than find())
+        const pool = soundPool[poolName];
+        const sound = pool[soundPoolIndex[poolName]];
+        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        
+        sound.currentTime = 0;
+        sound.play().catch(err => {});
     } catch (error) {
         // Silently fail if audio doesn't work
     }
