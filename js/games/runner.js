@@ -37,6 +37,43 @@ let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
 
+// Audio
+let jumpSound = null;
+let collectSound = null;
+let hitSound = null;
+let audioEnabled = false;
+
+function loadAudio() {
+    try {
+        jumpSound = new Audio('../audio/runner-jump.wav');
+        jumpSound.volume = 0.5;
+        
+        collectSound = new Audio('../audio/runner-collect.wav');
+        collectSound.volume = 0.6;
+        
+        hitSound = new Audio('../audio/runner-obstacle.wav');
+        hitSound.volume = 0.7;
+        
+        const enableAudio = () => { audioEnabled = true; };
+        jumpSound.addEventListener('canplaythrough', enableAudio, { once: true });
+        
+        jumpSound.load();
+        collectSound.load();
+        hitSound.load();
+    } catch (error) {
+        audioEnabled = false;
+    }
+}
+
+function playSound(audio) {
+    if (!audioEnabled || !audio) return;
+    try {
+        const sound = audio.cloneNode();
+        sound.volume = audio.volume;
+        sound.play().catch(err => {});
+    } catch (error) {}
+}
+
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
@@ -230,6 +267,7 @@ function update() {
             width: obstacles[i].width - hitboxMargin * 2,
             height: obstacles[i].height - hitboxMargin * 2
         })) {
+            playSound(hitSound);
             gameOver();
             return;
         }
@@ -256,6 +294,7 @@ function update() {
             veggies[i].collected = true;
             veggiesCollected++;
             
+            playSound(collectSound);
             particles.createParticles(veggies[i].x, veggies[i].y, 15, PALETTE.GREEN_MEDIUM);
             
             if (veggiesCollected >= WIN_VEGGIES) {
@@ -460,5 +499,6 @@ function restartGame() {
     initGame();
 }
 
-// Start the game
+// Load audio and start the game
+loadAudio();
 initGame();

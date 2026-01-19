@@ -32,6 +32,63 @@ let currentBallSpeed = 4;
 const BASE_BALL_SPEED = 4;
 const SPEED_INCREASE_PER_HIT = 0.25;
 
+// Audio
+let paddleSound = null;
+let brickSound = null;
+let wallSound = null;
+let loseSound = null;
+let catchCatSound = null;
+let audioEnabled = false;
+
+// Load audio files
+function loadAudio() {
+    try {
+        paddleSound = new Audio('../audio/breakout-paddle.wav');
+        paddleSound.volume = 0.5;
+        
+        brickSound = new Audio('../audio/breakout-brick.wav');
+        brickSound.volume = 0.6;
+        
+        wallSound = new Audio('../audio/breakout-wall.wav');
+        wallSound.volume = 0.4;
+        
+        loseSound = new Audio('../audio/breakout-lose.wav');
+        loseSound.volume = 0.7;
+        
+        catchCatSound = new Audio('../audio/score.wav'); // Reuse score sound
+        catchCatSound.volume = 0.6;
+        
+        // Enable audio after first user interaction
+        const enableAudio = () => {
+            audioEnabled = true;
+        };
+        
+        paddleSound.addEventListener('canplaythrough', enableAudio, { once: true });
+        
+        // Preload audio
+        paddleSound.load();
+        brickSound.load();
+        wallSound.load();
+        loseSound.load();
+        catchCatSound.load();
+    } catch (error) {
+        console.log('Audio files not found - game will run without sound');
+        audioEnabled = false;
+    }
+}
+
+// Play a sound effect
+function playSound(audio) {
+    if (!audioEnabled || !audio) return;
+    try {
+        const sound = audio.cloneNode();
+        sound.volume = audio.volume;
+        sound.play().catch(err => {});
+    } catch (error) {
+        // Silently fail
+    }
+}
+
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
@@ -41,6 +98,9 @@ let isDragging = false;
 
 controls.on('touchstart', (pos) => {
     isDragging = true;
+    if (!audioEnabled && paddleSound) {
+        audioEnabled = true;
+    }
     if (!gameRunning) {
         startGame();
     }
@@ -160,10 +220,12 @@ function update() {
     // Wall collision
     if (ball.x + ball.radius > canvas.logicalWidth || ball.x - ball.radius < 0) {
         ball.dx = -ball.dx;
+        playSound(wallSound);
     }
     
     if (ball.y - ball.radius < 0) {
         ball.dy = -ball.dy;
+        playSound(wallSound);
     }
     
     // Paddle collision
@@ -182,12 +244,14 @@ function update() {
         ball.dx = currentBallSpeed * Math.sin(angle);
         ball.dy = -currentBallSpeed * Math.cos(angle);
         
+        playSound(paddleSound);
         particles.createParticles(ball.x, ball.y, 10, PALETTE.PINK_HOT);
     }
     
     // Ball falls below paddle
     if (ball.y - ball.radius > canvas.logicalHeight) {
         lives--;
+        playSound(loseSound);
         updateUI();
         
         if (lives <= 0) {
@@ -216,6 +280,7 @@ function update() {
             cat.x + 15 >= paddle.x && 
             cat.x <= paddle.x + paddle.width) {
             catsRescued++;
+            playSound(catchCatSound);
             fallingCats.splice(i, 1);
             particles.createParticles(cat.x + 15, cat.y + 10, 20, PALETTE.YELLOW_GOLD);
             updateUI();
@@ -244,6 +309,7 @@ function update() {
             )) {
                 ball.dy = -ball.dy;
                 brick.visible = false;
+                playSound(brickSound);
                 bricksRemaining--;
                 
                 // If brick has a cat, make it fall
@@ -424,5 +490,6 @@ function restartGame() {
     initGame();
 }
 
-// Start the game
+// Load audio and start the game
+loadAudio();
 initGame();

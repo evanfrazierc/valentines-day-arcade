@@ -34,6 +34,43 @@ let dropTimer = 0;
 let dropInterval = 60;
 let fastDrop = false;
 
+// Audio
+let rotateSound = null;
+let dropSound = null;
+let lineSound = null;
+let audioEnabled = false;
+
+function loadAudio() {
+    try {
+        rotateSound = new Audio('../audio/tetris-rotate.wav');
+        rotateSound.volume = 0.3;
+        
+        dropSound = new Audio('../audio/tetris-drop.wav');
+        dropSound.volume = 0.5;
+        
+        lineSound = new Audio('../audio/tetris-line.wav');
+        lineSound.volume = 0.7;
+        
+        const enableAudio = () => { audioEnabled = true; };
+        rotateSound.addEventListener('canplaythrough', enableAudio, { once: true });
+        
+        rotateSound.load();
+        dropSound.load();
+        lineSound.load();
+    } catch (error) {
+        audioEnabled = false;
+    }
+}
+
+function playSound(audio) {
+    if (!audioEnabled || !audio) return;
+    try {
+        const sound = audio.cloneNode();
+        sound.volume = audio.volume;
+        sound.play().catch(err => {});
+    } catch (error) {}
+}
+
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
@@ -64,8 +101,9 @@ controls.on('swipe', (direction) => {
     }
 });
 
-controls.on('tap', () => {
-    if (!gameRunning) {
+controls.on('tap', () => {    if (!audioEnabled && rotateSound) {
+        audioEnabled = true;
+    }    if (!gameRunning) {
         startGame();
         return;
     }
@@ -167,6 +205,7 @@ function rotatePiece() {
     
     if (!checkCollision(0, 0, newRotation)) {
         currentRotation = newRotation;
+        playSound(rotateSound);
         particles.createParticles(
             (currentX + 1) * BLOCK_SIZE,
             (currentY + 1) * BLOCK_SIZE,
@@ -191,6 +230,7 @@ function lockPiece() {
     }
     
     clearLines();
+    playSound(dropSound);
     spawnPiece();
     fastDrop = false;
 }
@@ -200,6 +240,7 @@ function clearLines() {
     
     for (let y = ROWS - 1; y >= 0; y--) {
         if (board[y].every(cell => cell !== 0)) {
+            playSound(lineSound);
             // Create particles for cleared line
             for (let x = 0; x < COLS; x++) {
                 particles.createParticles(
@@ -375,5 +416,6 @@ function restartGame() {
     initGame();
 }
 
-// Start the game
+// Load audio and start the game
+loadAudio();
 initGame();

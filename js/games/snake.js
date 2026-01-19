@@ -20,6 +20,38 @@ let gameSpeed = 150;
 let lastUpdate = 0;
 let tailWagTime = 0; // For tail wagging animation
 
+// Audio
+let eatSound = null;
+let crashSound = null;
+let audioEnabled = false;
+
+function loadAudio() {
+    try {
+        eatSound = new Audio('../audio/snake-eat.wav');
+        eatSound.volume = 0.6;
+        
+        crashSound = new Audio('../audio/snake-crash.wav');
+        crashSound.volume = 0.7;
+        
+        const enableAudio = () => { audioEnabled = true; };
+        eatSound.addEventListener('canplaythrough', enableAudio, { once: true });
+        
+        eatSound.load();
+        crashSound.load();
+    } catch (error) {
+        audioEnabled = false;
+    }
+}
+
+function playSound(audio) {
+    if (!audioEnabled || !audio) return;
+    try {
+        const sound = audio.cloneNode();
+        sound.volume = audio.volume;
+        sound.play().catch(err => {});
+    } catch (error) {}
+}
+
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
@@ -48,6 +80,9 @@ controls.on('swipe', (dir) => {
 });
 
 controls.on('tap', () => {
+    if (!audioEnabled && eatSound) {
+        audioEnabled = true;
+    }
     if (!gameRunning) {
         startGame();
     }
@@ -114,12 +149,14 @@ function update() {
     
     // Check wall collision
     if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_HEIGHT) {
+        playSound(crashSound);
         gameOver();
         return;
     }
     
     // Check self collision
     if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        playSound(crashSound);
         gameOver();
         return;
     }
@@ -130,6 +167,7 @@ function update() {
     if (!scrap.falling && (head.x === scrap.x || head.x === scrap.x + 1) &&
         (head.y === scrap.y || head.y === scrap.y + 1)) {
         scrapsCollected++;
+        playSound(eatSound);
         particles.createParticles(
             (scrap.x + 1) * TILE_SIZE,
             (scrap.y + 1) * TILE_SIZE,
@@ -690,5 +728,6 @@ function restartGame() {
     initGame();
 }
 
-// Start the game
+// Load audio and start the game
+loadAudio();
 initGame();

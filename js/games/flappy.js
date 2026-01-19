@@ -30,6 +30,54 @@ let gameStarted = false;
 let pipeTimer = 0;
 let groundOffset = 0;
 
+// Audio
+let flapSound = null;
+let scoreSound = null;
+let hitSound = null;
+let audioEnabled = false;
+
+// Load audio files
+function loadAudio() {
+    try {
+        flapSound = new Audio('../audio/flap.wav');
+        flapSound.volume = 0.5;
+        
+        scoreSound = new Audio('../audio/score.wav');
+        scoreSound.volume = 0.6;
+        
+        hitSound = new Audio('../audio/hit.wav');
+        hitSound.volume = 0.7;
+        
+        // Enable audio after first user interaction (browser requirement)
+        const enableAudio = () => {
+            audioEnabled = true;
+        };
+        
+        // Test if audio can be loaded
+        flapSound.addEventListener('canplaythrough', enableAudio, { once: true });
+        
+        // Preload audio
+        flapSound.load();
+        scoreSound.load();
+        hitSound.load();
+    } catch (error) {
+        console.log('Audio files not found - game will run without sound');
+        audioEnabled = false;
+    }
+}
+
+// Play a sound effect (with cloning for overlapping sounds)
+function playSound(audio) {
+    if (!audioEnabled || !audio) return;
+    try {
+        const sound = audio.cloneNode();
+        sound.volume = audio.volume;
+        sound.play().catch(err => {});
+    } catch (error) {
+        // Silently fail if audio doesn't work
+    }
+}
+
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
@@ -37,6 +85,11 @@ const particles = new ParticleSystem(canvas, ctx);
 const controls = new TouchControls(canvas);
 
 controls.on('touchstart', () => {
+    // Enable audio on first interaction (browser requirement)
+    if (!audioEnabled && flapSound) {
+        audioEnabled = true;
+    }
+    
     if (!gameRunning) {
         startGame();
         return;
@@ -47,6 +100,7 @@ controls.on('touchstart', () => {
     }
     
     bird.dy = FLAP_STRENGTH;
+    playSound(flapSound);
     particles.createParticles(bird.x, bird.y + bird.height / 2, 5, PALETTE.PINK_PASTEL);
 });
 
@@ -100,6 +154,7 @@ function update() {
     
     // Check ground and ceiling collision
     if (bird.y + bird.height > canvas.logicalHeight - 50 || bird.y < 0) {
+        playSound(hitSound);
         gameOver();
         return;
     }
@@ -153,6 +208,7 @@ function update() {
         if (!pipes[i].scored && bird.x > pipes[i].x + PIPE_WIDTH) {
             pipes[i].scored = true;
             score++;
+            playSound(scoreSound);
             particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, PALETTE.PINK_HOT);
             
             if (score >= WIN_SCORE) {
@@ -169,12 +225,12 @@ function update() {
             bird.x + hitboxMargin < pipes[i].x + PIPE_WIDTH - hitboxMargin) {
             // Top pipe collision
             if (bird.y + hitboxMargin < pipes[i].topHeight) {
+                playSound(hitSound);
                 gameOver();
                 return;
             }
             // Bottom pipe collision
-            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {
-                gameOver();
+            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {                playSound(hitSound);                gameOver();
                 return;
             }
         }
@@ -341,5 +397,6 @@ function restartGame() {
     initGame();
 }
 
-// Start the game
+// Load audio and start the game
+loadAudio();
 initGame();

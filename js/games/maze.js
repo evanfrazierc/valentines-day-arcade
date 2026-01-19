@@ -98,17 +98,17 @@ let startTime = 0;
 // Load audio files
 function loadAudio() {
     try {
-        backgroundMusic = new Audio('../audio/tap-hero-music.mp3');
+        backgroundMusic = new Audio('../audio/tap-hero-music.wav');
         backgroundMusic.loop = false;
         backgroundMusic.volume = 0.6;
         
-        hitPerfectSound = new Audio('../audio/hit-perfect.mp3');
+        hitPerfectSound = new Audio('../audio/hit-perfect.wav');
         hitPerfectSound.volume = 0.7;
         
-        hitGoodSound = new Audio('../audio/hit-good.mp3');
+        hitGoodSound = new Audio('../audio/hit-good.wav');
         hitGoodSound.volume = 0.6;
         
-        hitMissSound = new Audio('../audio/hit-miss.mp3');
+        hitMissSound = new Audio('../audio/hit-miss.wav');
         hitMissSound.volume = 0.5;
         
         // Test if audio can be loaded
