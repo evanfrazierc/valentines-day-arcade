@@ -9,6 +9,31 @@ const TILE_SIZE = canvas.logicalWidth / GRID_SIZE;
 const WIN_SCRAPS = 15;
 const DINNER_SCRAPS = ['🍕', '🌭', '🍔'];
 
+// Cache calculated values for performance
+const CACHED_VALUES = {
+    rugCenterX: canvas.logicalWidth / 2,
+    rugCenterY: canvas.logicalHeight / 2,
+    rugRadiusX: canvas.logicalWidth * 0.4,
+    rugRadiusY: canvas.logicalHeight * 0.35,
+    legWidth: canvas.logicalWidth * 0.05,
+    legHeight: canvas.logicalHeight * 0.1,
+    tileHalf: TILE_SIZE / 2,
+    legWidthSmall: TILE_SIZE / 6,
+    legHeightSmall: TILE_SIZE / 3
+};
+
+// Pre-calculate heart positions (done once for performance)
+const HEART_POSITIONS = [
+    { x: CACHED_VALUES.rugCenterX, y: CACHED_VALUES.rugCenterY - CACHED_VALUES.rugRadiusY * 0.7 },
+    { x: CACHED_VALUES.rugCenterX, y: CACHED_VALUES.rugCenterY + CACHED_VALUES.rugRadiusY * 0.7 },
+    { x: CACHED_VALUES.rugCenterX - CACHED_VALUES.rugRadiusX * 0.7, y: CACHED_VALUES.rugCenterY },
+    { x: CACHED_VALUES.rugCenterX + CACHED_VALUES.rugRadiusX * 0.7, y: CACHED_VALUES.rugCenterY },
+    { x: CACHED_VALUES.rugCenterX - CACHED_VALUES.rugRadiusX * 0.55, y: CACHED_VALUES.rugCenterY - CACHED_VALUES.rugRadiusY * 0.55 },
+    { x: CACHED_VALUES.rugCenterX + CACHED_VALUES.rugRadiusX * 0.55, y: CACHED_VALUES.rugCenterY - CACHED_VALUES.rugRadiusY * 0.55 },
+    { x: CACHED_VALUES.rugCenterX - CACHED_VALUES.rugRadiusX * 0.55, y: CACHED_VALUES.rugCenterY + CACHED_VALUES.rugRadiusY * 0.55 },
+    { x: CACHED_VALUES.rugCenterX + CACHED_VALUES.rugRadiusX * 0.55, y: CACHED_VALUES.rugCenterY + CACHED_VALUES.rugRadiusY * 0.55 }
+];
+
 // Game state
 let snake = [];
 let direction = { x: 1, y: 0 };
@@ -54,7 +79,13 @@ function playSound(soundName) {
         source.buffer = audioBuffers[soundName];
         
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = soundName === 'eat' ? 0.6 : 0.7;
+        if (soundName === 'move') {
+            gainNode.gain.value = 0.2; // Quieter movement sound
+        } else if (soundName === 'eat') {
+            gainNode.gain.value = 0.6;
+        } else {
+            gainNode.gain.value = 0.7;
+        }
         
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
@@ -214,7 +245,7 @@ function update() {
 
 function draw() {
     // Clear canvas with blue floor
-    ctx.fillStyle = '#5B9BD5';
+    ctx.fillStyle = '#89BDE8'; // Lighter, more pale blue
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Add wood plank texture to floor
@@ -228,10 +259,10 @@ function draw() {
     }
     
     // Draw oval rug in center
-    const rugCenterX = canvas.logicalWidth / 2;
-    const rugCenterY = canvas.logicalHeight / 2;
-    const rugRadiusX = canvas.logicalWidth * 0.4;
-    const rugRadiusY = canvas.logicalHeight * 0.35;
+    const rugCenterX = CACHED_VALUES.rugCenterX;
+    const rugCenterY = CACHED_VALUES.rugCenterY;
+    const rugRadiusX = CACHED_VALUES.rugRadiusX;
+    const rugRadiusY = CACHED_VALUES.rugRadiusY;
     
     // Rug shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
@@ -263,19 +294,8 @@ function draw() {
     ctx.fillStyle = PALETTE.PINK_PASTEL;
     const heartSize = TILE_SIZE * 0.8;
     
-    // Draw hearts at various positions around the rug - moved towards border
-    const heartPositions = [
-        { x: rugCenterX, y: rugCenterY - rugRadiusY * 0.7 }, // top
-        { x: rugCenterX, y: rugCenterY + rugRadiusY * 0.7 }, // bottom
-        { x: rugCenterX - rugRadiusX * 0.7, y: rugCenterY }, // left
-        { x: rugCenterX + rugRadiusX * 0.7, y: rugCenterY }, // right
-        { x: rugCenterX - rugRadiusX * 0.55, y: rugCenterY - rugRadiusY * 0.55 }, // top-left
-        { x: rugCenterX + rugRadiusX * 0.55, y: rugCenterY - rugRadiusY * 0.55 }, // top-right
-        { x: rugCenterX - rugRadiusX * 0.55, y: rugCenterY + rugRadiusY * 0.55 }, // bottom-left
-        { x: rugCenterX + rugRadiusX * 0.55, y: rugCenterY + rugRadiusY * 0.55 }  // bottom-right
-    ];
-    
-    heartPositions.forEach(pos => {
+    // Draw hearts at pre-calculated positions (optimized)
+    HEART_POSITIONS.forEach(pos => {
         // Draw properly proportioned heart shape
         ctx.save();
         ctx.translate(pos.x, pos.y);
@@ -337,64 +357,34 @@ function draw() {
     
     // Table legs/shadow at top to suggest being under table
     const legWidth = TILE_SIZE * 1.5;
-    const legHeight = canvas.logicalHeight * 0.15;
-    const legColor = '#8B4513';
-    const legShadow = 'rgba(0, 0, 0, 0.3)';
+    const legHeight = canvas.logicalHeight * 0.1; // Shorter legs
+    const legColor = 'rgba(139, 69, 19, 0.35)'; // More transparent brown
+    const legShadow = 'rgba(0, 0, 0, 0.1)'; // Subtle shadow
     
     // Top left leg
     ctx.fillStyle = legShadow;
-    ctx.fillRect(canvas.logicalWidth * 0.15 + 3, 0, legWidth, legHeight + 3);
+    ctx.fillRect(canvas.logicalWidth * 0.15 + 2, 0, legWidth, legHeight + 2);
     ctx.fillStyle = legColor;
     ctx.fillRect(canvas.logicalWidth * 0.15, 0, legWidth, legHeight);
-    // Wood grain on leg
-    ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
-    ctx.lineWidth = 1;
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, 0);
-        ctx.lineTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, legHeight);
-        ctx.stroke();
-    }
     
     // Top right leg
     ctx.fillStyle = legShadow;
-    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth + 3, 0, legWidth, legHeight + 3);
+    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth + 2, 0, legWidth, legHeight + 2);
     ctx.fillStyle = legColor;
     ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth, 0, legWidth, legHeight);
-    // Wood grain on leg
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, 0);
-        ctx.lineTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, legHeight);
-        ctx.stroke();
-    }
     
     // Table legs/shadow at bottom to mirror top legs
     // Bottom left leg
     ctx.fillStyle = legShadow;
-    ctx.fillRect(canvas.logicalWidth * 0.15 + 3, canvas.logicalHeight - legHeight, legWidth, legHeight + 3);
+    ctx.fillRect(canvas.logicalWidth * 0.15 + 2, canvas.logicalHeight - legHeight, legWidth, legHeight + 2);
     ctx.fillStyle = legColor;
     ctx.fillRect(canvas.logicalWidth * 0.15, canvas.logicalHeight - legHeight, legWidth, legHeight);
-    // Wood grain on leg
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight - legHeight);
-        ctx.lineTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight);
-        ctx.stroke();
-    }
     
     // Bottom right leg
     ctx.fillStyle = legShadow;
-    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth + 3, canvas.logicalHeight - legHeight, legWidth, legHeight + 3);
+    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth + 2, canvas.logicalHeight - legHeight, legWidth, legHeight + 2);
     ctx.fillStyle = legColor;
     ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth, canvas.logicalHeight - legHeight, legWidth, legHeight);
-    // Wood grain on leg
-    for (let i = 0; i < 3; i++) {
-        ctx.beginPath();
-        ctx.moveTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight - legHeight);
-        ctx.lineTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight);
-        ctx.stroke();
-    }
     
     // Draw grid
     ctx.strokeStyle = 'rgba(139, 69, 19, 0.15)';

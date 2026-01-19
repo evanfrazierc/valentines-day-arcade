@@ -101,6 +101,21 @@ let beatIndex = 0;
 let startTime = 0;
 let lastEmptyTapTime = 0; // Prevent multiple empty tap sounds
 
+// Pre-create gradient for better performance
+let backgroundGradient = null;
+const FONTS = {
+    FEEDBACK: 'bold 40px Arial, sans-serif',
+    BOLD_24: 'bold 24px Arial',
+    REGULAR_16: '16px Arial'
+};
+
+function createGradient() {
+    backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    backgroundGradient.addColorStop(0, '#0a0a0a'); // Very dark at top
+    backgroundGradient.addColorStop(0.6, '#1a1a1a'); // Dark gray
+    backgroundGradient.addColorStop(1, '#2a2a2a'); // Slightly lighter at bottom
+}
+
 // Load audio files
 async function loadAudio() {
     // Background music (HTML5 Audio)
@@ -357,6 +372,9 @@ function initGame() {
     }
     startTime = 0;
     
+    // Initialize gradient for better performance
+    createGradient();
+    
     updateUI();
     draw();
 }
@@ -461,12 +479,8 @@ function draw() {
         ctx.translate(shakeX, shakeY);
     }
     
-    // Clear canvas with dark club atmosphere
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#0a0a0a'); // Very dark at top
-    gradient.addColorStop(0.6, '#1a1a1a'); // Dark gray
-    gradient.addColorStop(1, '#2a2a2a'); // Slightly lighter at bottom
-    ctx.fillStyle = gradient;
+    // Clear canvas with dark club atmosphere (pre-created gradient for performance)
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw equalizer visualization

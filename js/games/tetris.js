@@ -34,6 +34,14 @@ let dropTimer = 0;
 let dropInterval = 60;
 let fastDrop = false;
 
+// Pre-create gradient for better performance
+let backgroundGradient = null;
+function createGradient() {
+    backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    backgroundGradient.addColorStop(0, PALETTE.BROWN_MAHOGANY);
+    backgroundGradient.addColorStop(1, PALETTE.RED_DARK);
+}
+
 // Audio using Web Audio API
 let audioContext = null;
 let audioBuffers = {
@@ -141,6 +149,9 @@ function initGame() {
     dropTimer = 0;
     fastDrop = false;
     gameRunning = false;
+    
+    // Initialize gradient for better performance
+    createGradient();
     
     updateUI();
     draw();
@@ -302,11 +313,8 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, PALETTE.BROWN_MAHOGANY);
-    gradient.addColorStop(1, PALETTE.RED_DARK);
-    ctx.fillStyle = gradient;
+    // Clear canvas (pre-created gradient for performance)
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw grid

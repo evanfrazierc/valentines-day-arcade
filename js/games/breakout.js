@@ -31,6 +31,27 @@ let animationFrameId = null;
 let currentBallSpeed = 4;
 const BASE_BALL_SPEED = 4;
 const SPEED_INCREASE_PER_HIT = 0.25;
+const MAX_TRAIL_LENGTH = 8; // Constant for trail optimization
+
+// Pre-create gradients and fonts for better performance
+let backgroundGradient = null;
+let paddleGradient = null;
+const FONTS = {
+    CAT_20: '20px Arial',
+    CAT_30: '30px Arial',
+    BOLD_20: 'bold 20px Arial'
+};
+
+function createGradients() {
+    backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    backgroundGradient.addColorStop(0, '#4A1942');
+    backgroundGradient.addColorStop(0.5, '#67294C');
+    backgroundGradient.addColorStop(1, '#2A1A3D');
+    
+    paddleGradient = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
+    paddleGradient.addColorStop(0, PALETTE.PINK_PASTEL);
+    paddleGradient.addColorStop(1, PALETTE.PINK_HOT);
+}
 
 // Audio using Web Audio API
 let audioContext = null;
@@ -192,6 +213,10 @@ function initGame() {
     }
     
     bricksRemaining = BRICK_ROWS * BRICK_COLS;
+    
+    // Initialize gradients for better performance
+    createGradients();
+    
     updateUI();
     draw();
 }
@@ -215,8 +240,8 @@ function startGame() {
 function update() {
     // Add current ball position to trail
     ballTrail.push({ x: ball.x, y: ball.y });
-    if (ballTrail.length > 8) {
-        ballTrail.shift(); // Keep only last 8 positions
+    if (ballTrail.length > MAX_TRAIL_LENGTH) {
+        ballTrail.shift(); // Keep only last positions for performance
     }
     
     // Move ball
@@ -360,12 +385,8 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with gradient background
-    const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    bgGradient.addColorStop(0, '#4A1942'); // Deep purple
-    bgGradient.addColorStop(0.5, '#67294C'); // Rose
-    bgGradient.addColorStop(1, '#2A1A3D'); // Dark purple
-    ctx.fillStyle = bgGradient;
+    // Clear canvas with gradient background (pre-created for performance)
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw bricks (rectangles)

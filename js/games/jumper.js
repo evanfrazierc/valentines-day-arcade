@@ -31,6 +31,23 @@ let score = 0;
 let maxScore = 0;
 let gameRunning = false;
 
+// Pre-create gradient for better performance
+let backgroundGradient = null;
+const FONTS = {
+    PLATFORM: `${PLATFORM_HEIGHT * 5}px Arial`,
+    WINE: '24px Arial',
+    PLAYER: `${PLAYER_SIZE}px Arial`,
+    BOLD_20: 'bold 20px Arial',
+    REGULAR_16: '16px Arial'
+};
+
+function createGradient() {
+    backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    backgroundGradient.addColorStop(0, '#87CEEB');
+    backgroundGradient.addColorStop(0.5, '#B0E0E6');
+    backgroundGradient.addColorStop(1, '#FFE4E1');
+}
+
 // Audio using Web Audio API
 let audioContext = null;
 let audioBuffers = {
@@ -257,6 +274,9 @@ function initGame() {
     gameRunning = false;
     
     generatePlatforms();
+    
+    // Initialize gradient for better performance
+    createGradient();
     
     updateUI();
     draw();

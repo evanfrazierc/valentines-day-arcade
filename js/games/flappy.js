@@ -17,6 +17,13 @@ const CLOUD_SPEED = 0.5;
 // Collectible items (jewelry and clothing emojis)
 const COLLECTIBLE_ITEMS = ['💍', '👗', '👠', '👑', '💎', '⌚', '👜'];
 
+// Cached font strings for better performance
+const FONTS = {
+    ITEM: `${ITEM_SIZE}px Arial`,
+    BOLD_24: 'bold 24px Arial',
+    REGULAR_16: '16px Arial'
+};
+
 // Game state
 let bird = {
     x: 80,
@@ -35,6 +42,14 @@ let gameRunning = false;
 let gameStarted = false;
 let pipeTimer = 0;
 let groundOffset = 0;
+
+// Pre-create gradients for better performance
+let backgroundGradient = null;
+function createGradients() {
+    backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    backgroundGradient.addColorStop(0, '#87CEEB');
+    backgroundGradient.addColorStop(1, '#4A90E2');
+}
 
 // Audio using Web Audio API for better performance
 let audioContext = null;
@@ -72,7 +87,7 @@ function playSound(soundName) {
         source.buffer = audioBuffers[soundName];
         
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = soundName === 'flap' ? 0.5 : soundName === 'score' ? 0.6 : 0.7;
+        gainNode.gain.value = soundName === 'flap' ? 0.5 : soundName === 'score' ? 0.1 : 0.7;
         
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
@@ -143,6 +158,9 @@ function initGame() {
     pipeTimer = 0;
     groundOffset = 0;
     gameRunning = false;
+    
+    // Initialize gradients for better performance
+    createGradients();
     gameStarted = false;
     
     updateUI();
@@ -284,10 +302,7 @@ function update() {
 
 function draw() {
     // Clear canvas with sky blue gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#87CEEB');
-    gradient.addColorStop(1, '#4A90E2');
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw clouds
@@ -343,14 +358,16 @@ function draw() {
     });
     
     // Draw collectible items
-    items.forEach(item => {
-        if (!item.collected) {
-            ctx.font = `${ITEM_SIZE}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(item.emoji, item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2);
-        }
-    });
+    if (items.length > 0) {
+        ctx.font = FONTS.ITEM;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        items.forEach(item => {
+            if (!item.collected) {
+                ctx.fillText(item.emoji, item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2);
+            }
+        });
+    }
     
     // Draw red cardinal
     ctx.save();
@@ -408,10 +425,10 @@ function draw() {
     // Draw start message
     if (!gameRunning) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
+        ctx.font = FONTS.BOLD_24;
         ctx.fillText('Tap to Start Flying!', canvas.logicalWidth / 2, canvas.logicalHeight / 2 - 20);
-        ctx.font = '16px Arial';
+        ctx.font = FONTS.REGULAR_16;
         ctx.fillText('Collect jewelry & clothing!', canvas.logicalWidth / 2, canvas.logicalHeight / 2 + 10);
     }
 }

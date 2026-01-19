@@ -37,12 +37,27 @@ let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
 
+// Pre-create gradients and fonts for better performance
+let backgroundGradient = null;
+const FONTS = {
+    PLAYER: `${PLAYER_SIZE}px Arial`,
+    BOLD_24: 'bold 24px Arial'
+};
+
+function createGradients() {
+    backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
+    backgroundGradient.addColorStop(0, '#8B5CF6');
+    backgroundGradient.addColorStop(0.5, '#9BB0E8');
+    backgroundGradient.addColorStop(1, '#87CEEB');
+}
+
 // Audio using Web Audio API
 let audioContext = null;
 let audioBuffers = {
     jump: null,
     collect: null,
-    hit: null
+    hit: null,
+    bark: null
 };
 let audioEnabled = false;
 
@@ -63,6 +78,7 @@ async function loadAudio() {
     audioBuffers.jump = await loadSound('../audio/runner-jump.wav');
     audioBuffers.collect = await loadSound('../audio/runner-collect.wav');
     audioBuffers.hit = await loadSound('../audio/runner-obstacle.wav');
+    audioBuffers.bark = await loadSound('../audio/dog-bark.wav');
     
     audioEnabled = Object.values(audioBuffers).filter(b => b !== null).length > 0;
 }
@@ -169,8 +185,9 @@ function initGame() {
     obstacleTimer = 0;
     nextObstacleTime = random(80, 150);
     veggieTimer = 0;
-    gameRunning = false;
-    
+    gameRunning = false;    
+    // Initialize gradients for better performance
+    createGradients();    
     updateUI();
     draw();
 }
@@ -370,20 +387,28 @@ function update() {
     if (dog) {
         dog.x += dog.speed;
         
+        // Play second bark after delay
+        if (!dog.barkedTwice && dog.x < canvas.logicalWidth - 100) {
+            playSound('bark');
+            dog.barkedTwice = true;
+        }
+        
         // Remove dog when it goes off-screen (left side)
         if (dog.x < -50) {
             dog = null;
         }
     } else {
         // Randomly spawn dog (low probability each frame)
-        if (Math.random() < 0.002) {
+        if (Math.random() < 0.0005) { // Reduced from 0.002 to 0.0005
             dog = {
                 x: canvas.logicalWidth + 50,
                 y: canvas.logicalHeight - GROUND_HEIGHT + 30, // On the ground surface
                 size: 40,
                 speed: -gameSpeed * 2.5, // Negative to move left
-                emoji: DOG_EMOJIS[Math.floor(Math.random() * DOG_EMOJIS.length)]
+                emoji: DOG_EMOJIS[Math.floor(Math.random() * DOG_EMOJIS.length)],
+                barkedTwice: false
             };
+            playSound('bark'); // First bark
         }
     }
     
@@ -391,12 +416,8 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with vibrant sunrise gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, '#8B5CF6'); // Vibrant purple
-    gradient.addColorStop(0.5, '#9BB0E8'); // Medium blue
-    gradient.addColorStop(1, '#87CEEB'); // Light sky blue
-    ctx.fillStyle = gradient;
+    // Clear canvas with vibrant sunrise gradient (pre-created for performance)
+    ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
     // Draw clouds
@@ -416,17 +437,15 @@ function draw() {
         ctx.fill();
     });
     
-    // Draw ground with earthy gradient
-    const groundGradient = ctx.createLinearGradient(0, canvas.logicalHeight - GROUND_HEIGHT, 0, canvas.logicalHeight);
-    groundGradient.addColorStop(0, PALETTE.BROWN_MAHOGANY); // Deep brown
-    groundGradient.addColorStop(1, PALETTE.BROWN_MEDIUM); // Light tan
-    ctx.fillStyle = groundGradient;
+    // Draw ground with flappy bird style pattern
+    ctx.fillStyle = '#4CAF50'; // Green base (same as flappy bird)
     ctx.fillRect(0, canvas.logicalHeight - GROUND_HEIGHT, canvas.logicalWidth, GROUND_HEIGHT);
     
-    // Ground detail
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-    for (let i = 0; i < canvas.logicalWidth; i += 40) {
-        ctx.fillRect(i - (distance * gameSpeed * 3) % 40, canvas.logicalHeight - GROUND_HEIGHT, 20, 5);
+    // Ground pattern (moving stripes) - moves at same speed as obstacles
+    const groundOffset = (distance * 10) % 30; // distance * 10 = gameSpeed per frame
+    ctx.fillStyle = '#45a049'; // Darker green stripes (same as flappy bird)
+    for (let i = -30; i < canvas.logicalWidth + 30; i += 30) {
+        ctx.fillRect(i - groundOffset, canvas.logicalHeight - GROUND_HEIGHT, 15, GROUND_HEIGHT);
     }
     
     // Draw player with rotation
@@ -436,7 +455,7 @@ function draw() {
     
     // Running man emoji - flipped to face right
     ctx.scale(-1, 1); // Flip horizontally
-    ctx.font = `${player.width}px Arial`;
+    ctx.font = FONTS.PLAYER;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = PALETTE.BLACK; // Set color for emoji
@@ -484,7 +503,7 @@ function draw() {
     // Draw start message
     if (!gameRunning) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.font = 'bold 24px Arial';
+        ctx.font = FONTS.BOLD_24;
         ctx.textAlign = 'center';
         ctx.fillText('Tap to Start Running!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
     }
