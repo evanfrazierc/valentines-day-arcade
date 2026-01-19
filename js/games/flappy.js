@@ -84,13 +84,21 @@ const particles = new ParticleSystem(canvas, ctx);
 // Touch controls
 const controls = new TouchControls(canvas);
 
-controls.on('touchstart', () => {
+controls.on('touchstart', async () => {
     // Create and resume audio context synchronously on first interaction
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            audioContext.resume();
+            await audioContext.resume();
         }
+        // Play silent sound to unlock audio on iOS
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0;
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.start(0);
+        oscillator.stop(0.001);
         loadAudio(); // Load audio files in background
     }
     

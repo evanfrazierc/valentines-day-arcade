@@ -89,13 +89,21 @@ const particles = new ParticleSystem(canvas, ctx);
 const controls = new TouchControls(canvas);
 let isDragging = false;
 
-controls.on('touchstart', (pos) => {
+controls.on('touchstart', async (pos) => {
     isDragging = true;
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            audioContext.resume();
+            await audioContext.resume();
         }
+        // Play silent sound to unlock audio on iOS
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = 0;
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.start(0);
+        oscillator.stop(0.001);
         loadAudio();
     }
     if (!gameRunning) {
