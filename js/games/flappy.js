@@ -58,7 +58,7 @@ function loadAudio() {
             return pool;
         };
         
-        soundPool.flap = createSoundPool('../audio/flap.wav', 0.5, 5);
+        soundPool.flap = createSoundPool('../audio/flap.wav', 0.5, 10);
         soundPool.score = createSoundPool('../audio/score.wav', 0.6);
         soundPool.hit = createSoundPool('../audio/hit.wav', 0.7);
         
@@ -84,7 +84,10 @@ function playSound(poolName) {
         const sound = pool[soundPoolIndex[poolName]];
         soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
         
-        sound.currentTime = 0;
+        // Only interrupt if sound is nearly finished or paused
+        if (sound.paused || sound.ended || sound.currentTime > sound.duration - 0.1) {
+            sound.currentTime = 0;
+        }
         sound.play().catch(err => {});
     } catch (error) {
         // Silently fail if audio doesn't work
