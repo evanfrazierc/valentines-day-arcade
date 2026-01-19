@@ -60,7 +60,7 @@ function loadAudio() {
         soundPool.brick = createSoundPool('../audio/breakout-brick.wav', 0.6);
         soundPool.wall = createSoundPool('../audio/breakout-wall.wav', 0.4);
         soundPool.lose = createSoundPool('../audio/breakout-lose.wav', 0.7);
-        soundPool.catchCat = createSoundPool('../audio/score.wav', 0.6);
+        soundPool.catchCat = createSoundPool('../audio/meow.wav', 0.6);
         
         audioEnabled = true;
     } catch (error) {
