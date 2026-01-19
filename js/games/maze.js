@@ -98,28 +98,38 @@ let startTime = 0;
 
 // Load audio files
 async function loadAudio() {
+    // Background music (HTML5 Audio)
     try {
-        // Background music still uses HTML5 Audio
-        backgroundMusic = new Audio('../audio/tap-hero-music.wav');
+        backgroundMusic = new Audio('../audio/tap-hero-music.mp3');
         backgroundMusic.loop = false;
         backgroundMusic.volume = 0.6;
         backgroundMusic.load();
-        
-        // Load hit sounds
+    } catch (error) {}
+    
+    // Load hit sounds (Web Audio API) - optional
+    if (audioContext) {
         const loadSound = async (url) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            return await audioContext.decodeAudioData(arrayBuffer);
+            try {
+                const response = await fetch(url);
+                if (!response.ok) return null;
+                const arrayBuffer = await response.arrayBuffer();
+                return await audioContext.decodeAudioData(arrayBuffer);
+            } catch (error) {
+                return null;
+            }
         };
         
         hitPerfectSound = await loadSound('../audio/hit-perfect.wav');
         hitGoodSound = await loadSound('../audio/hit-good.wav');
         hitMissSound = await loadSound('../audio/hit-miss.wav');
-        
-        audioEnabled = true;
-    } catch (error) {
-        console.log('Audio files not found - game will run without sound');
-        audioEnabled = false;
+    }
+    
+    audioEnabled = true;
+    
+    // If game already started while we were loading, start the music now
+    if (gameRunning && backgroundMusic) {
+        backgroundMusic.currentTime = 0;
+        backgroundMusic.play().catch(() => {});
     }
 }
 
@@ -381,7 +391,7 @@ function startGame() {
     // Start background music
     if (audioEnabled && backgroundMusic) {
         backgroundMusic.currentTime = 0;
-        backgroundMusic.play().catch(err => console.log('Music play failed:', err));
+        backgroundMusic.play().catch(() => {});
     }
     
     gameLoop();
