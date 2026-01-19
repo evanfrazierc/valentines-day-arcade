@@ -549,7 +549,7 @@ function draw() {
     // Draw hit feedback
     if (feedbackText && gameRunning && Date.now() - feedbackTime < 500) {
         ctx.fillStyle = feedbackColor;
-        ctx.font = '35px "Brush Script MT", cursive';
+        ctx.font = 'bold 40px "Brush Script MT"';
         ctx.textAlign = 'center';
         ctx.fillText(feedbackText, canvas.logicalWidth / 2, 60);
     }
