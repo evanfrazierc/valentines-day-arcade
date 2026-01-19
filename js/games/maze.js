@@ -106,7 +106,13 @@ async function loadAudio() {
         backgroundMusic.load();
         
         // Hit sounds use Web Audio API for better performance
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         
         const loadSound = async (url) => {
             const response = await fetch(url);

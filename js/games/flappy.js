@@ -42,8 +42,15 @@ let audioEnabled = false;
 // Load audio files with Web Audio API
 async function loadAudio() {
     try {
-        // Create audio context (must be created after user interaction)
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Create audio context if not already created
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        // Resume audio context (required for mobile browsers)
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         
         // Load and decode audio files
         const loadSound = async (url) => {

@@ -46,7 +46,13 @@ let audioEnabled = false;
 // Load audio files
 async function loadAudio() {
     try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (!audioContext) {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        
+        if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+        }
         
         const loadSound = async (url) => {
             const response = await fetch(url);
