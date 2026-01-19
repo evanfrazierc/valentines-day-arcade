@@ -109,8 +109,9 @@ controls.on('touchstart', async () => {
         console.log('[AUDIO] AudioContext created. State:', audioContext.state);
         if (audioContext.state === 'suspended') {
             console.log('[AUDIO] Resuming suspended context...');
-            await audioContext.resume();
-            console.log('[AUDIO] Context resumed. New state:', audioContext.state);
+            audioContext.resume().then(() => {
+                console.log('[AUDIO] Context resumed. New state:', audioContext.state);
+            });
         }
         // Play silent sound to unlock audio on iOS
         console.log('[AUDIO] Playing unlock sound...');
