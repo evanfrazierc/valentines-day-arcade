@@ -35,42 +35,75 @@ let gameRunning = false;
 let audioContext = null;
 let audioBuffers = {
     jump: null,
-    collect: null,
+    score: null,
     fall: null
 };
 let audioEnabled = false;
 
 async function loadAudio() {
-    try {
-        const loadSound = async (url) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            return await audioContext.decodeAudioData(arrayBuffer);
-        };
-        
-        audioBuffers.jump = await loadSound('../audio/jumper-jump.wav');
-        audioBuffers.collect = await loadSound('../audio/jumper-land.wav');
-        audioBuffers.fall = await loadSound('../audio/jumper-fall.wav');
-        
-        audioEnabled = true;
-    } catch (error) {
-        audioEnabled = false;
+    console.log('[AUDIO] Starting audio load...');
+    if (!audioContext) {
+        console.error('[AUDIO] Cannot load - audioContext not initialized');
+        return;
     }
+    
+    const loadSound = async (name, url) => {
+        try {
+            console.log('[AUDIO] Fetching:', url);
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.warn('[AUDIO] File not found:', url);
+                return null;
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            console.log('[AUDIO] Decoding:', url, 'Size:', arrayBuffer.byteLength);
+            const buffer = await audioContext.decodeAudioData(arrayBuffer);
+            console.log('[AUDIO] ✓ Loaded:', name);
+            return buffer;
+        } catch (error) {
+            console.error('[AUDIO] ✗ Failed to load', name, ':', error);
+            return null;
+        }
+    };
+    
+    audioBuffers.jump = await loadSound('jump', '../audio/jumper-jump.wav');
+    audioBuffers.score = await loadSound('score', '../audio/jumper-score.wav');
+    audioBuffers.fall = await loadSound('fall', '../audio/jumper-fall.wav');
+    
+    // Enable audio if at least one sound loaded
+    const loadedCount = Object.values(audioBuffers).filter(b => b !== null).length;
+    audioEnabled = loadedCount > 0;
+    console.log(`[AUDIO] Loaded ${loadedCount}/3 sounds. Audio enabled: ${audioEnabled}`);
 }
 
 function playSound(soundName) {
-    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
+    if (!audioEnabled) {
+        console.log('[AUDIO] Playback blocked - audio not enabled');
+        return;
+    }
+    if (!audioContext) {
+        console.log('[AUDIO] Playback blocked - no context');
+        return;
+    }
+    if (!audioBuffers[soundName]) {
+        console.log('[AUDIO] Playback blocked - buffer not loaded:', soundName);
+        return;
+    }
     try {
+        console.log('[AUDIO] Playing:', soundName, 'Context state:', audioContext.state);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[soundName];
         
         const gainNode = audioContext.createGain();
-        gainNode.gain.value = soundName === 'jump' ? 0.5 : soundName === 'collect' ? 0.6 : 0.7;
+        gainNode.gain.value = soundName === 'jump' ? 0.5 : soundName === 'score' ? 0.6 : 0.7;
         
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
         source.start(0);
-    } catch (error) {}
+        console.log('[AUDIO] ✓ Playback started');
+    } catch (error) {
+        console.error('[AUDIO] ✗ Playback error:', error);
+    }
 }
 
 // Particle system
@@ -346,6 +379,7 @@ function update() {
             if (dist < player.width / 2 + 10) {
                 wine.collected = true;
                 score++;
+                playSound('score');
                 player.willSpinNextJump = true; // Spin on next jump
                 particles.createParticles(wine.x + 10, wine.y + 10, 15, PALETTE.PURPLE_DARK);
                 

@@ -47,26 +47,56 @@ let audioBuffers = {
 let audioEnabled = false;
 
 async function loadAudio() {
-    try {
-        const loadSound = async (url) => {
-            const response = await fetch(url);
-            const arrayBuffer = await response.arrayBuffer();
-            return await audioContext.decodeAudioData(arrayBuffer);
-        };
-        
-        audioBuffers.jump = await loadSound('../audio/runner-jump.wav');
-        audioBuffers.collect = await loadSound('../audio/runner-collect.wav');
-        audioBuffers.hit = await loadSound('../audio/runner-obstacle.wav');
-        
-        audioEnabled = true;
-    } catch (error) {
-        audioEnabled = false;
+    console.log('[AUDIO] Starting audio load...');
+    if (!audioContext) {
+        console.error('[AUDIO] Cannot load - audioContext not initialized');
+        return;
     }
+    
+    const loadSound = async (name, url) => {
+        try {
+            console.log('[AUDIO] Fetching:', url);
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.warn('[AUDIO] File not found:', url);
+                return null;
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            console.log('[AUDIO] Decoding:', url, 'Size:', arrayBuffer.byteLength);
+            const buffer = await audioContext.decodeAudioData(arrayBuffer);
+            console.log('[AUDIO] ✓ Loaded:', name);
+            return buffer;
+        } catch (error) {
+            console.error('[AUDIO] ✗ Failed to load', name, ':', error);
+            return null;
+        }
+    };
+    
+    audioBuffers.jump = await loadSound('jump', '../audio/runner-jump.wav');
+    audioBuffers.collect = await loadSound('collect', '../audio/runner-collect.wav');
+    audioBuffers.hit = await loadSound('hit', '../audio/runner-obstacle.wav');
+    
+    // Enable audio if at least one sound loaded
+    const loadedCount = Object.values(audioBuffers).filter(b => b !== null).length;
+    audioEnabled = loadedCount > 0;
+    console.log(`[AUDIO] Loaded ${loadedCount}/3 sounds. Audio enabled: ${audioEnabled}`);
 }
 
 function playSound(soundName) {
-    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
+    if (!audioEnabled) {
+        console.log('[AUDIO] Playback blocked - audio not enabled');
+        return;
+    }
+    if (!audioContext) {
+        console.log('[AUDIO] Playback blocked - no context');
+        return;
+    }
+    if (!audioBuffers[soundName]) {
+        console.log('[AUDIO] Playback blocked - buffer not loaded:', soundName);
+        return;
+    }
     try {
+        console.log('[AUDIO] Playing:', soundName, 'Context state:', audioContext.state);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[soundName];
         
@@ -76,7 +106,10 @@ function playSound(soundName) {
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
         source.start(0);
-    } catch (error) {}
+        console.log('[AUDIO] ✓ Playback started');
+    } catch (error) {
+        console.error('[AUDIO] ✗ Playback error:', error);
+    }
 }
 
 // Particle system
@@ -87,11 +120,16 @@ const controls = new TouchControls(canvas);
 
 controls.on('touchstart', async () => {
     if (!audioContext) {
+        console.log('[AUDIO] Creating AudioContext...');
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('[AUDIO] AudioContext created. State:', audioContext.state);
         if (audioContext.state === 'suspended') {
+            console.log('[AUDIO] Resuming suspended context...');
             await audioContext.resume();
+            console.log('[AUDIO] Context resumed. New state:', audioContext.state);
         }
         // Play silent sound to unlock audio on iOS
+        console.log('[AUDIO] Playing unlock sound...');
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 0;
@@ -99,6 +137,8 @@ controls.on('touchstart', async () => {
         gainNode.connect(audioContext.destination);
         oscillator.start(0);
         oscillator.stop(0.001);
+        console.log('[AUDIO] Unlock sound played');
+        // Now load audio files (audioContext is ready)
         loadAudio();
     }
     if (!gameRunning) {
@@ -110,6 +150,7 @@ controls.on('touchstart', async () => {
     if (!player.grounded && player.dy < 0 && player.canDoubleJump) {
         player.dy = JUMP_STRENGTH * 0.9;
         player.canDoubleJump = false;
+        playSound('jump');
         particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, PALETTE.GREEN_LIGHT);
     }
     // Regular jump from ground
@@ -117,6 +158,7 @@ controls.on('touchstart', async () => {
         player.dy = JUMP_STRENGTH;
         player.grounded = false;
         player.canDoubleJump = true;
+        playSound('jump');
     }
 });
 
