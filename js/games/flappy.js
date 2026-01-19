@@ -9,8 +9,13 @@ const BIRD_SIZE = 25;
 const PIPE_WIDTH = 60;
 const PIPE_GAP = 180;
 const PIPE_SPEED = 3;
-const WIN_SCORE = 20;
+const ITEM_SIZE = 30;
+const ITEM_SPEED = 3; // Match pipe speed
+const WIN_SCORE = 15;
 const CLOUD_SPEED = 0.5;
+
+// Collectible items (jewelry and clothing emojis)
+const COLLECTIBLE_ITEMS = ['💍', '👗', '👠', '👑', '💎', '⌚', '👜'];
 
 // Game state
 let bird = {
@@ -23,6 +28,7 @@ let bird = {
 };
 
 let pipes = [];
+let items = [];
 let clouds = [];
 let score = 0;
 let gameRunning = false;
@@ -120,6 +126,7 @@ function initGame() {
     bird.rotation = 0;
     
     pipes = [];
+    items = [];
     clouds = [];
     
     // Create initial clouds
@@ -188,9 +195,9 @@ function update() {
         }
     }
     
-    // Spawn pipes
+    // Spawn collectible items
     pipeTimer++;
-    if (pipeTimer > 90) {
+    if (pipeTimer > 70) {
         const gapY = random(100, canvas.logicalHeight - 150 - PIPE_GAP);
         pipes.push({
             x: canvas.logicalWidth,
@@ -198,6 +205,16 @@ function update() {
             bottomY: gapY + PIPE_GAP,
             scored: false
         });
+        
+        // Spawn item in the gap
+        const itemY = gapY + PIPE_GAP / 2 - ITEM_SIZE / 2;
+        items.push({
+            x: canvas.logicalWidth + PIPE_WIDTH / 2 - ITEM_SIZE / 2,
+            y: itemY,
+            emoji: COLLECTIBLE_ITEMS[Math.floor(Math.random() * COLLECTIBLE_ITEMS.length)],
+            collected: false
+        });
+        
         pipeTimer = 0;
     }
     
@@ -208,37 +225,58 @@ function update() {
         // Remove off-screen pipes
         if (pipes[i].x + PIPE_WIDTH < 0) {
             pipes.splice(i, 1);
-            continue;'score'
+            continue;
         }
         
-        // Check if bird passed pipe (score)
-        if (!pipes[i].scored && bird.x > pipes[i].x + PIPE_WIDTH) {
-            pipes[i].scored = true;
-            score++;
-            playSound('score');
-            particles.createParticles(bird.x + bird.width / 2, bird.y + bird.height / 2, 20, PALETTE.PINK_HOT);
-            
-            if (score >= WIN_SCORE) {
-                winGame();
-                return;
-            }
-            
-            updateUI();
-        }
-        'hit'
         // Check collision with pipes (with forgiving hitbox)
         const hitboxMargin = 5;
         if (bird.x + bird.width - hitboxMargin > pipes[i].x + hitboxMargin && 
             bird.x + hitboxMargin < pipes[i].x + PIPE_WIDTH - hitboxMargin) {
-            // Top pipe collision'hit'
+            // Top pipe collision
             if (bird.y + hitboxMargin < pipes[i].topHeight) {
                 playSound('hit');
                 gameOver();
                 return;
             }
             // Bottom pipe collision
-            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {                playSound('hit');                gameOver();
+            if (bird.y + bird.height - hitboxMargin > pipes[i].bottomY) {
+                playSound('hit');
+                gameOver();
                 return;
+            }
+        }
+    }
+    
+    // Update collectible items
+    for (let i = items.length - 1; i >= 0; i--) {
+        items[i].x -= ITEM_SPEED;
+        
+        // Remove off-screen items
+        if (items[i].x + ITEM_SIZE < 0) {
+            items.splice(i, 1);
+            continue;
+        }
+        
+        // Check if bird collected item
+        if (!items[i].collected) {
+            const dx = (bird.x + bird.width / 2) - (items[i].x + ITEM_SIZE / 2);
+            const dy = (bird.y + bird.height / 2) - (items[i].y + ITEM_SIZE / 2);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Collision detection
+            if (distance < (bird.width / 2 + ITEM_SIZE / 2)) {
+                items[i].collected = true;
+                score++;
+                playSound('score');
+                particles.createParticles(items[i].x + ITEM_SIZE / 2, items[i].y + ITEM_SIZE / 2, 20, PALETTE.PINK_HOT);
+                
+                if (score >= WIN_SCORE) {
+                    winGame();
+                    return;
+                }
+                
+                updateUI();
+                items.splice(i, 1);
             }
         }
     }
@@ -304,6 +342,16 @@ function draw() {
         drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 3, 15, PALETTE.PINK_PASTEL);
     });
     
+    // Draw collectible items
+    items.forEach(item => {
+        if (!item.collected) {
+            ctx.font = `${ITEM_SIZE}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(item.emoji, item.x + ITEM_SIZE / 2, item.y + ITEM_SIZE / 2);
+        }
+    });
+    
     // Draw red cardinal
     ctx.save();
     ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
@@ -362,7 +410,9 @@ function draw() {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
         ctx.font = 'bold 24px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('Tap to Start Flying!', canvas.logicalWidth / 2, canvas.logicalHeight / 2);
+        ctx.fillText('Tap to Start Flying!', canvas.logicalWidth / 2, canvas.logicalHeight / 2 - 20);
+        ctx.font = '16px Arial';
+        ctx.fillText('Collect jewelry & clothing!', canvas.logicalWidth / 2, canvas.logicalHeight / 2 + 10);
     }
 }
 
