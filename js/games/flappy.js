@@ -122,7 +122,8 @@ controls.on('touchstart', async () => {
         oscillator.start(0);
         oscillator.stop(0.001);
         console.log('[AUDIO] Unlock sound played');
-        loadAudio(); // Load audio files in background
+        // Wait a moment for unlock to process, then load audio
+        setTimeout(() => loadAudio(), 100);
     }
     
     if (!gameRunning) {
