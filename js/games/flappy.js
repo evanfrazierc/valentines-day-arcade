@@ -42,16 +42,6 @@ let audioEnabled = false;
 // Load audio files with Web Audio API
 async function loadAudio() {
     try {
-        // Create audio context if not already created
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        // Resume audio context (required for mobile browsers)
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-        
         // Load and decode audio files
         const loadSound = async (url) => {
             const response = await fetch(url);
@@ -95,9 +85,13 @@ const particles = new ParticleSystem(canvas, ctx);
 const controls = new TouchControls(canvas);
 
 controls.on('touchstart', () => {
-    // Enable audio on first interaction (browser requirement)
-    if (!audioEnabled) {
-        loadAudio();
+    // Create and resume audio context synchronously on first interaction
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        loadAudio(); // Load audio files in background
     }
     
     if (!gameRunning) {

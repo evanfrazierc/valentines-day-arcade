@@ -42,14 +42,6 @@ let audioEnabled = false;
 
 async function loadAudio() {
     try {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-        
         const loadSound = async (url) => {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
@@ -146,6 +138,13 @@ window.addEventListener('keyup', (e) => {
 const controls = new TouchControls(canvas);
 
 controls.on('tap', (pos) => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        loadAudio();
+    }
     if (!gameRunning) {
         startGame();
         return;
@@ -160,6 +159,13 @@ controls.on('tap', (pos) => {
 });
 
 controls.on('touchstart', (pos) => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        loadAudio();
+    }
     if (gameRunning) {
         if (pos.x < canvas.logicalWidth / 2) {
             player.dx = -5;

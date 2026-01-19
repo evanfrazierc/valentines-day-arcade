@@ -48,14 +48,6 @@ let audioEnabled = false;
 
 async function loadAudio() {
     try {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-        
         const loadSound = async (url) => {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
@@ -94,6 +86,13 @@ const particles = new ParticleSystem(canvas, ctx);
 const controls = new TouchControls(canvas);
 
 controls.on('touchstart', () => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        loadAudio();
+    }
     if (!gameRunning) {
         startGame();
         return;

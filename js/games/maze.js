@@ -105,15 +105,7 @@ async function loadAudio() {
         backgroundMusic.volume = 0.6;
         backgroundMusic.load();
         
-        // Hit sounds use Web Audio API for better performance
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        if (audioContext.state === 'suspended') {
-            await audioContext.resume();
-        }
-        
+        // Load hit sounds
         const loadSound = async (url) => {
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
@@ -185,6 +177,13 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 controls.on('touchstart', (pos) => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        loadAudio();
+    }
     if (!gameRunning) {
         startGame();
         return;
@@ -208,6 +207,13 @@ controls.on('touchstart', (pos) => {
 });
 
 controls.on('tap', (pos) => {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+        loadAudio();
+    }
     if (!gameRunning) {
         startGame();
         return;
