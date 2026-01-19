@@ -41,14 +41,10 @@ let audioEnabled = false;
 
 // Load audio files with Web Audio API
 async function loadAudio() {
-    console.log('[AUDIO] Starting audio load...');
     try {
-        // Load and decode audio files
         const loadSound = async (url) => {
-            console.log('[AUDIO] Fetching:', url);
             const response = await fetch(url);
             const arrayBuffer = await response.arrayBuffer();
-            console.log('[AUDIO] Decoding:', url, 'Size:', arrayBuffer.byteLength);
             return await audioContext.decodeAudioData(arrayBuffer);
         };
         
@@ -57,29 +53,15 @@ async function loadAudio() {
         audioBuffers.hit = await loadSound('../audio/hit.wav');
         
         audioEnabled = true;
-        console.log('[AUDIO] ✓ All audio loaded successfully');
     } catch (error) {
-        console.error('[AUDIO] ✗ Load failed:', error);
         audioEnabled = false;
     }
 }
 
 // Play a sound effect using Web Audio API
 function playSound(soundName) {
-    if (!audioEnabled) {
-        console.log('[AUDIO] Playback blocked - audio not enabled');
-        return;
-    }
-    if (!audioContext) {
-        console.log('[AUDIO] Playback blocked - no context');
-        return;
-    }
-    if (!audioBuffers[soundName]) {
-        console.log('[AUDIO] Playback blocked - buffer not loaded:', soundName);
-        return;
-    }
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        console.log('[AUDIO] Playing:', soundName, 'Context state:', audioContext.state);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[soundName];
         
@@ -89,10 +71,7 @@ function playSound(soundName) {
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
         source.start(0);
-        console.log('[AUDIO] ✓ Playback started');
-    } catch (error) {
-        console.error('[AUDIO] ✗ Playback error:', error);
-    }
+    } catch (error) {}
 }
 
 // Particle system
@@ -102,19 +81,12 @@ const particles = new ParticleSystem(canvas, ctx);
 const controls = new TouchControls(canvas);
 
 controls.on('touchstart', async () => {
-    // Create and resume audio context synchronously on first interaction
     if (!audioContext) {
-        console.log('[AUDIO] Creating AudioContext...');
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        console.log('[AUDIO] AudioContext created. State:', audioContext.state);
         if (audioContext.state === 'suspended') {
-            console.log('[AUDIO] Resuming suspended context...');
-            audioContext.resume().then(() => {
-                console.log('[AUDIO] Context resumed. New state:', audioContext.state);
-            });
+            audioContext.resume().then(() => {});
         }
         // Play silent sound to unlock audio on iOS
-        console.log('[AUDIO] Playing unlock sound...');
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
         gainNode.gain.value = 0;
@@ -122,8 +94,6 @@ controls.on('touchstart', async () => {
         gainNode.connect(audioContext.destination);
         oscillator.start(0);
         oscillator.stop(0.001);
-        console.log('[AUDIO] Unlock sound played');
-        // Wait a moment for unlock to process, then load audio
         setTimeout(() => loadAudio(), 100);
     }
     

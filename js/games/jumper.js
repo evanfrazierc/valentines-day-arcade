@@ -41,56 +41,29 @@ let audioBuffers = {
 let audioEnabled = false;
 
 async function loadAudio() {
-    console.log('[AUDIO] Starting audio load...');
-    if (!audioContext) {
-        console.error('[AUDIO] Cannot load - audioContext not initialized');
-        return;
-    }
+    if (!audioContext) return;
     
-    const loadSound = async (name, url) => {
+    const loadSound = async (url) => {
         try {
-            console.log('[AUDIO] Fetching:', url);
             const response = await fetch(url);
-            if (!response.ok) {
-                console.warn('[AUDIO] File not found:', url);
-                return null;
-            }
+            if (!response.ok) return null;
             const arrayBuffer = await response.arrayBuffer();
-            console.log('[AUDIO] Decoding:', url, 'Size:', arrayBuffer.byteLength);
-            const buffer = await audioContext.decodeAudioData(arrayBuffer);
-            console.log('[AUDIO] ✓ Loaded:', name);
-            return buffer;
+            return await audioContext.decodeAudioData(arrayBuffer);
         } catch (error) {
-            console.error('[AUDIO] ✗ Failed to load', name, ':', error);
             return null;
         }
     };
     
-    audioBuffers.jump = await loadSound('jump', '../audio/jumper-jump.wav');
-    audioBuffers.score = await loadSound('score', '../audio/jumper-score.wav');
-    audioBuffers.fall = await loadSound('fall', '../audio/jumper-fall.wav');
+    audioBuffers.jump = await loadSound('../audio/jumper-jump.wav');
+    audioBuffers.score = await loadSound('../audio/jumper-score.wav');
+    audioBuffers.fall = await loadSound('../audio/jumper-fall.wav');
     
-    // Enable audio if at least one sound loaded
-    const loadedCount = Object.values(audioBuffers).filter(b => b !== null).length;
-    audioEnabled = loadedCount > 0;
-    console.log(`[AUDIO] Loaded ${loadedCount}/3 sounds. Audio enabled: ${audioEnabled}`);
+    audioEnabled = Object.values(audioBuffers).filter(b => b !== null).length > 0;
 }
 
 function playSound(soundName) {
-    if (!audioEnabled) {
-        console.log('[AUDIO] Playback blocked - audio not enabled');
-        return;
-    }
-    if (!audioContext) {
-        console.log('[AUDIO] Playback blocked - no context');
-        return;
-    }
-    if (!audioBuffers[soundName]) {
-        console.log('[AUDIO] Playback blocked - buffer not loaded:', soundName);
-        return;
-    }
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        console.log('[AUDIO] Playing:', soundName, 'Context state:', audioContext.state);
         const source = audioContext.createBufferSource();
         source.buffer = audioBuffers[soundName];
         
@@ -100,10 +73,7 @@ function playSound(soundName) {
         source.connect(gainNode);
         gainNode.connect(audioContext.destination);
         source.start(0);
-        console.log('[AUDIO] ✓ Playback started');
-    } catch (error) {
-        console.error('[AUDIO] ✗ Playback error:', error);
-    }
+    } catch (error) {}
 }
 
 // Particle system
@@ -170,11 +140,11 @@ window.addEventListener('keyup', (e) => {
 // Touch controls (backup for devices without accelerometer)
 const controls = new TouchControls(canvas);
 
-controls.on('tap', async (pos) => {
+controls.on('tap', (pos) => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            await audioContext.resume();
+            audioContext.resume();
         }
         // Play silent sound to unlock audio on iOS
         const oscillator = audioContext.createOscillator();
@@ -184,7 +154,7 @@ controls.on('tap', async (pos) => {
         gainNode.connect(audioContext.destination);
         oscillator.start(0);
         oscillator.stop(0.001);
-        loadAudio();
+        setTimeout(() => loadAudio(), 100);
     }
     if (!gameRunning) {
         startGame();
@@ -199,11 +169,11 @@ controls.on('tap', async (pos) => {
     }
 });
 
-controls.on('touchstart', async (pos) => {
+controls.on('touchstart', (pos) => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            await audioContext.resume();
+            audioContext.resume();
         }
         // Play silent sound to unlock audio on iOS
         const oscillator = audioContext.createOscillator();
@@ -213,7 +183,7 @@ controls.on('touchstart', async (pos) => {
         gainNode.connect(audioContext.destination);
         oscillator.start(0);
         oscillator.stop(0.001);
-        loadAudio();
+        setTimeout(() => loadAudio(), 100);
     }
     if (gameRunning) {
         if (pos.x < canvas.logicalWidth / 2) {
@@ -589,6 +559,5 @@ function restartGame() {
     initGame();
 }
 
-// Load audio and start the game
-loadAudio();
+// Initialize game (audio loads on first user interaction)
 initGame();

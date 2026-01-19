@@ -176,11 +176,11 @@ canvas.addEventListener('touchstart', (e) => {
     }
 }, { passive: false });
 
-controls.on('touchstart', async (pos) => {
+controls.on('touchstart', (pos) => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            await audioContext.resume();
+            audioContext.resume();
         }
         // Play silent sound to unlock audio on iOS
         const oscillator = audioContext.createOscillator();
@@ -190,7 +190,7 @@ controls.on('touchstart', async (pos) => {
         gainNode.connect(audioContext.destination);
         oscillator.start(0);
         oscillator.stop(0.001);
-        loadAudio();
+        setTimeout(() => loadAudio(), 100);
     }
     if (!gameRunning) {
         startGame();
@@ -214,11 +214,11 @@ controls.on('touchstart', async (pos) => {
     tapLane(lane);
 });
 
-controls.on('tap', async (pos) => {
+controls.on('tap', (pos) => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            await audioContext.resume();
+            audioContext.resume();
         }
         // Play silent sound to unlock audio on iOS
         const oscillator = audioContext.createOscillator();
@@ -228,7 +228,7 @@ controls.on('tap', async (pos) => {
         gainNode.connect(audioContext.destination);
         oscillator.start(0);
         oscillator.stop(0.001);
-        loadAudio();
+        setTimeout(() => loadAudio(), 100);
     }
     if (!gameRunning) {
         startGame();
@@ -714,6 +714,5 @@ function restartGame() {
     initGame();
 }
 
-// Load audio and start the game
-loadAudio();
+// Initialize game (audio loads on first user interaction)
 initGame();
