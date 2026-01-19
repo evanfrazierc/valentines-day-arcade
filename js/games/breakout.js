@@ -94,7 +94,7 @@ controls.on('touchstart', (pos) => {
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
-            audioContext.resume();
+            audioContext.resume(); // No await - mobile browsers handle this better without blocking
         }
         // Play silent sound to unlock audio on iOS
         const oscillator = audioContext.createOscillator();
