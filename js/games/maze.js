@@ -30,6 +30,13 @@ const NUM_BARS = 30;
 let waveOffset = 0;
 let waveSpeed = 0.08;
 
+// Audio
+let backgroundMusic = null;
+let hitPerfectSound = null;
+let hitGoodSound = null;
+let hitMissSound = null;
+let audioEnabled = false;
+
 // Beat pattern for the song (timing in milliseconds)
 // Minimum 700ms between notes to prevent 3 simultaneous notes
 const beatPattern = [
@@ -87,6 +94,51 @@ const beatPattern = [
 
 let beatIndex = 0;
 let startTime = 0;
+
+// Load audio files
+function loadAudio() {
+    try {
+        backgroundMusic = new Audio('../audio/tap-hero-music.mp3');
+        backgroundMusic.loop = false;
+        backgroundMusic.volume = 0.6;
+        
+        hitPerfectSound = new Audio('../audio/hit-perfect.mp3');
+        hitPerfectSound.volume = 0.7;
+        
+        hitGoodSound = new Audio('../audio/hit-good.mp3');
+        hitGoodSound.volume = 0.6;
+        
+        hitMissSound = new Audio('../audio/hit-miss.mp3');
+        hitMissSound.volume = 0.5;
+        
+        // Test if audio can be loaded
+        backgroundMusic.addEventListener('canplaythrough', () => {
+            audioEnabled = true;
+        }, { once: true });
+        
+        // Preload audio
+        backgroundMusic.load();
+        hitPerfectSound.load();
+        hitGoodSound.load();
+        hitMissSound.load();
+    } catch (error) {
+        console.log('Audio files not found - game will run without sound');
+        audioEnabled = false;
+    }
+}
+
+// Play a sound effect (with cloning for overlapping sounds)
+function playSound(audio) {
+    if (!audioEnabled || !audio) return;
+    try {
+        // Clone the audio to allow overlapping sounds
+        const sound = audio.cloneNode();
+        sound.volume = audio.volume;
+        sound.play().catch(err => console.log('Audio play failed:', err));
+    } catch (error) {
+        // Silently fail if audio doesn't work
+    }
+}
 
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
@@ -204,6 +256,7 @@ function tapLane(lane) {
             feedbackText = 'Perfect!';
             feedbackColor = PALETTE.YELLOW_LIGHT;
             feedbackTime = Date.now();
+            playSound(hitPerfectSound);
             // Boost equalizer on perfect hit
             waveSpeed = 0.16; // Speed up wave
             waveOffset += 0.5; // Jump wave forward
@@ -223,6 +276,7 @@ function tapLane(lane) {
             feedbackText = 'Nice!';
             feedbackColor = PALETTE.PINK_PASTEL;
             feedbackTime = Date.now();
+            playSound(hitGoodSound);
             // Boost equalizer on good hit
             waveSpeed = 0.12; // Speed up wave slightly
             waveOffset += 0.3; // Jump wave forward
@@ -286,6 +340,13 @@ function startGame() {
     gameRunning = true;
     setPlayingMode(true);
     startTime = Date.now();
+    
+    // Start background music
+    if (audioEnabled && backgroundMusic) {
+        backgroundMusic.currentTime = 0;
+        backgroundMusic.play().catch(err => console.log('Music play failed:', err));
+    }
+    
     gameLoop();
 }
 
@@ -332,6 +393,7 @@ function update() {
                 feedbackText = 'Missed';
                 feedbackColor = PALETTE.RED_PRIMARY;
                 feedbackTime = Date.now();
+                playSound(hitMissSound);
                 shakeIntensity = 10;
                 shakeTime = Date.now();
                 updateUI();
@@ -592,12 +654,18 @@ function updateUI() {
 function gameOver() {
     gameRunning = false;
     setPlayingMode(false);
+    if (audioEnabled && backgroundMusic) {
+        backgroundMusic.pause();
+    }
     document.getElementById('gameOverScreen').classList.add('show');
 }
 
 function winGame() {
     gameRunning = false;
     setPlayingMode(false);
+    if (audioEnabled && backgroundMusic) {
+        backgroundMusic.pause();
+    }
     showWinScreen(
         "Harrison, you hit all the right notes in my heart! 🎵💕",
         restartGame
@@ -609,5 +677,6 @@ function restartGame() {
     initGame();
 }
 
-// Start the game
+// Load audio and start the game
+loadAudio();
 initGame();
