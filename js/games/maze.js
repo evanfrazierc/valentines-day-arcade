@@ -3,7 +3,7 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
 // Game constants
-const NOTE_SPEED = 3;
+const NOTE_SPEED = 2;
 const TARGET_Y = canvas.logicalHeight - 100;
 const TARGET_HEIGHT = 60;
 const LANE_WIDTH = canvas.logicalWidth / 3;
@@ -38,59 +38,62 @@ let hitGoodSound = null;
 let hitMissSound = null;
 let audioEnabled = false;
 
-// Beat pattern for the song (timing in milliseconds)
-// Minimum 700ms between notes to prevent 3 simultaneous notes
+// Beat pattern for the song (75 BPM = 800ms per beat)
+const BPM = 75;
+const BEAT_MS = 60000 / BPM; // 800ms per beat
+const HALF_BEAT = BEAT_MS / 2; // 400ms
+
 const beatPattern = [
-    { time: 1000, lane: 1 },
-    { time: 1700, lane: 2 },
-    { time: 2400, lane: 0 },
-    { time: 3100, lane: 1 },
-    { time: 3800, lane: 2 },
-    { time: 4500, lane: 0 },
-    { time: 5200, lane: 1 },
-    { time: 5900, lane: 2 },
-    { time: 6600, lane: 0 },
-    { time: 7300, lane: 1 },
-    { time: 8000, lane: 2 },
-    { time: 8700, lane: 0 },
-    { time: 9400, lane: 1 },
-    { time: 10100, lane: 2 },
-    { time: 10800, lane: 0 },
-    { time: 11500, lane: 1 },
-    { time: 12200, lane: 2 },
-    { time: 12900, lane: 0 },
-    { time: 13600, lane: 1 },
-    { time: 14300, lane: 2 },
-    { time: 15000, lane: 0 },
-    { time: 15700, lane: 1 },
-    { time: 16400, lane: 2 },
-    { time: 17100, lane: 0 },
-    { time: 17800, lane: 1 },
-    { time: 18500, lane: 2 },
-    { time: 19200, lane: 0 },
-    { time: 19900, lane: 1 },
-    { time: 20600, lane: 2 },
-    { time: 21300, lane: 0 },
-    { time: 22000, lane: 1 },
-    { time: 22700, lane: 2 },
-    { time: 23400, lane: 0 },
-    { time: 24100, lane: 1 },
-    { time: 24800, lane: 2 },
-    { time: 25500, lane: 0 },
-    { time: 26200, lane: 1 },
-    { time: 26900, lane: 2 },
-    { time: 27600, lane: 0 },
-    { time: 28300, lane: 1 },
-    { time: 29000, lane: 2 },
-    { time: 29700, lane: 0 },
-    { time: 30400, lane: 1 },
-    { time: 31100, lane: 2 },
-    { time: 31800, lane: 0 },
-    { time: 32500, lane: 1 },
-    { time: 33200, lane: 2 },
-    { time: 33900, lane: 0 },
-    { time: 34600, lane: 1 },
-    { time: 35300, lane: 2 }
+    { time: BEAT_MS * 1, lane: 1 },
+    { time: BEAT_MS * 2, lane: 2 },
+    { time: BEAT_MS * 3, lane: 0 },
+    { time: BEAT_MS * 4, lane: 1 },
+    { time: BEAT_MS * 5, lane: 2 },
+    { time: BEAT_MS * 6, lane: 0 },
+    { time: BEAT_MS * 7, lane: 1 },
+    { time: BEAT_MS * 8, lane: 2 },
+    { time: BEAT_MS * 9, lane: 0 },
+    { time: BEAT_MS * 10, lane: 1 },
+    { time: BEAT_MS * 11, lane: 2 },
+    { time: BEAT_MS * 12, lane: 0 },
+    { time: BEAT_MS * 13, lane: 1 },
+    { time: BEAT_MS * 14, lane: 2 },
+    { time: BEAT_MS * 15, lane: 0 },
+    { time: BEAT_MS * 16, lane: 1 },
+    { time: BEAT_MS * 17, lane: 2 },
+    { time: BEAT_MS * 18, lane: 0 },
+    { time: BEAT_MS * 19, lane: 1 },
+    { time: BEAT_MS * 20, lane: 2 },
+    { time: BEAT_MS * 21, lane: 0 },
+    { time: BEAT_MS * 22, lane: 1 },
+    { time: BEAT_MS * 23, lane: 2 },
+    { time: BEAT_MS * 24, lane: 0 },
+    { time: BEAT_MS * 25, lane: 1 },
+    { time: BEAT_MS * 26, lane: 2 },
+    { time: BEAT_MS * 27, lane: 0 },
+    { time: BEAT_MS * 28, lane: 1 },
+    { time: BEAT_MS * 29, lane: 2 },
+    { time: BEAT_MS * 30, lane: 0 },
+    { time: BEAT_MS * 31, lane: 1 },
+    { time: BEAT_MS * 32, lane: 2 },
+    { time: BEAT_MS * 33, lane: 0 },
+    { time: BEAT_MS * 34, lane: 1 },
+    { time: BEAT_MS * 35, lane: 2 },
+    { time: BEAT_MS * 36, lane: 0 },
+    { time: BEAT_MS * 37, lane: 1 },
+    { time: BEAT_MS * 38, lane: 2 },
+    { time: BEAT_MS * 39, lane: 0 },
+    { time: BEAT_MS * 40, lane: 1 },
+    { time: BEAT_MS * 41, lane: 2 },
+    { time: BEAT_MS * 42, lane: 0 },
+    { time: BEAT_MS * 43, lane: 1 },
+    { time: BEAT_MS * 44, lane: 2 },
+    { time: BEAT_MS * 45, lane: 0 },
+    { time: BEAT_MS * 46, lane: 1 },
+    { time: BEAT_MS * 47, lane: 2 },
+    { time: BEAT_MS * 48, lane: 0 },
+    { time: BEAT_MS * 49, lane: 1 },
+    { time: BEAT_MS * 50, lane: 2 }
 ];
 
 let beatIndex = 0;
@@ -398,7 +401,13 @@ function startGame() {
 }
 
 function update() {
-    gameTime = Date.now() - startTime;
+    // Use music playback time as source of truth for perfect sync
+    // Fall back to Date.now() if music isn't playing yet
+    if (backgroundMusic && audioEnabled && !backgroundMusic.paused) {
+        gameTime = backgroundMusic.currentTime * 1000; // Convert to milliseconds
+    } else {
+        gameTime = Date.now() - startTime;
+    }
     
     // Spawn notes based on beat pattern
     while (beatIndex < beatPattern.length && 
