@@ -391,7 +391,7 @@ function update() {
         notes.push({
             lane: beat.lane,
             y: -30,
-            size: 30,
+            size: 45,
             hit: false,
             missed: false
         });

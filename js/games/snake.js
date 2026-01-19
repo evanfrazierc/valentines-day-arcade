@@ -24,7 +24,8 @@ let tailWagTime = 0; // For tail wagging animation
 let audioContext = null;
 let audioBuffers = {
     eat: null,
-    crash: null
+    crash: null,
+    move: null
 };
 let audioEnabled = false;
 
@@ -38,6 +39,7 @@ async function loadAudio() {
         
         audioBuffers.eat = await loadSound('../audio/snake-eat.wav');
         audioBuffers.crash = await loadSound('../audio/snake-crash.wav');
+        audioBuffers.move = await loadSound('../audio/snake-move.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -167,6 +169,9 @@ function update() {
         y: snake[0].y + direction.y 
     };
     
+    // Play move sound
+    playSound('move');
+    
     // Check wall collision
     if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_HEIGHT) {
         playSound('crash');
@@ -208,9 +213,19 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with hardwood floor color
-    ctx.fillStyle = PALETTE.BROWN_TAN;
+    // Clear canvas with blue floor
+    ctx.fillStyle = '#5B9BD5';
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
+    
+    // Add wood plank texture to floor
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < canvas.logicalHeight; i += TILE_SIZE * 3) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(canvas.logicalWidth, i);
+        ctx.stroke();
+    }
     
     // Draw oval rug in center
     const rugCenterX = canvas.logicalWidth / 2;
@@ -224,8 +239,8 @@ function draw() {
     ctx.ellipse(rugCenterX + 3, rugCenterY + 3, rugRadiusX, rugRadiusY, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Main rug
-    ctx.fillStyle = PALETTE.PURPLE_MEDIUM;
+    // Main rug - vibrant magenta/purple
+    ctx.fillStyle = '#C44BAD';
     ctx.beginPath();
     ctx.ellipse(rugCenterX, rugCenterY, rugRadiusX, rugRadiusY, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -321,13 +336,65 @@ function draw() {
     });
     
     // Table legs/shadow at top to suggest being under table
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillRect(canvas.logicalWidth * 0.1, 0, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
-    ctx.fillRect(canvas.logicalWidth * 0.75, 0, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
+    const legWidth = TILE_SIZE * 1.5;
+    const legHeight = canvas.logicalHeight * 0.15;
+    const legColor = '#8B4513';
+    const legShadow = 'rgba(0, 0, 0, 0.3)';
+    
+    // Top left leg
+    ctx.fillStyle = legShadow;
+    ctx.fillRect(canvas.logicalWidth * 0.15 + 3, 0, legWidth, legHeight + 3);
+    ctx.fillStyle = legColor;
+    ctx.fillRect(canvas.logicalWidth * 0.15, 0, legWidth, legHeight);
+    // Wood grain on leg
+    ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, 0);
+        ctx.lineTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, legHeight);
+        ctx.stroke();
+    }
+    
+    // Top right leg
+    ctx.fillStyle = legShadow;
+    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth + 3, 0, legWidth, legHeight + 3);
+    ctx.fillStyle = legColor;
+    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth, 0, legWidth, legHeight);
+    // Wood grain on leg
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, 0);
+        ctx.lineTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, legHeight);
+        ctx.stroke();
+    }
     
     // Table legs/shadow at bottom to mirror top legs
-    ctx.fillRect(canvas.logicalWidth * 0.1, canvas.logicalHeight * 0.9, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
-    ctx.fillRect(canvas.logicalWidth * 0.75, canvas.logicalHeight * 0.9, canvas.logicalWidth * 0.15, canvas.logicalHeight * 0.1);
+    // Bottom left leg
+    ctx.fillStyle = legShadow;
+    ctx.fillRect(canvas.logicalWidth * 0.15 + 3, canvas.logicalHeight - legHeight, legWidth, legHeight + 3);
+    ctx.fillStyle = legColor;
+    ctx.fillRect(canvas.logicalWidth * 0.15, canvas.logicalHeight - legHeight, legWidth, legHeight);
+    // Wood grain on leg
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight - legHeight);
+        ctx.lineTo(canvas.logicalWidth * 0.15 + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight);
+        ctx.stroke();
+    }
+    
+    // Bottom right leg
+    ctx.fillStyle = legShadow;
+    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth + 3, canvas.logicalHeight - legHeight, legWidth, legHeight + 3);
+    ctx.fillStyle = legColor;
+    ctx.fillRect(canvas.logicalWidth * 0.85 - legWidth, canvas.logicalHeight - legHeight, legWidth, legHeight);
+    // Wood grain on leg
+    for (let i = 0; i < 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight - legHeight);
+        ctx.lineTo(canvas.logicalWidth * 0.85 - legWidth + legWidth * 0.2 + i * legWidth * 0.3, canvas.logicalHeight);
+        ctx.stroke();
+    }
     
     // Draw grid
     ctx.strokeStyle = 'rgba(139, 69, 19, 0.15)';

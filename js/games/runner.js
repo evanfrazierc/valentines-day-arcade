@@ -182,11 +182,13 @@ function startGame() {
 }
 
 function update() {
+    const prevDistanceMilestone = Math.floor(distance / 100);
     distance += gameSpeed / 10;
+    const currentDistanceMilestone = Math.floor(distance / 100);
     
-    // Gradually increase speed
-    if (distance % 50 === 0 && gameSpeed < 6) {
-        gameSpeed += 0.25;
+    // Gradually increase speed every 100 units of distance
+    if (currentDistanceMilestone > prevDistanceMilestone && gameSpeed < 8) {
+        gameSpeed += 0.3;
     }
     
     // Update player
@@ -222,18 +224,16 @@ function update() {
             emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)]
         });
         obstacleTimer = 0;
-        // Random delay before next obstacle: shorter at higher speeds
-        const minDelay = Math.max(60, 120 - gameSpeed * 10);
-        const maxDelay = Math.max(100, 200 - gameSpeed * 15);
-        nextObstacleTime = random(minDelay, maxDelay);
+        // Fixed delay before next obstacle (not affected by speed)
+        nextObstacleTime = random(120, 180);
     }
     
     // Spawn veggies
     veggieTimer++;
-    if (veggieTimer > 60 / gameSpeed) {
+    if (veggieTimer > 150 / gameSpeed) {
         if (Math.random() < 0.6) {
             // Check if there's an obstacle near the right edge of screen
-            const heartY = random(canvas.logicalHeight - GROUND_HEIGHT - 200, canvas.logicalHeight - GROUND_HEIGHT - 100);
+            const heartY = random(canvas.logicalHeight - GROUND_HEIGHT - 280, canvas.logicalHeight - GROUND_HEIGHT - 80);
             let canSpawn = true;
             
             // Don't spawn if there's an obstacle that would overlap
@@ -266,7 +266,9 @@ function update() {
                     y: heartY,
                     size: 20,
                     collected: false,
-                    emoji: VEGGIE_EMOJIS[Math.floor(Math.random() * VEGGIE_EMOJIS.length)]
+                    emoji: VEGGIE_EMOJIS[Math.floor(Math.random() * VEGGIE_EMOJIS.length)],
+                    baseY: heartY,
+                    oscillation: Math.random() * Math.PI * 2
                 });
             }
         }
@@ -301,6 +303,10 @@ function update() {
     // Update veggies
     for (let i = veggies.length - 1; i >= 0; i--) {
         veggies[i].x -= gameSpeed;
+        
+        // Add vertical oscillation
+        veggies[i].oscillation += 0.05;
+        veggies[i].y = veggies[i].baseY + Math.sin(veggies[i].oscillation) * 30;
         
         // Remove off-screen veggies
         if (veggies[i].x + veggies[i].size < 0) {
@@ -385,10 +391,11 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with gradient sky - early morning dawn
+    // Clear canvas with vibrant sunrise gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, PALETTE.BLUE_DARKEST); // Dark blue-grey
-    gradient.addColorStop(1, PALETTE.CORAL_LIGHT); // Soft pink/coral
+    gradient.addColorStop(0, '#8B5CF6'); // Vibrant purple
+    gradient.addColorStop(0.5, '#9BB0E8'); // Medium blue
+    gradient.addColorStop(1, '#87CEEB'); // Light sky blue
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
