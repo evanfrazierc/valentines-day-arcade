@@ -35,7 +35,9 @@ const MAX_TRAIL_LENGTH = 8; // Constant for trail optimization
 
 // Pre-create gradients and fonts for better performance
 let backgroundGradient = null;
+let brickOverlayGradient = null;
 let paddleGradient = null;
+let animationTime = 0; // Single time calculation per frame
 const FONTS = {
     CAT_20: '20px Arial',
     CAT_30: '30px Arial',
@@ -48,7 +50,14 @@ function createGradients() {
     backgroundGradient.addColorStop(0.5, '#67294C');
     backgroundGradient.addColorStop(1, '#2A1A3D');
     
-    paddleGradient = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
+    // Pre-create brick overlay gradient
+    brickOverlayGradient = ctx.createLinearGradient(0, 0, 0, BRICK_HEIGHT);
+    brickOverlayGradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)');
+    brickOverlayGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+    brickOverlayGradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
+    
+    // Pre-create paddle gradient
+    paddleGradient = ctx.createLinearGradient(0, 0, 0, PADDLE_HEIGHT);
     paddleGradient.addColorStop(0, PALETTE.PINK_PASTEL);
     paddleGradient.addColorStop(1, PALETTE.PINK_HOT);
 }
@@ -385,126 +394,120 @@ function update() {
 }
 
 function draw() {
+    // Update animation time once per frame
+    animationTime = Date.now() * 0.002;
+    
     // Clear canvas with gradient background (pre-created for performance)
     ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
-    // Draw bricks (rectangles)
+    // Draw bricks - optimized rendering
+    const radius = 6;
+    
+    // First pass: Draw all brick shadows (batched for performance)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     bricks.forEach(row => {
         row.forEach(brick => {
             if (brick.visible) {
-                // Draw rounded rectangle brick with shadow
-                const radius = 6;
-                
-                // Add glow for bricks with cats
-                if (brick.hasCat) {
-                    ctx.save();
-                    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-                    ctx.shadowBlur = 15;
-                    ctx.fillStyle = brick.color;
-                    ctx.beginPath();
-                    ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
-                    ctx.fill();
-                    ctx.restore();
-                }
-                
-                // Shadow
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
                 ctx.beginPath();
                 ctx.roundRect(brick.x + 2, brick.y + 2, brick.width, brick.height, radius);
                 ctx.fill();
-                
+            }
+        });
+    });
+    
+    // Second pass: Draw brick colors and overlays
+    bricks.forEach(row => {
+        row.forEach(brick => {
+            if (brick.visible) {
                 // Main brick color
                 ctx.fillStyle = brick.color;
                 ctx.beginPath();
                 ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
                 ctx.fill();
                 
-                // Add subtle gradient overlay for 3D effect
-                const gradient = ctx.createLinearGradient(brick.x, brick.y, brick.x, brick.y + brick.height);
-                gradient.addColorStop(0, 'rgba(255, 255, 255, 0.25)'); // Lighter top
-                gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
-                gradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)'); // Slightly darker bottom
-                ctx.fillStyle = gradient;
+                // Use pre-created gradient with transform for 3D effect
+                ctx.save();
+                ctx.translate(brick.x, brick.y);
+                ctx.fillStyle = brickOverlayGradient;
                 ctx.beginPath();
-                ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
+                ctx.roundRect(0, 0, brick.width, brick.height, radius);
                 ctx.fill();
+                ctx.restore();
                 
-                // Add subtle border
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
-                ctx.stroke();
-                
-                // Draw cat emoji if brick has cat
+                // Add subtle border (only for cat bricks to reduce draw calls)
                 if (brick.hasCat) {
-                    // Calculate slight movement animation
-                    const time = Date.now() * 0.002;
-                    const offsetX = Math.sin(time + brick.catAnimOffset) * 2;
-                    const offsetY = Math.cos(time * 1.5 + brick.catAnimOffset) * 1.5;
-                    
-                    // White background circle for better visibility
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                    ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.arc(brick.x + brick.width / 2 + offsetX, brick.y + brick.height / 2 + offsetY, 12, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    // Draw cat emoji larger
-                    ctx.fillStyle = '#000000';
-                    ctx.font = '20px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(brick.catEmoji, brick.x + brick.width / 2 + offsetX, brick.y + brick.height / 2 + offsetY);
+                    ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
+                    ctx.stroke();
                 }
             }
         });
     });
     
-    // Draw falling cats
-    fallingCats.forEach(cat => {
+    // Third pass: Draw cat emojis (if any) - separate to batch font operations
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    bricks.forEach(row => {
+        row.forEach(brick => {
+            if (brick.visible && brick.hasCat) {
+                // Calculate slight movement animation using shared time
+                const offsetX = Math.sin(animationTime + brick.catAnimOffset) * 2;
+                const offsetY = Math.cos(animationTime * 1.5 + brick.catAnimOffset) * 1.5;
+                
+                // White background circle for better visibility
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                ctx.arc(brick.x + brick.width / 2 + offsetX, brick.y + brick.height / 2 + offsetY, 12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw cat emoji
+                ctx.fillStyle = '#000000';
+                ctx.fillText(brick.catEmoji, brick.x + brick.width / 2 + offsetX, brick.y + brick.height / 2 + offsetY);
+            }
+        });
+    });
+    
+    // Draw falling cats (batch font operations)
+    if (fallingCats.length > 0) {
         ctx.fillStyle = '#000000';
         ctx.font = '30px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText(cat.emoji, cat.x + 15, cat.y);
-    });
+        fallingCats.forEach(cat => {
+            ctx.fillText(cat.emoji, cat.x + 15, cat.y);
+        });
+    }
     
-    // Draw paddle
-    ctx.fillStyle = PALETTE.PINK_HOT;
-    ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
-    
-    // Add gradient
-    const gradient = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.height);
-    gradient.addColorStop(0, PALETTE.PINK_PASTEL);
-    gradient.addColorStop(1, PALETTE.PINK_HOT);
-    ctx.fillStyle = gradient;
-    ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+    // Draw paddle with pre-created gradient
+    ctx.save();
+    ctx.translate(paddle.x, paddle.y);
+    ctx.fillStyle = paddleGradient;
+    ctx.fillRect(0, 0, paddle.width, paddle.height);
     
     // Round corners
     ctx.fillStyle = PALETTE.PINK_PASTEL;
     ctx.beginPath();
-    ctx.arc(paddle.x + 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
-    ctx.arc(paddle.x + paddle.width - 5, paddle.y + paddle.height / 2, 5, 0, Math.PI * 2);
+    ctx.arc(5, paddle.height / 2, 5, 0, Math.PI * 2);
+    ctx.arc(paddle.width - 5, paddle.height / 2, 5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
     
-    // Draw ball trail (motion blur)
-    for (let i = 0; i < ballTrail.length; i++) {
-        const alpha = (i + 1) / ballTrail.length * 0.3; // Fade from 0 to 0.3
+    // Draw ball trail (optimized - only draw every other trail point for performance)
+    for (let i = 0; i < ballTrail.length; i += 2) {
+        const alpha = (i + 1) / ballTrail.length * 0.3;
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.beginPath();
         ctx.arc(ballTrail[i].x, ballTrail[i].y, ball.radius, 0, Math.PI * 2);
         ctx.fill();
     }
     
-    // Draw ball
+    // Draw ball with subtle glow (reduced blur for performance)
     ctx.fillStyle = PALETTE.WHITE;
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fill();
-    
-    // Ball glow
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 8; // Reduced from 15
     ctx.shadowColor = PALETTE.PINK_HOT;
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
