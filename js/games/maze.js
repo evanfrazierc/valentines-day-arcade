@@ -85,6 +85,29 @@ const particles = new ParticleSystem(canvas, ctx);
 // Touch controls
 const controls = new TouchControls(canvas);
 
+// Handle multi-touch
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (!gameRunning) {
+        startGame();
+        return;
+    }
+    
+    // Process all touch points
+    const rect = canvas.getBoundingClientRect();
+    const visualHeight = rect.height;
+    const visualWidth = visualHeight * (canvas.logicalWidth / canvas.logicalHeight);
+    const visualLeft = (rect.width - visualWidth) / 2;
+    
+    for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        const relativeX = touch.clientX - rect.left - visualLeft;
+        const canvasX = (relativeX / visualWidth) * canvas.logicalWidth;
+        const lane = Math.max(0, Math.min(2, Math.floor(canvasX / LANE_WIDTH)));
+        tapLane(lane);
+    }
+}, { passive: false });
+
 controls.on('touchstart', (pos) => {
     if (!gameRunning) {
         startGame();
