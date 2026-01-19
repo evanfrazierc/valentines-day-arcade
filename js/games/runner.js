@@ -37,35 +37,28 @@ let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
 
-// Audio
-let soundPool = {
-    jump: [],
-    collect: [],
-    hit: []
-};
-let soundPoolIndex = {
-    jump: 0,
-    collect: 0,
-    hit: 0
+// Audio using Web Audio API
+let audioContext = null;
+let audioBuffers = {
+    jump: null,
+    collect: null,
+    hit: null
 };
 let audioEnabled = false;
 
-function loadAudio() {
+async function loadAudio() {
     try {
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        soundPool.jump = createSoundPool('../audio/runner-jump.wav', 0.5);
-        soundPool.collect = createSoundPool('../audio/runner-collect.wav', 0.6);
-        soundPool.hit = createSoundPool('../audio/runner-obstacle.wav', 0.7);
+        audioBuffers.jump = await loadSound('../audio/runner-jump.wav');
+        audioBuffers.collect = await loadSound('../audio/runner-collect.wav');
+        audioBuffers.hit = await loadSound('../audio/runner-obstacle.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -73,15 +66,18 @@ function loadAudio() {
     }
 }
 
-function playSound(poolName) {
-    if (!audioEnabled) return;
+function playSound(soundName) {
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        const pool = soundPool[poolName];
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[soundName];
         
-        sound.currentTime = 0;
-        sound.play().catch(err => {});
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = soundName === 'jump' ? 0.5 : soundName === 'collect' ? 0.6 : 0.7;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
     } catch (error) {}
 }
 

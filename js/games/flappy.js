@@ -30,65 +30,52 @@ let gameStarted = false;
 let pipeTimer = 0;
 let groundOffset = 0;
 
-// Audio
+// Audio using Web Audio API for better performance
+let audioContext = null;
+let audioBuffers = {
+    flap: null,
+    score: null,
+    hit: null
+};
 let audioEnabled = false;
-let soundPool = {
-    flap: [],
-    score: [],
-    hit: []
-};
-let soundPoolIndex = {
-    flap: 0,
-    score: 0,
-    hit: 0
-};
 
-// Load audio files with sound pooling for better performance
-function loadAudio() {
+// Load audio files with Web Audio API
+async function loadAudio() {
     try {
-        // Create a pool of audio elements for each sound to avoid cloning overhead
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        // Create audio context (must be created after user interaction)
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Load and decode audio files
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        soundPool.flap = createSoundPool('../audio/flap.wav', 0.5, 10);
-        soundPool.score = createSoundPool('../audio/score.wav', 0.6);
-        soundPool.hit = createSoundPool('../audio/hit.wav', 0.7);
+        audioBuffers.flap = await loadSound('../audio/flap.wav');
+        audioBuffers.score = await loadSound('../audio/score.wav');
+        audioBuffers.hit = await loadSound('../audio/hit.wav');
         
-        // Enable audio after first user interaction (browser requirement)
-        const enableAudio = () => {
-            audioEnabled = true;
-        };
-        
-        // Test if audio can be loaded
-        soundPool.flap[0].addEventListener('canplaythrough', enableAudio, { once: true });
+        audioEnabled = true;
     } catch (error) {
         console.log('Audio files not found - game will run without sound');
         audioEnabled = false;
     }
 }
 
-// Play a sound effect from the pool
-function playSound(poolName) {
-    if (!audioEnabled || !soundPool[poolName]) return;
+// Play a sound effect using Web Audio API
+function playSound(soundName) {
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        // Use round-robin to cycle through pool (much faster than find())
-        const pool = soundPool[poolName];
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[soundName];
         
-        // Only interrupt if sound is nearly finished or paused
-        if (sound.paused || sound.ended || sound.currentTime > sound.duration - 0.1) {
-            sound.currentTime = 0;
-        }
-        sound.play().catch(err => {});
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = soundName === 'flap' ? 0.5 : soundName === 'score' ? 0.6 : 0.7;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
     } catch (error) {
         // Silently fail if audio doesn't work
     }
@@ -102,14 +89,14 @@ const controls = new TouchControls(canvas);
 
 controls.on('touchstart', () => {
     // Enable audio on first interaction (browser requirement)
-    if (!audioEnabled && flapSound) {
-        audioEnabled = true;
+    if (!audioEnabled) {
+        loadAudio();
     }
     
     if (!gameRunning) {
         startGame();
         return;
-    }'flap'
+    }
     
     if (!gameStarted) {
         gameStarted = true;

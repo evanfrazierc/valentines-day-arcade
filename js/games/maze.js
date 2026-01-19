@@ -32,14 +32,10 @@ let waveSpeed = 0.08;
 
 // Audio
 let backgroundMusic = null;
-let hitPerfectSound = [];
-let hitGoodSound = [];
-let hitMissSound = [];
-let soundPoolIndex = {
-    perfect: 0,
-    good: 0,
-    miss: 0
-};
+let audioContext = null;
+let hitPerfectSound = null;
+let hitGoodSound = null;
+let hitMissSound = null;
 let audioEnabled = false;
 
 // Beat pattern for the song (timing in milliseconds)
@@ -101,27 +97,26 @@ let beatIndex = 0;
 let startTime = 0;
 
 // Load audio files
-function loadAudio() {
+async function loadAudio() {
     try {
+        // Background music still uses HTML5 Audio
         backgroundMusic = new Audio('../audio/tap-hero-music.wav');
         backgroundMusic.loop = false;
         backgroundMusic.volume = 0.6;
         backgroundMusic.load();
         
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        // Hit sounds use Web Audio API for better performance
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        hitPerfectSound = createSoundPool('../audio/hit-perfect.wav', 0.7);
-        hitGoodSound = createSoundPool('../audio/hit-good.wav', 0.6);
-        hitMissSound = createSoundPool('../audio/hit-miss.wav', 0.5);
+        hitPerfectSound = await loadSound('../audio/hit-perfect.wav');
+        hitGoodSound = await loadSound('../audio/hit-good.wav');
+        hitMissSound = await loadSound('../audio/hit-miss.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -130,21 +125,25 @@ function loadAudio() {
     }
 }
 
-// Play a sound effect (uses sound pooling for overlapping sounds)
+// Play a sound effect (uses Web Audio API for overlapping sounds)
 function playSound(poolName) {
-    if (!audioEnabled) return;
+    if (!audioEnabled || !audioContext) return;
     try {
-        let pool;
-        if (poolName === 'perfect') pool = hitPerfectSound;
-        else if (poolName === 'good') pool = hitGoodSound;
-        else if (poolName === 'miss') pool = hitMissSound;
+        let buffer;
+        if (poolName === 'perfect') buffer = hitPerfectSound;
+        else if (poolName === 'good') buffer = hitGoodSound;
+        else if (poolName === 'miss') buffer = hitMissSound;
         else return;
         
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
         
-        sound.currentTime = 0;
-        sound.play().catch(err => {});
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = poolName === 'perfect' ? 0.7 : poolName === 'good' ? 0.6 : 0.5;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
     } catch (error) {
         // Silently fail if audio doesn't work
     }

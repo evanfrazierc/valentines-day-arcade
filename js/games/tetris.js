@@ -34,35 +34,28 @@ let dropTimer = 0;
 let dropInterval = 60;
 let fastDrop = false;
 
-// Audio
-let soundPool = {
-    rotate: [],
-    drop: [],
-    line: []
-};
-let soundPoolIndex = {
-    rotate: 0,
-    drop: 0,
-    line: 0
+// Audio using Web Audio API
+let audioContext = null;
+let audioBuffers = {
+    rotate: null,
+    drop: null,
+    line: null
 };
 let audioEnabled = false;
 
-function loadAudio() {
+async function loadAudio() {
     try {
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        soundPool.rotate = createSoundPool('../audio/tetris-rotate.wav', 0.3);
-        soundPool.drop = createSoundPool('../audio/tetris-drop.wav', 0.5);
-        soundPool.line = createSoundPool('../audio/tetris-line.wav', 0.7);
+        audioBuffers.rotate = await loadSound('../audio/tetris-rotate.wav');
+        audioBuffers.drop = await loadSound('../audio/tetris-drop.wav');
+        audioBuffers.line = await loadSound('../audio/tetris-line.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -70,15 +63,18 @@ function loadAudio() {
     }
 }
 
-function playSound(poolName) {
-    if (!audioEnabled) return;
+function playSound(soundName) {
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        const pool = soundPool[poolName];
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[soundName];
         
-        sound.currentTime = 0;
-        sound.play().catch(err => {});
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = soundName === 'rotate' ? 0.3 : soundName === 'drop' ? 0.5 : 0.7;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
     } catch (error) {}
 }
 
@@ -112,9 +108,11 @@ controls.on('swipe', (direction) => {
     }
 });
 
-controls.on('tap', () => {    if (!audioEnabled && rotateSound) {
-        audioEnabled = true;
-    }    if (!gameRunning) {
+controls.on('tap', () => {
+    if (!audioEnabled) {
+        loadAudio();
+    }
+    if (!gameRunning) {
         startGame();
         return;
     }

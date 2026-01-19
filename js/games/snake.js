@@ -20,32 +20,26 @@ let gameSpeed = 150;
 let lastUpdate = 0;
 let tailWagTime = 0; // For tail wagging animation
 
-// Audio
-let soundPool = {
-    eat: [],
-    crash: []
-};
-let soundPoolIndex = {
-    eat: 0,
-    crash: 0
+// Audio using Web Audio API
+let audioContext = null;
+let audioBuffers = {
+    eat: null,
+    crash: null
 };
 let audioEnabled = false;
 
-function loadAudio() {
+async function loadAudio() {
     try {
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        soundPool.eat = createSoundPool('../audio/snake-eat.wav', 0.6);
-        soundPool.crash = createSoundPool('../audio/snake-crash.wav', 0.7);
+        audioBuffers.eat = await loadSound('../audio/snake-eat.wav');
+        audioBuffers.crash = await loadSound('../audio/snake-crash.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -53,15 +47,18 @@ function loadAudio() {
     }
 }
 
-function playSound(poolName) {
-    if (!audioEnabled) return;
+function playSound(soundName) {
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        const pool = soundPool[poolName];
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[soundName];
         
-        sound.currentTime = 0;
-        sound.play().catch(err => {});
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = soundName === 'eat' ? 0.6 : 0.7;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
     } catch (error) {}
 }
 
@@ -93,8 +90,8 @@ controls.on('swipe', (dir) => {
 });
 
 controls.on('tap', () => {
-    if (!audioEnabled && eatSound) {
-        audioEnabled = true;
+    if (!audioEnabled) {
+        loadAudio();
     }
     if (!gameRunning) {
         startGame();

@@ -31,35 +31,28 @@ let score = 0;
 let maxScore = 0;
 let gameRunning = false;
 
-// Audio
-let soundPool = {
-    jump: [],
-    collect: [],
-    fall: []
-};
-let soundPoolIndex = {
-    jump: 0,
-    collect: 0,
-    fall: 0
+// Audio using Web Audio API
+let audioContext = null;
+let audioBuffers = {
+    jump: null,
+    collect: null,
+    fall: null
 };
 let audioEnabled = false;
 
-function loadAudio() {
+async function loadAudio() {
     try {
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        soundPool.jump = createSoundPool('../audio/jumper-jump.wav', 0.5);
-        soundPool.collect = createSoundPool('../audio/jumper-land.wav', 0.6);
-        soundPool.fall = createSoundPool('../audio/jumper-fall.wav', 0.7);
+        audioBuffers.jump = await loadSound('../audio/jumper-jump.wav');
+        audioBuffers.collect = await loadSound('../audio/jumper-land.wav');
+        audioBuffers.fall = await loadSound('../audio/jumper-fall.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -67,15 +60,18 @@ function loadAudio() {
     }
 }
 
-function playSound(poolName) {
-    if (!audioEnabled) return;
+function playSound(soundName) {
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        const pool = soundPool[poolName];
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[soundName];
         
-        sound.currentTime = 0;
-        sound.play().catch(err => {});
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = soundName === 'jump' ? 0.5 : soundName === 'collect' ? 0.6 : 0.7;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
     } catch (error) {}
 }
 

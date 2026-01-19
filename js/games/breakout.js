@@ -32,42 +32,33 @@ let currentBallSpeed = 4;
 const BASE_BALL_SPEED = 4;
 const SPEED_INCREASE_PER_HIT = 0.25;
 
-// Audio
-let soundPool = {
-    paddle: [],
-    brick: [],
-    wall: [],
-    lose: [],
-    catchCat: []
-};
-let soundPoolIndex = {
-    paddle: 0,
-    brick: 0,
-    wall: 0,
-    lose: 0,
-    catchCat: 0
+// Audio using Web Audio API
+let audioContext = null;
+let audioBuffers = {
+    paddle: null,
+    brick: null,
+    wall: null,
+    lose: null,
+    catchCat: null
 };
 let audioEnabled = false;
 
 // Load audio files
-function loadAudio() {
+async function loadAudio() {
     try {
-        const createSoundPool = (src, volume, poolSize = 3) => {
-            const pool = [];
-            for (let i = 0; i < poolSize; i++) {
-                const audio = new Audio(src);
-                audio.volume = volume;
-                audio.load();
-                pool.push(audio);
-            }
-            return pool;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const loadSound = async (url) => {
+            const response = await fetch(url);
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        soundPool.paddle = createSoundPool('../audio/breakout-paddle.wav', 0.5, 5);
-        soundPool.brick = createSoundPool('../audio/breakout-brick.wav', 0.6, 4);
-        soundPool.wall = createSoundPool('../audio/breakout-wall.wav', 0.4, 6);
-        soundPool.lose = createSoundPool('../audio/breakout-lose.wav', 0.7);
-        soundPool.catchCat = createSoundPool('../audio/meow.wav', 0.6);
+        audioBuffers.paddle = await loadSound('../audio/breakout-paddle.wav');
+        audioBuffers.brick = await loadSound('../audio/breakout-brick.wav');
+        audioBuffers.wall = await loadSound('../audio/breakout-wall.wav');
+        audioBuffers.lose = await loadSound('../audio/breakout-lose.wav');
+        audioBuffers.catchCat = await loadSound('../audio/meow.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -77,18 +68,20 @@ function loadAudio() {
 }
 
 // Play a sound effect
-function playSound(poolName) {
-    if (!audioEnabled) return;
+function playSound(soundName) {
+    if (!audioEnabled || !audioContext || !audioBuffers[soundName]) return;
     try {
-        const pool = soundPool[poolName];
-        const sound = pool[soundPoolIndex[poolName]];
-        soundPoolIndex[poolName] = (soundPoolIndex[poolName] + 1) % pool.length;
+        const source = audioContext.createBufferSource();
+        source.buffer = audioBuffers[soundName];
         
-        sound.currentTime = 0;
-        sound.play().catch(err => {});
-    } catch (error) {
-        // Silently fail
-    }
+        const gainNode = audioContext.createGain();
+        const volumes = { paddle: 0.5, brick: 0.6, wall: 0.4, lose: 0.7, catchCat: 0.6 };
+        gainNode.gain.value = volumes[soundName] || 0.5;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
+    } catch (error) {}
 }
 
 // Particle system
@@ -100,8 +93,8 @@ let isDragging = false;
 
 controls.on('touchstart', (pos) => {
     isDragging = true;
-    if (!audioEnabled && paddleSound) {
-        audioEnabled = true;
+    if (!audioEnabled) {
+        loadAudio();
     }
     if (!gameRunning) {
         startGame();
