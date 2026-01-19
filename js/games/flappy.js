@@ -1,4 +1,4 @@
-// Flappy Hearts Game - For Karen
+// Flappy Redbird Game - For Karen
 const canvas = document.getElementById('gameCanvas');
 const ctx = setupCanvas(canvas, 350, 600);
 
@@ -10,6 +10,7 @@ const PIPE_WIDTH = 60;
 const PIPE_GAP = 180;
 const PIPE_SPEED = 3;
 const WIN_SCORE = 20;
+const CLOUD_SPEED = 0.5;
 
 // Game state
 let bird = {
@@ -22,10 +23,12 @@ let bird = {
 };
 
 let pipes = [];
+let clouds = [];
 let score = 0;
 let gameRunning = false;
 let gameStarted = false;
 let pipeTimer = 0;
+let groundOffset = 0;
 
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
@@ -56,8 +59,21 @@ function initGame() {
     bird.rotation = 0;
     
     pipes = [];
+    clouds = [];
+    
+    // Create initial clouds
+    for (let i = 0; i < 5; i++) {
+        clouds.push({
+            x: random(0, canvas.logicalWidth),
+            y: random(50, canvas.logicalHeight - 100),
+            size: random(30, 60),
+            speed: CLOUD_SPEED * random(0.5, 1.5)
+        });
+    }
+    
     score = 0;
     pipeTimer = 0;
+    groundOffset = 0;
     gameRunning = false;
     gameStarted = false;
     
@@ -90,6 +106,25 @@ function update() {
     
     // Only spawn and move pipes after game has started
     if (!gameStarted) return;
+    
+    // Update ground offset
+    groundOffset -= PIPE_SPEED;
+    if (groundOffset <= -30) {
+        groundOffset = 0;
+    }
+    
+    // Update clouds
+    for (let i = clouds.length - 1; i >= 0; i--) {
+        clouds[i].x -= clouds[i].speed;
+        
+        // Remove clouds that are off-screen and add new ones
+        if (clouds[i].x + clouds[i].size < 0) {
+            clouds[i].x = canvas.logicalWidth + 50;
+            clouds[i].y = random(50, canvas.logicalHeight - 100);
+            clouds[i].size = random(30, 60);
+            clouds[i].speed = CLOUD_SPEED * random(0.5, 1.5);
+        }
+    }
     
     // Spawn pipes
     pipeTimer++;
@@ -147,21 +182,34 @@ function update() {
 }
 
 function draw() {
-    // Clear canvas with gradient
+    // Clear canvas with sky blue gradient
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
-    gradient.addColorStop(0, PALETTE.PINK_PASTEL);
-    gradient.addColorStop(1, PALETTE.PINK_HOT);
+    gradient.addColorStop(0, '#87CEEB');
+    gradient.addColorStop(1, '#4A90E2');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
+    // Draw clouds
+    clouds.forEach(cloud => {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        
+        // Main cloud body
+        ctx.beginPath();
+        ctx.arc(cloud.x, cloud.y, cloud.size * 0.5, 0, Math.PI * 2);
+        ctx.arc(cloud.x + cloud.size * 0.4, cloud.y - cloud.size * 0.1, cloud.size * 0.4, 0, Math.PI * 2);
+        ctx.arc(cloud.x + cloud.size * 0.7, cloud.y, cloud.size * 0.45, 0, Math.PI * 2);
+        ctx.arc(cloud.x + cloud.size * 0.35, cloud.y + cloud.size * 0.15, cloud.size * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    
     // Draw ground
-    ctx.fillStyle = PALETTE.BROWN_MAHOGANY;
+    ctx.fillStyle = '#4CAF50';
     ctx.fillRect(0, canvas.logicalHeight - 50, canvas.logicalWidth, 50);
     
-    // Ground pattern
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    for (let i = 0; i < canvas.logicalWidth; i += 30) {
-        ctx.fillRect(i, canvas.logicalHeight - 50, 15, 50);
+    // Ground pattern (moving stripes)
+    ctx.fillStyle = '#45a049';
+    for (let i = -30; i < canvas.logicalWidth + 30; i += 30) {
+        ctx.fillRect(i + groundOffset, canvas.logicalHeight - 50, 15, 50);
     }
     
     // Draw pipes
@@ -174,8 +222,12 @@ function draw() {
         ctx.fillStyle = PALETTE.RED_PRIMARY;
         ctx.fillRect(pipe.x - 5, pipe.topHeight - 20, PIPE_WIDTH + 10, 20);
         
-        // Small heart decoration
-        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.topHeight - 10, 15, PALETTE.PINK_PASTEL);
+        // Small heart decoration (upside down, closer to edge)
+        ctx.save();
+        ctx.translate(pipe.x + PIPE_WIDTH / 2, pipe.topHeight - 3);
+        ctx.scale(1, -1);
+        drawHeart(ctx, 0, 0, 15, PALETTE.PINK_PASTEL);
+        ctx.restore();
         
         // Bottom pipe
         ctx.fillStyle = PALETTE.RED_DARK;
@@ -185,28 +237,55 @@ function draw() {
         ctx.fillStyle = PALETTE.RED_PRIMARY;
         ctx.fillRect(pipe.x - 5, pipe.bottomY, PIPE_WIDTH + 10, 20);
         
-        // Small heart decoration
-        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 10, 15, PALETTE.PINK_PASTEL);
+        // Small heart decoration (closer to edge)
+        drawHeart(ctx, pipe.x + PIPE_WIDTH / 2, pipe.bottomY + 3, 15, PALETTE.PINK_PASTEL);
     });
     
-    // Draw bird
+    // Draw red cardinal
     ctx.save();
     ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
     ctx.rotate(bird.rotation * Math.PI / 180);
     
-    // Bird body (heart shape)
-    drawHeart(ctx, 0, 0, bird.width, PALETTE.WHITE);
-    
-    // Eye
-    ctx.fillStyle = PALETTE.BLACK;
+    // Bird body - red cardinal
+    ctx.fillStyle = '#DC143C';
     ctx.beginPath();
-    ctx.arc(3, -3, 3, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, bird.width / 2, bird.height / 2, 0, 0, Math.PI * 2);
     ctx.fill();
     
-    // Wings
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    // Black face mask
+    ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.ellipse(-5, 0, 8, 4, 0, 0, Math.PI * 2);
+    ctx.arc(bird.width / 4, -bird.height / 6, bird.width / 5, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Eye
+    ctx.fillStyle = PALETTE.WHITE;
+    ctx.beginPath();
+    ctx.arc(bird.width / 4, -bird.height / 6, 2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Orange beak
+    ctx.fillStyle = '#FF8C00';
+    ctx.beginPath();
+    ctx.moveTo(bird.width / 2, 0);
+    ctx.lineTo(bird.width / 2 + 8, -2);
+    ctx.lineTo(bird.width / 2 + 8, 2);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Red crest on top
+    ctx.fillStyle = '#DC143C';
+    ctx.beginPath();
+    ctx.moveTo(0, -bird.height / 2);
+    ctx.lineTo(-3, -bird.height / 2 - 8);
+    ctx.lineTo(3, -bird.height / 2 - 8);
+    ctx.closePath();
+    ctx.fill();
+    
+    // Wing
+    ctx.fillStyle = '#8B0000';
+    ctx.beginPath();
+    ctx.ellipse(-bird.width / 4, 0, bird.width / 3, bird.height / 5, -20 * Math.PI / 180, 0, Math.PI * 2);
     ctx.fill();
     
     ctx.restore();
@@ -252,7 +331,7 @@ function winGame() {
     gameRunning = false;
     setPlayingMode(false);
     showWinScreen(
-        "Karen, you flew straight into my heart! 🦋💕",
+        "Karen, you're as beautiful as a cardinal in flight! 🐦💕",
         restartGame
     );
 }
