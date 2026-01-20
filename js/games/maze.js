@@ -29,6 +29,8 @@ let equalizerBars = [];
 const NUM_BARS = 30;
 let waveOffset = 0;
 let waveSpeed = 0.08;
+let endlessMode = false;
+let highScore = 0;
 
 // Audio
 let backgroundMusic = null;
@@ -178,6 +180,26 @@ function playSound(poolName) {
         source.start(0);
     } catch (error) {
         // Silently fail if audio doesn't work
+    }
+}
+
+function loadHighScore() {
+    return parseInt(localStorage.getItem('mazeHighScore') || '0');
+}
+
+function saveHighScore(score) {
+    const currentHigh = loadHighScore();
+    if (score > currentHigh) {
+        localStorage.setItem('mazeHighScore', score.toString());
+        highScore = score;
+        updateHighScoreDisplay();
+    }
+}
+
+function updateHighScoreDisplay() {
+    const highScoreEl = document.getElementById('highScore');
+    if (highScoreEl) {
+        highScoreEl.textContent = highScore;
     }
 }
 
@@ -336,7 +358,7 @@ function tapLane(lane) {
             maxCombo = combo;
         }
         
-        if (score >= WIN_SCORE) {
+        if (score >= WIN_SCORE && !endlessMode) {
             winGame();
         }
         
@@ -466,7 +488,7 @@ function update() {
     
     // Check if song is over
     if (beatIndex >= beatPattern.length && notes.length === 0) {
-        if (score >= WIN_SCORE) {
+        if (score >= WIN_SCORE && !endlessMode) {
             winGame();
         } else {
             gameOver();
@@ -692,16 +714,28 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('score').textContent = `${score}/${WIN_SCORE}`;
+    if (endlessMode) {
+        document.getElementById('score').textContent = score;
+        const scoreOverlay = document.getElementById('score-overlay');
+        if (scoreOverlay) scoreOverlay.textContent = score;
+    } else {
+        document.getElementById('score').textContent = `${score}/${WIN_SCORE}`;
+        const scoreOverlay = document.getElementById('score-overlay');
+        if (scoreOverlay) scoreOverlay.textContent = `${score}/${WIN_SCORE}`;
+    }
+    
     document.getElementById('combo').textContent = combo;
-    const scoreOverlay = document.getElementById('score-overlay');
     const comboOverlay = document.getElementById('combo-overlay');
-    if (scoreOverlay) scoreOverlay.textContent = `${score}/${WIN_SCORE}`;
     if (comboOverlay) comboOverlay.textContent = combo;
 }
 
 function gameOver() {
     gameRunning = false;
+    
+    if (endlessMode) {
+        saveHighScore(score);
+    }
+    
     setPlayingMode(false);
     if (audioEnabled && backgroundMusic) {
         backgroundMusic.pause();
@@ -732,3 +766,25 @@ function restartGame() {
 
 // Initialize game (audio loads on first user interaction)
 initGame();
+
+// Endless mode toggle
+const endlessToggle = document.getElementById('endlessToggle');
+if (endlessToggle) {
+    endlessToggle.addEventListener('change', (e) => {
+        endlessMode = e.target.checked;
+        const highScoreLabel = document.getElementById('highScoreLabel');
+        const highScoreValue = document.getElementById('highScoreValue');
+        
+        if (endlessMode) {
+            highScore = loadHighScore();
+            updateHighScoreDisplay();
+            highScoreLabel.style.display = 'block';
+            highScoreValue.style.display = 'block';
+        } else {
+            highScoreLabel.style.display = 'none';
+            highScoreValue.style.display = 'none';
+        }
+        
+        updateUI();
+    });
+}

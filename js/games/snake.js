@@ -9,6 +9,10 @@ const TILE_SIZE = canvas.logicalWidth / GRID_SIZE;
 const WIN_SCRAPS = 15;
 const DINNER_SCRAPS = ['🍕', '🌭', '🍔'];
 
+// Endless mode
+let endlessMode = false;
+let highScore = 0;
+
 // Cache calculated values for performance
 const CACHED_VALUES = {
     rugCenterX: canvas.logicalWidth / 2,
@@ -71,6 +75,26 @@ async function loadAudio() {
         audioEnabled = true;
     } catch (error) {
         audioEnabled = false;
+    }
+}
+
+function loadHighScore() {
+    return parseInt(localStorage.getItem('snakeHighScore') || '0');
+}
+
+function saveHighScore(score) {
+    const currentHigh = loadHighScore();
+    if (score > currentHigh) {
+        localStorage.setItem('snakeHighScore', score.toString());
+        highScore = score;
+        updateHighScoreDisplay();
+    }
+}
+
+function updateHighScoreDisplay() {
+    const highScoreEl = document.getElementById('highScore');
+    if (highScoreEl) {
+        highScoreEl.textContent = highScore;
     }
 }
 
@@ -252,7 +276,7 @@ function update() {
             PALETTE.BROWN_CHOCOLATE
         );
         
-        if (scrapsCollected >= WIN_SCRAPS) {
+        if (scrapsCollected >= WIN_SCRAPS && !endlessMode) {
             winGame();
             return;
         }
@@ -816,16 +840,29 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('scraps').textContent = `${scrapsCollected}/${WIN_SCRAPS}`;
+    if (endlessMode) {
+        document.getElementById('scraps').textContent = scrapsCollected;
+        const scrapsOverlay = document.getElementById('scraps-overlay');
+        if (scrapsOverlay) scrapsOverlay.textContent = scrapsCollected;
+    } else {
+        document.getElementById('scraps').textContent = `${scrapsCollected}/${WIN_SCRAPS}`;
+        const scrapsOverlay = document.getElementById('scraps-overlay');
+        if (scrapsOverlay) scrapsOverlay.textContent = `${scrapsCollected}/${WIN_SCRAPS}`;
+    }
+    
     document.getElementById('length').textContent = snake.length;
-    const scrapsOverlay = document.getElementById('scraps-overlay');
     const lengthOverlay = document.getElementById('length-overlay');
-    if (scrapsOverlay) scrapsOverlay.textContent = `${scrapsCollected}/${WIN_SCRAPS}`;
     if (lengthOverlay) lengthOverlay.textContent = snake.length;
 }
 
 function gameOver() {
     gameRunning = false;
+    
+    // Save high score in endless mode
+    if (endlessMode) {
+        saveHighScore(scrapsCollected);
+    }
+    
     gameAnimations.startShake();
     
     setTimeout(() => {
@@ -854,3 +891,27 @@ function restartGame() {
 
 // Initialize game (audio loads on first user interaction)
 initGame();
+
+// Endless mode toggle
+const endlessModeToggle = document.getElementById('endlessModeToggle');
+const highScoreLabel = document.getElementById('highScoreLabel');
+const highScoreDisplay = document.getElementById('highScore');
+
+highScore = loadHighScore();
+updateHighScoreDisplay();
+
+endlessModeToggle.addEventListener('change', (e) => {
+    endlessMode = e.target.checked;
+    
+    if (endlessMode) {
+        highScoreLabel.style.display = 'block';
+        highScoreDisplay.style.display = 'block';
+        updateHighScoreDisplay();
+    } else {
+        highScoreLabel.style.display = 'none';
+        highScoreDisplay.style.display = 'none';
+    }
+    
+    // Update UI to reflect mode change
+    updateUI();
+});

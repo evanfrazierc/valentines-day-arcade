@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Go Long, Gaston - For Sarah 💕</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/games.css">
+    <link rel="stylesheet" href="../css/games.css?v=2">
 </head>
 <body>
     <div class="game-container snake-game">
@@ -20,6 +20,15 @@
                 <p>🍖 Collect 15 dinner scraps to win</p>
                 <p>⚠️ Don't hit walls or yourself!</p>
             </div>
+        </div>
+
+        <div class="endless-toggle" style="margin: 15px 0;">
+            <label class="toggle-label">
+                <input type="checkbox" id="endlessModeToggle">
+                <span>Endless Mode</span>
+            </label>
+            <div class="info-label" id="highScoreLabel" style="display: none; margin-top: 5px;">High Score</div>
+            <div class="info-value" id="highScore" style="display: none;">0</div>
         </div>
 
         <div class="game-info">
@@ -71,6 +80,6 @@
 
     <script src="../js/colors.js"></script>
     <script src="../js/utils.js?v=40"></script>
-    <script src="../js/games/snake.js?v=42"></script>
+    <script src="../js/games/snake.js?v=43"></script>
 </body>
 </html>

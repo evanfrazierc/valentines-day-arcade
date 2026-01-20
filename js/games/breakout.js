@@ -32,6 +32,8 @@ let currentBallSpeed = 4;
 const BASE_BALL_SPEED = 4;
 const SPEED_INCREASE_PER_HIT = 0.25;
 const MAX_TRAIL_LENGTH = 8; // Constant for trail optimization
+let endlessMode = false;
+let highScore = 0;
 
 // Pre-create gradients and fonts for better performance
 let backgroundGradient = null;
@@ -110,6 +112,26 @@ function playSound(soundName) {
         gainNode.connect(audioContext.destination);
         source.start(0);
     } catch (error) {}
+}
+
+function loadHighScore() {
+    return parseInt(localStorage.getItem('breakoutHighScore') || '0');
+}
+
+function saveHighScore(score) {
+    const currentHigh = loadHighScore();
+    if (score > currentHigh) {
+        localStorage.setItem('breakoutHighScore', score.toString());
+        highScore = score;
+        updateHighScoreDisplay();
+    }
+}
+
+function updateHighScoreDisplay() {
+    const highScoreEl = document.getElementById('highScore');
+    if (highScoreEl) {
+        highScoreEl.textContent = highScore;
+    }
 }
 
 // Particle system
@@ -355,9 +377,18 @@ function update() {
             updateUI();
             
             // Check win condition
-            if (catsRescued >= CATS_TO_RESCUE) {
+            if (catsRescued >= CATS_TO_RESCUE && !endlessMode) {
                 winGame();
                 return;
+            } else if (catsRescued >= CATS_TO_RESCUE && endlessMode) {
+                // In endless mode, regenerate level
+                catsRescued = 0;
+                fallingCats = [];
+                currentBallSpeed = BASE_BALL_SPEED;
+                resetBall();
+                resetLevel();
+                updateUI();
+                playSound('nextLevel');
             }
         }
         // Cat fell off screen
@@ -567,16 +598,28 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('cats').textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
+    if (endlessMode) {
+        document.getElementById('cats').textContent = catsRescued;
+        const catsOverlay = document.getElementById('cats-overlay');
+        if (catsOverlay) catsOverlay.textContent = catsRescued;
+    } else {
+        document.getElementById('cats').textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
+        const catsOverlay = document.getElementById('cats-overlay');
+        if (catsOverlay) catsOverlay.textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
+    }
+    
     document.getElementById('lives').textContent = lives;
-    const catsOverlay = document.getElementById('cats-overlay');
     const livesOverlay = document.getElementById('lives-overlay');
-    if (catsOverlay) catsOverlay.textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
     if (livesOverlay) livesOverlay.textContent = lives;
 }
 
 function gameOver() {
     gameRunning = false;
+    
+    if (endlessMode) {
+        saveHighScore(catsRescued);
+    }
+    
     gameAnimations.startShake();
     
     setTimeout(() => {
@@ -605,3 +648,25 @@ function restartGame() {
 
 // Initialize game (audio loads on first user interaction)
 initGame();
+
+// Endless mode toggle
+const endlessToggle = document.getElementById('endlessToggle');
+if (endlessToggle) {
+    endlessToggle.addEventListener('change', (e) => {
+        endlessMode = e.target.checked;
+        const highScoreLabel = document.getElementById('highScoreLabel');
+        const highScoreValue = document.getElementById('highScoreValue');
+        
+        if (endlessMode) {
+            highScore = loadHighScore();
+            updateHighScoreDisplay();
+            highScoreLabel.style.display = 'block';
+            highScoreValue.style.display = 'block';
+        } else {
+            highScoreLabel.style.display = 'none';
+            highScoreValue.style.display = 'none';
+        }
+        
+        updateUI();
+    });
+}

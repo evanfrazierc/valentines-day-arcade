@@ -33,6 +33,8 @@ let gameRunning = false;
 let dropTimer = 0;
 let dropInterval = 60;
 let fastDrop = false;
+let endlessMode = false;
+let highScore = 0;
 
 // Pre-create gradient for better performance
 let backgroundGradient = null;
@@ -82,6 +84,26 @@ function playSound(soundName) {
         gainNode.connect(audioContext.destination);
         source.start(0);
     } catch (error) {}
+}
+
+function loadHighScore() {
+    return parseInt(localStorage.getItem('tetrisHighScore') || '0');
+}
+
+function saveHighScore(score) {
+    const currentHigh = loadHighScore();
+    if (score > currentHigh) {
+        localStorage.setItem('tetrisHighScore', score.toString());
+        highScore = score;
+        updateHighScoreDisplay();
+    }
+}
+
+function updateHighScoreDisplay() {
+    const highScoreEl = document.getElementById('highScore');
+    if (highScoreEl) {
+        highScoreEl.textContent = highScore;
+    }
 }
 
 // Particle system
@@ -305,7 +327,7 @@ function clearLines() {
         lines += linesCleared;
         score += linesCleared * 100 * linesCleared; // Bonus for multiple lines
         
-        if (lines >= WIN_LINES) {
+        if (lines >= WIN_LINES && !endlessMode) {
             winGame();
         }
         
@@ -443,16 +465,28 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('lines').textContent = `${lines}/${WIN_LINES}`;
+    if (endlessMode) {
+        document.getElementById('lines').textContent = lines;
+        const linesOverlay = document.getElementById('lines-overlay');
+        if (linesOverlay) linesOverlay.textContent = lines;
+    } else {
+        document.getElementById('lines').textContent = `${lines}/${WIN_LINES}`;
+        const linesOverlay = document.getElementById('lines-overlay');
+        if (linesOverlay) linesOverlay.textContent = `${lines}/${WIN_LINES}`;
+    }
+    
     document.getElementById('score').textContent = score;
-    const linesOverlay = document.getElementById('lines-overlay');
     const scoreOverlay = document.getElementById('score-overlay');
-    if (linesOverlay) linesOverlay.textContent = `${lines}/${WIN_LINES}`;
     if (scoreOverlay) scoreOverlay.textContent = score;
 }
 
 function gameOver() {
     gameRunning = false;
+    
+    if (endlessMode) {
+        saveHighScore(score);
+    }
+    
     gameAnimations.startShake();
     
     setTimeout(() => {
@@ -481,3 +515,25 @@ function restartGame() {
 
 // Initialize game (audio loads on first user interaction)
 initGame();
+
+// Endless mode toggle
+const endlessToggle = document.getElementById('endlessToggle');
+if (endlessToggle) {
+    endlessToggle.addEventListener('change', (e) => {
+        endlessMode = e.target.checked;
+        const highScoreLabel = document.getElementById('highScoreLabel');
+        const highScoreValue = document.getElementById('highScoreValue');
+        
+        if (endlessMode) {
+            highScore = loadHighScore();
+            updateHighScoreDisplay();
+            highScoreLabel.style.display = 'block';
+            highScoreValue.style.display = 'block';
+        } else {
+            highScoreLabel.style.display = 'none';
+            highScoreValue.style.display = 'none';
+        }
+        
+        updateUI();
+    });
+}

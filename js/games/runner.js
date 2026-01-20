@@ -37,6 +37,10 @@ let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
 
+// Endless mode
+let endlessMode = false;
+let highScore = 0;
+
 // Pre-create gradients and fonts for better performance
 let backgroundGradient = null;
 const FONTS = {
@@ -96,6 +100,26 @@ function playSound(soundName) {
         gainNode.connect(audioContext.destination);
         source.start(0);
     } catch (error) {}
+}
+
+function loadHighScore() {
+    return parseInt(localStorage.getItem('runnerHighScore') || '0');
+}
+
+function saveHighScore(score) {
+    const currentHigh = loadHighScore();
+    if (score > currentHigh) {
+        localStorage.setItem('runnerHighScore', score.toString());
+        highScore = score;
+        updateHighScoreDisplay();
+    }
+}
+
+function updateHighScoreDisplay() {
+    const highScoreEl = document.getElementById('highScore');
+    if (highScoreEl) {
+        highScoreEl.textContent = highScore;
+    }
 }
 
 // Particle system
@@ -353,7 +377,7 @@ function update() {
             playSound('collect');
             particles.createParticles(veggies[i].x, veggies[i].y, 15, PALETTE.GREEN_MEDIUM);
             
-            if (veggiesCollected >= WIN_VEGGIES) {
+            if (veggiesCollected >= WIN_VEGGIES && !endlessMode) {
                 winGame();
                 return;
             }
@@ -545,16 +569,28 @@ function gameLoop() {
 }
 
 function updateUI() {
-    document.getElementById('veggies').textContent = `${veggiesCollected}/${WIN_VEGGIES}`;
+    if (endlessMode) {
+        document.getElementById('veggies').textContent = veggiesCollected;
+        const veggiesOverlay = document.getElementById('veggies-overlay');
+        if (veggiesOverlay) veggiesOverlay.textContent = veggiesCollected;
+    } else {
+        document.getElementById('veggies').textContent = `${veggiesCollected}/${WIN_VEGGIES}`;
+        const veggiesOverlay = document.getElementById('veggies-overlay');
+        if (veggiesOverlay) veggiesOverlay.textContent = `${veggiesCollected}/${WIN_VEGGIES}`;
+    }
+    
     document.getElementById('distance').textContent = Math.floor(distance) + 'm';
-    const veggiesOverlay = document.getElementById('veggies-overlay');
     const distanceOverlay = document.getElementById('distance-overlay');
-    if (veggiesOverlay) veggiesOverlay.textContent = `${veggiesCollected}/${WIN_VEGGIES}`;
     if (distanceOverlay) distanceOverlay.textContent = Math.floor(distance) + 'm';
 }
 
 function gameOver() {
     gameRunning = false;
+    
+    if (endlessMode) {
+        saveHighScore(veggiesCollected);
+    }
+    
     gameAnimations.startShake();
     
     setTimeout(() => {
@@ -583,3 +619,25 @@ function restartGame() {
 
 // Initialize game (audio loads on first user interaction)
 initGame();
+
+// Endless mode toggle
+const endlessToggle = document.getElementById('endlessToggle');
+if (endlessToggle) {
+    endlessToggle.addEventListener('change', (e) => {
+        endlessMode = e.target.checked;
+        const highScoreLabel = document.getElementById('highScoreLabel');
+        const highScoreValue = document.getElementById('highScoreValue');
+        
+        if (endlessMode) {
+            highScore = loadHighScore();
+            updateHighScoreDisplay();
+            highScoreLabel.style.display = 'block';
+            highScoreValue.style.display = 'block';
+        } else {
+            highScoreLabel.style.display = 'none';
+            highScoreValue.style.display = 'none';
+        }
+        
+        updateUI();
+    });
+}

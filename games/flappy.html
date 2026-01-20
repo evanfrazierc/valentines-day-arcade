@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Flappy Redbird - For Karen 🐦</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/games.css">
+    <link rel="stylesheet" href="../css/games.css?v=2">
 </head>
 <body>
     <div class="game-container flappy-game">
@@ -22,9 +22,18 @@
             </div>
         </div>
 
+        <div class="endless-toggle" style="margin: 15px 0;">
+            <label class="toggle-label">
+                <input type="checkbox" id="endlessModeToggle">
+                <span>Endless Mode</span>
+            </label>
+            <div class="info-label" id="highScoreLabel" style="display: none; margin-top: 5px;">High Score</div>
+            <div class="info-value" id="highScore" style="display: none;">0</div>
+        </div>
+
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Obstacles</div>
+                <div class="info-label">Collectibles</div>
                 <div class="info-value" id="score">0/20</div>
             </div>
         </div>
@@ -33,7 +42,7 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Obstacles</div>
+                <div class="info-label">Collectibles</div>
                 <div class="info-value" id="score-overlay">0/20</div>
             </div>
         </div>
@@ -63,6 +72,6 @@
 
     <script src="../js/colors.js?v=4"></script>
     <script src="../js/utils.js?v=34"></script>
-    <script src="../js/games/flappy.js?v=34"></script>
+    <script src="../js/games/flappy.js?v=35"></script>
 </body>
 </html>
