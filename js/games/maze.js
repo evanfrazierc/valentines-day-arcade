@@ -20,7 +20,7 @@ let missedCount = 0;
 let gameRunning = false;
 let gameTime = 0;
 let notesSpawned = 0;
-let totalNotes = 175; // Total notes in the song (extended to match 3:53 duration)
+let totalNotes = 205; // Total notes in the song including half-beats (extended to match 3:53 duration)
 let feedbackText = '';
 let feedbackTime = 0;
 let feedbackColor = '';
@@ -156,6 +156,7 @@ const beatPattern = [
     { time: BEAT_MS * 81, lane: 1 },
     { time: BEAT_MS * 82, lane: 0 },
     { time: BEAT_MS * 83, lane: 2 },
+    { time: BEAT_MS * 83.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 84, lane: 1 },
     { time: BEAT_MS * 84, lane: 0 }, // Double note
     { time: BEAT_MS * 85, lane: 2 },
@@ -165,6 +166,7 @@ const beatPattern = [
     { time: BEAT_MS * 88, lane: 1 }, // Double note
     { time: BEAT_MS * 89, lane: 0 },
     { time: BEAT_MS * 90, lane: 1 },
+    { time: BEAT_MS * 90.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 91, lane: 2 },
     { time: BEAT_MS * 92, lane: 0 },
     { time: BEAT_MS * 92, lane: 2 }, // Double note
@@ -178,22 +180,26 @@ const beatPattern = [
     { time: BEAT_MS * 99, lane: 0 },
     { time: BEAT_MS * 100, lane: 2 },
     { time: BEAT_MS * 100, lane: 1 }, // Double note
-    // Peak - most challenging section
+    // Peak - most challenging section with half-beats
     { time: BEAT_MS * 101, lane: 0 },
+    { time: BEAT_MS * 101.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 102, lane: 1 },
     { time: BEAT_MS * 102, lane: 2 }, // Double note
     { time: BEAT_MS * 103, lane: 0 },
     { time: BEAT_MS * 104, lane: 2 },
     { time: BEAT_MS * 104, lane: 1 }, // Double note
     { time: BEAT_MS * 105, lane: 0 },
+    { time: BEAT_MS * 105.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 106, lane: 1 },
     { time: BEAT_MS * 107, lane: 2 },
+    { time: BEAT_MS * 107.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 108, lane: 0 },
     { time: BEAT_MS * 108, lane: 1 }, // Double note
     { time: BEAT_MS * 109, lane: 2 },
     { time: BEAT_MS * 110, lane: 0 },
     { time: BEAT_MS * 110, lane: 1 }, // Double note
     { time: BEAT_MS * 111, lane: 2 },
+    { time: BEAT_MS * 111.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 112, lane: 1 },
     { time: BEAT_MS * 113, lane: 0 },
     { time: BEAT_MS * 114, lane: 2 },
@@ -203,80 +209,105 @@ const beatPattern = [
     { time: BEAT_MS * 116, lane: 0 }, // Double note
     { time: BEAT_MS * 117, lane: 1 },
     { time: BEAT_MS * 118, lane: 2 },
+    { time: BEAT_MS * 118.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 119, lane: 0 },
     { time: BEAT_MS * 120, lane: 1 },
     { time: BEAT_MS * 120, lane: 2 }, // Double note
     { time: BEAT_MS * 121, lane: 0 },
+    { time: BEAT_MS * 121.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 122, lane: 1 },
     { time: BEAT_MS * 122, lane: 2 }, // Double note
     { time: BEAT_MS * 123, lane: 0 },
     { time: BEAT_MS * 124, lane: 2 },
+    { time: BEAT_MS * 124.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 125, lane: 1 },
     { time: BEAT_MS * 126, lane: 0 },
     { time: BEAT_MS * 126, lane: 2 }, // Double note
     { time: BEAT_MS * 127, lane: 1 },
+    { time: BEAT_MS * 127.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 128, lane: 0 },
     { time: BEAT_MS * 128, lane: 2 }, // Double note
     { time: BEAT_MS * 129, lane: 1 },
     { time: BEAT_MS * 130, lane: 2 },
+    { time: BEAT_MS * 130.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 131, lane: 0 },
     { time: BEAT_MS * 132, lane: 1 },
     { time: BEAT_MS * 132, lane: 0 }, // Double note
     { time: BEAT_MS * 133, lane: 2 },
+    { time: BEAT_MS * 133.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 134, lane: 1 },
     { time: BEAT_MS * 134, lane: 0 }, // Double note
     { time: BEAT_MS * 135, lane: 2 },
     { time: BEAT_MS * 136, lane: 1 },
+    { time: BEAT_MS * 136.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 137, lane: 0 },
     { time: BEAT_MS * 138, lane: 2 },
     { time: BEAT_MS * 138, lane: 1 }, // Double note
     { time: BEAT_MS * 139, lane: 0 },
+    { time: BEAT_MS * 139.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 140, lane: 1 },
     { time: BEAT_MS * 140, lane: 2 }, // Double note
     { time: BEAT_MS * 141, lane: 0 },
     { time: BEAT_MS * 142, lane: 2 },
+    { time: BEAT_MS * 142.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 143, lane: 1 },
     { time: BEAT_MS * 144, lane: 0 },
     { time: BEAT_MS * 144, lane: 2 }, // Double note
     { time: BEAT_MS * 145, lane: 1 },
+    { time: BEAT_MS * 145.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 146, lane: 0 },
     { time: BEAT_MS * 146, lane: 2 }, // Double note
     { time: BEAT_MS * 147, lane: 1 },
     { time: BEAT_MS * 148, lane: 2 },
+    { time: BEAT_MS * 148.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 149, lane: 0 },
     { time: BEAT_MS * 150, lane: 1 },
     { time: BEAT_MS * 150, lane: 2 }, // Double note
-    // Final stretch - maintaining challenge
+    // Final stretch - maintaining challenge with more half-beats
     { time: BEAT_MS * 151, lane: 0 },
+    { time: BEAT_MS * 151.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 152, lane: 2 },
     { time: BEAT_MS * 152, lane: 1 }, // Double note
     { time: BEAT_MS * 153, lane: 0 },
+    { time: BEAT_MS * 153.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 154, lane: 1 },
     { time: BEAT_MS * 155, lane: 2 },
+    { time: BEAT_MS * 155.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 156, lane: 0 },
     { time: BEAT_MS * 156, lane: 1 }, // Double note
     { time: BEAT_MS * 157, lane: 2 },
+    { time: BEAT_MS * 157.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 158, lane: 0 },
     { time: BEAT_MS * 159, lane: 1 },
+    { time: BEAT_MS * 159.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 160, lane: 2 },
     { time: BEAT_MS * 160, lane: 0 }, // Double note
     { time: BEAT_MS * 161, lane: 1 },
+    { time: BEAT_MS * 161.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 162, lane: 2 },
     { time: BEAT_MS * 163, lane: 0 },
+    { time: BEAT_MS * 163.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 164, lane: 1 },
     { time: BEAT_MS * 164, lane: 2 }, // Double note
     { time: BEAT_MS * 165, lane: 0 },
+    { time: BEAT_MS * 165.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 166, lane: 1 },
     { time: BEAT_MS * 167, lane: 2 },
+    { time: BEAT_MS * 167.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 168, lane: 0 },
     { time: BEAT_MS * 168, lane: 1 }, // Double note
     { time: BEAT_MS * 169, lane: 2 },
+    { time: BEAT_MS * 169.5, lane: 1 }, // Half-beat
     { time: BEAT_MS * 170, lane: 0 },
+    { time: BEAT_MS * 170.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 171, lane: 1 },
+    { time: BEAT_MS * 171.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 172, lane: 2 },
     { time: BEAT_MS * 172, lane: 0 }, // Double note
     { time: BEAT_MS * 173, lane: 1 },
+    { time: BEAT_MS * 173.5, lane: 2 }, // Half-beat
     { time: BEAT_MS * 174, lane: 2 },
+    { time: BEAT_MS * 174.5, lane: 0 }, // Half-beat
     { time: BEAT_MS * 175, lane: 0 },
     { time: BEAT_MS * 175, lane: 1 } // Final double note
 ];
