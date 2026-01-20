@@ -36,6 +36,8 @@ let gameSpeed = 5;
 let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
+let speedLines = []; // For visual effect
+let difficultyLevel = 0; // Track difficulty progression
 
 // Endless mode - check URL parameter or default to true
 const urlParams = new URLSearchParams(window.location.search);
@@ -220,6 +222,8 @@ function initGame() {
     veggies = [];
     clouds = [];
     dog = null;
+    speedLines = [];
+    difficultyLevel = 0;
     
     // Create initial clouds
     for (let i = 0; i < 5; i++) {
@@ -268,6 +272,22 @@ function update() {
     distance += gameSpeed / 10;
     const currentDistanceMilestone = Math.floor(distance / 100);
     
+    // Update difficulty level in endless mode
+    if (endlessMode) {
+        difficultyLevel = Math.floor(distance / 200); // Level up every 200 distance
+        
+        // Update speed lines based on difficulty
+        if (difficultyLevel > 0 && Math.random() < 0.3) {
+            speedLines.push({
+                x: canvas.logicalWidth,
+                y: random(0, canvas.logicalHeight - GROUND_HEIGHT),
+                length: random(20, 50),
+                speed: random(8, 15) + difficultyLevel * 2,
+                opacity: random(0.3, 0.6)
+            });
+        }
+    }
+    
     // Gradually increase speed every 100 units of distance
     if (currentDistanceMilestone > prevDistanceMilestone && gameSpeed < 8) {
         gameSpeed += 0.3;
@@ -295,16 +315,50 @@ function update() {
     obstacleTimer++;
     if (obstacleTimer >= nextObstacleTime) {
         const height = random(50, 90);
-        // Spawn further right to account for emoji size extending beyond obstacle bounds
-        const spawnOffset = height * 0.6; // Half of emoji width extension
+        const spawnOffset = height * 0.6;
+        
+        // Determine obstacle type based on difficulty
+        let obstacleType = 'block';
+        let bounceSpeed = 0;
+        
+        if (endlessMode && difficultyLevel >= 3 && Math.random() < 0.3) {
+            // Bouncing obstacles at higher difficulty
+            obstacleType = 'bouncing';
+            bounceSpeed = random(2, 4);
+        }
+        
         obstacles.push({
             x: canvas.logicalWidth + spawnOffset,
             y: canvas.logicalHeight - GROUND_HEIGHT - height,
             width: OBSTACLE_WIDTH,
             height: height,
-            type: 'block',
-            emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)]
+            type: obstacleType,
+            emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
+            bounceSpeed: bounceSpeed,
+            bounceDirection: -1 // Start moving up
         });
+        
+        // Create cluster pattern at higher difficulty
+        if (endlessMode && difficultyLevel >= 2 && Math.random() < 0.25) {
+            // Add 1-2 more obstacles in a cluster
+            const clusterSize = Math.random() < 0.5 ? 1 : 2;
+            for (let i = 1; i <= clusterSize; i++) {
+                const clusterHeight = random(50, 90);
+                const clusterOffset = clusterHeight * 0.6;
+                const gap = random(60, 100); // Tight gap requiring precise timing
+                obstacles.push({
+                    x: canvas.logicalWidth + spawnOffset + (gap * i),
+                    y: canvas.logicalHeight - GROUND_HEIGHT - clusterHeight,
+                    width: OBSTACLE_WIDTH,
+                    height: clusterHeight,
+                    type: 'block',
+                    emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
+                    bounceSpeed: 0,
+                    bounceDirection: 0
+                });
+            }
+        }
+        
         obstacleTimer = 0;
         // Fixed delay before next obstacle (not affected by speed)
         nextObstacleTime = random(120, 180);
@@ -360,6 +414,23 @@ function update() {
     // Update obstacles
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= gameSpeed;
+        
+        // Handle bouncing obstacles
+        if (obstacles[i].type === 'bouncing') {
+            obstacles[i].y += obstacles[i].bounceSpeed * obstacles[i].bounceDirection;
+            
+            // Bounce off ground and top bounds
+            const maxY = canvas.logicalHeight - GROUND_HEIGHT - obstacles[i].height;
+            const minY = 50;
+            
+            if (obstacles[i].y >= maxY) {
+                obstacles[i].y = maxY;
+                obstacles[i].bounceDirection = -1;
+            } else if (obstacles[i].y <= minY) {
+                obstacles[i].y = minY;
+                obstacles[i].bounceDirection = 1;
+            }
+        }
         
         // Remove off-screen obstacles - account for emoji size extending beyond width
         const emojiExtension = obstacles[i].height * 0.6; // Extra space for emoji
@@ -448,6 +519,15 @@ function update() {
         }
     }
     
+    // Update speed lines
+    for (let i = speedLines.length - 1; i >= 0; i--) {
+        speedLines[i].x -= speedLines[i].speed;
+        
+        if (speedLines[i].x + speedLines[i].length < 0) {
+            speedLines.splice(i, 1);
+        }
+    }
+    
     // Update dog
     if (dog) {
         dog.x += dog.speed;
@@ -488,6 +568,16 @@ function draw() {
     // Clear canvas with vibrant sunrise gradient (pre-created for performance)
     ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
+    
+    // Draw speed lines (behind everything else)
+    speedLines.forEach(line => {
+        ctx.strokeStyle = `rgba(255, 255, 255, ${line.opacity})`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(line.x, line.y);
+        ctx.lineTo(line.x - line.length, line.y);
+        ctx.stroke();
+    });
     
     // Draw clouds
     clouds.forEach(cloud => {
