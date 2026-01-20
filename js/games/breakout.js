@@ -380,15 +380,6 @@ function update() {
             if (catsRescued >= CATS_TO_RESCUE && !endlessMode) {
                 winGame();
                 return;
-            } else if (catsRescued >= CATS_TO_RESCUE && endlessMode) {
-                // In endless mode, regenerate level
-                catsRescued = 0;
-                fallingCats = [];
-                currentBallSpeed = BASE_BALL_SPEED;
-                resetBall();
-                resetLevel();
-                updateUI();
-                playSound('nextLevel');
             }
         }
         // Cat fell off screen
@@ -430,14 +421,46 @@ function update() {
                 
                 updateUI();
                 
-                // Check lose condition: no more bricks but haven't rescued 5 cats
-                if (bricksRemaining === 0 && catsRescued < CATS_TO_RESCUE) {
-                    gameOver();
-                    return;
+                // Check level complete (only if no cats are falling)
+                if (bricksRemaining === 0 && fallingCats.length === 0) {
+                    if (endlessMode) {
+                        // In endless mode, regenerate level without resetting lives or score
+                        const currentLives = lives;
+                        const currentCatsRescued = catsRescued;
+                        initGame();
+                        lives = currentLives;
+                        catsRescued = currentCatsRescued;
+                        gameRunning = true;
+                        updateUI();
+                        playSound('brick');
+                        return;
+                    } else if (catsRescued < CATS_TO_RESCUE) {
+                        // In normal mode, lose if bricks are gone but not enough cats rescued
+                        gameOver();
+                        return;
+                    }
                 }
                 
                 return; // Only hit one brick per frame
             }
+        }
+    }
+    
+    // Check level complete at end of update (for when last cat is caught/missed)
+    if (bricksRemaining === 0 && fallingCats.length === 0) {
+        if (endlessMode) {
+            // In endless mode, regenerate level without resetting lives or score
+            const currentLives = lives;
+            const currentCatsRescued = catsRescued;
+            initGame();
+            lives = currentLives;
+            catsRescued = currentCatsRescued;
+            gameRunning = true;
+            updateUI();
+            playSound('brick');
+        } else if (catsRescued < CATS_TO_RESCUE) {
+            // In normal mode, lose if bricks are gone but not enough cats rescued
+            gameOver();
         }
     }
 }
