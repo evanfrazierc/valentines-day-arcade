@@ -5,6 +5,7 @@ const ctx = setupCanvas(canvas, 350, 600);
 // Game constants
 const PADDLE_WIDTH = 80;
 const PADDLE_HEIGHT = 15;
+const PADDLE_SPEED = 8;
 const BALL_RADIUS = 8;
 const BRICK_ROWS = 5;
 const BRICK_COLS = 6;
