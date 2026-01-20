@@ -394,3 +394,96 @@ function setPlayingMode(isPlaying) {
         }
     }
 }
+
+// Win/Lose Animation System
+class GameAnimations {
+    constructor(canvas, ctx) {
+        this.canvas = canvas;
+        this.ctx = ctx;
+        this.shakeIntensity = 0;
+        this.shakeStartTime = 0;
+        this.hearts = [];
+        this.animating = false;
+    }
+    
+    // Screen shake animation for lose
+    startShake() {
+        this.shakeIntensity = 15;
+        this.shakeStartTime = Date.now();
+    }
+    
+    applyShake() {
+        const elapsed = Date.now() - this.shakeStartTime;
+        if (elapsed < 800) { // Shake for full 800ms
+            const decay = Math.max(0, 1 - elapsed / 800);
+            this.shakeIntensity = 15 * decay;
+            
+            const shakeX = (Math.random() - 0.5) * this.shakeIntensity * 2;
+            const shakeY = (Math.random() - 0.5) * this.shakeIntensity * 2;
+            this.ctx.translate(shakeX, shakeY);
+            
+            return true;
+        }
+        this.shakeIntensity = 0;
+        return false;
+    }
+    
+    // Hearts raining animation for win
+    startHeartRain() {
+        this.hearts = [];
+        this.animating = true;
+        this.heartRainStartTime = Date.now();
+        
+        // Create 15 hearts at random positions
+        for (let i = 0; i < 15; i++) {
+            this.hearts.push({
+                x: Math.random() * this.canvas.logicalWidth,
+                y: -20 - Math.random() * 100, // Start above screen
+                speed: 2 + Math.random() * 3,
+                size: 15 + Math.random() * 15,
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() - 0.5) * 0.1,
+                color: ['#FF1493', '#FF69B4', '#FFB6C1', '#FFC0CB'][Math.floor(Math.random() * 4)]
+            });
+        }
+    }
+    
+    drawHeartRain() {
+        const elapsed = Date.now() - this.heartRainStartTime;
+        if (elapsed > 2000) { // Stop after 2000ms
+            this.animating = false;
+            return false;
+        }
+        
+        this.hearts.forEach(heart => {
+            heart.y += heart.speed;
+            heart.rotation += heart.rotationSpeed;
+            
+            // Only draw if on screen
+            if (heart.y < this.canvas.logicalHeight + 50) {
+                this.ctx.save();
+                this.ctx.translate(heart.x, heart.y);
+                this.ctx.rotate(heart.rotation);
+                this.ctx.fillStyle = heart.color;
+                
+                // Draw heart shape
+                const size = heart.size;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, size * 0.3);
+                this.ctx.bezierCurveTo(-size * 0.5, -size * 0.1, -size * 0.5, -size * 0.5, 0, -size * 0.2);
+                this.ctx.bezierCurveTo(size * 0.5, -size * 0.5, size * 0.5, -size * 0.1, 0, size * 0.3);
+                this.ctx.closePath();
+                this.ctx.fill();
+                
+                this.ctx.restore();
+            }
+        });
+        
+        return true;
+    }
+    
+    isAnimating() {
+        const shakeActive = (Date.now() - this.shakeStartTime) < 800;
+        return this.animating || shakeActive;
+    }
+}

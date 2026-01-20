@@ -96,9 +96,17 @@ function playSound(soundName) {
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
+// Game animations
+const gameAnimations = new GameAnimations(canvas, ctx);
+
 // Touch controls
 const controls = new TouchControls(canvas);
 controls.on('swipe', (dir) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!gameRunning) {
         startGame();
         return;
@@ -121,6 +129,11 @@ controls.on('swipe', (dir) => {
 });
 
 controls.on('tap', () => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
@@ -244,6 +257,10 @@ function update() {
 }
 
 function draw() {
+    // Apply shake animation if active
+    ctx.save();
+    gameAnimations.applyShake();
+    
     // Clear canvas with blue floor
     ctx.fillStyle = '#89BDE8'; // Lighter, more pale blue
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
@@ -745,6 +762,13 @@ function draw() {
     particles.update();
     particles.draw();
     
+    ctx.restore();
+    
+    // Draw heart rain animation
+    if (gameAnimations.isAnimating()) {
+        gameAnimations.drawHeartRain();
+    }
+    
     // Draw start message
     if (!gameRunning) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -755,7 +779,14 @@ function draw() {
 }
 
 function gameLoop() {
-    if (!gameRunning) return;
+    if (!gameRunning) {
+        draw();
+        // Continue loop if animations are active
+        if (gameAnimations.isAnimating()) {
+            requestAnimationFrame(gameLoop);
+        }
+        return;
+    }
     
     // Update scrap falling animation every frame for smoothness
     if (scrap.falling) {
@@ -787,17 +818,25 @@ function updateUI() {
 
 function gameOver() {
     gameRunning = false;
-    setPlayingMode(false);
-    document.getElementById('gameOverScreen').classList.add('show');
+    gameAnimations.startShake();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        document.getElementById('gameOverScreen').classList.add('show');
+    }, 800);
 }
 
 function winGame() {
     gameRunning = false;
-    setPlayingMode(false);
-    showWinScreen(
-        "Sarah, Gaston fetched all the scraps just for you! 🐕💕",
-        restartGame
-    );
+    gameAnimations.startHeartRain();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        showWinScreen(
+            "Sarah, Gaston fetched all the scraps just for you! 🐕💕",
+            restartGame
+        );
+    }, 2000);
 }
 
 function restartGame() {

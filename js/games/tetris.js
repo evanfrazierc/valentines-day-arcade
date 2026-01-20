@@ -87,11 +87,19 @@ function playSound(soundName) {
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
+// Game animations
+const gameAnimations = new GameAnimations(canvas, ctx);
+
 // Touch controls
 const controls = new TouchControls(canvas);
 let lastSwipeTime = 0;
 
 controls.on('swipe', (direction) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!gameRunning) {
         startGame();
         return;
@@ -115,6 +123,11 @@ controls.on('swipe', (direction) => {
 });
 
 controls.on('tap', () => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
@@ -313,6 +326,10 @@ function update() {
 }
 
 function draw() {
+    // Apply shake animation if active
+    ctx.save();
+    gameAnimations.applyShake();
+    
     // Clear canvas (pre-created gradient for performance)
     ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
@@ -390,6 +407,13 @@ function draw() {
     particles.update();
     particles.draw();
     
+    ctx.restore();
+    
+    // Draw heart rain animation
+    if (gameAnimations.isAnimating()) {
+        gameAnimations.drawHeartRain();
+    }
+    
     // Draw start message
     if (!gameRunning) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -405,6 +429,10 @@ function draw() {
 function gameLoop() {
     if (!gameRunning) {
         draw();
+        // Continue loop if animations are active
+        if (gameAnimations.isAnimating()) {
+            requestAnimationFrame(gameLoop);
+        }
         return;
     }
     
@@ -425,17 +453,25 @@ function updateUI() {
 
 function gameOver() {
     gameRunning = false;
-    setPlayingMode(false);
-    document.getElementById('gameOverScreen').classList.add('show');
+    gameAnimations.startShake();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        document.getElementById('gameOverScreen').classList.add('show');
+    }, 800);
 }
 
 function winGame() {
     gameRunning = false;
-    setPlayingMode(false);
-    showWinScreen(
-        "Megan, we fit together perfectly! 🧩💗",
-        restartGame
-    );
+    gameAnimations.startHeartRain();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        showWinScreen(
+            "Megan, our love blocks fit perfectly! ❤️🧩",
+            restartGame
+        );
+    }, 2000);
 }
 
 function restartGame() {

@@ -115,11 +115,19 @@ function playSound(soundName) {
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
+// Game animations
+const gameAnimations = new GameAnimations(canvas, ctx);
+
 // Touch controls
 const controls = new TouchControls(canvas);
 let isDragging = false;
 
 controls.on('touchstart', async (pos) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     isDragging = true;
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -142,12 +150,22 @@ controls.on('touchstart', async (pos) => {
 });
 
 controls.on('touchmove', (pos) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (isDragging) {
         paddle.x = clamp(pos.x - PADDLE_WIDTH / 2, 0, canvas.logicalWidth - PADDLE_WIDTH);
     }
 });
 
 controls.on('tap', () => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!gameRunning) {
         startGame();
     }
@@ -396,8 +414,10 @@ function update() {
 function draw() {
     // Update animation time once per frame
     animationTime = Date.now() * 0.002;
-    
-    // Clear canvas with gradient background (pre-created for performance)
+        // Apply shake animation if active
+    ctx.save();
+    gameAnimations.applyShake();
+        // Clear canvas with gradient background (pre-created for performance)
     ctx.fillStyle = backgroundGradient;
     ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
     
@@ -518,6 +538,13 @@ function draw() {
     particles.update();
     particles.draw();
     
+    ctx.restore();
+    
+    // Draw heart rain animation
+    if (gameAnimations.isAnimating()) {
+        gameAnimations.drawHeartRain();
+    }
+    
     // Draw start message
     if (!gameRunning && lives > 0) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -534,7 +561,7 @@ function gameLoop() {
     
     draw();
     
-    if (gameRunning || lives > 0) {
+    if (gameRunning || lives > 0 || gameAnimations.isAnimating()) {
         animationFrameId = requestAnimationFrame(gameLoop);
     }
 }
@@ -550,17 +577,25 @@ function updateUI() {
 
 function gameOver() {
     gameRunning = false;
-    setPlayingMode(false);
-    document.getElementById('gameOverScreen').classList.add('show');
+    gameAnimations.startShake();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        document.getElementById('gameOverScreen').classList.add('show');
+    }, 800);
 }
 
 function winGame() {
     gameRunning = false;
-    setPlayingMode(false);
-    showWinScreen(
-        "You rescued all 5 cats! You're purr-fect! 🐱💕",
-        restartGame
-    );
+    gameAnimations.startHeartRain();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        showWinScreen(
+            "You rescued all 5 cats! You're purr-fect! 🐱💕",
+            restartGame
+        );
+    }, 2000);
 }
 
 function restartGame() {

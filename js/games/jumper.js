@@ -96,6 +96,9 @@ function playSound(soundName) {
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
+// Game animations
+const gameAnimations = new GameAnimations(canvas, ctx);
+
 // Control state
 let tiltX = 0;
 let keysPressed = {};
@@ -158,6 +161,11 @@ window.addEventListener('keyup', (e) => {
 const controls = new TouchControls(canvas);
 
 controls.on('tap', (pos) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
@@ -187,6 +195,11 @@ controls.on('tap', (pos) => {
 });
 
 controls.on('touchstart', (pos) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
@@ -463,6 +476,10 @@ function update() {
 }
 
 function draw() {
+    // Apply shake animation if active
+    ctx.save();
+    gameAnimations.applyShake();
+    
     // Sky gradient that gets darker with each wine collected
     const skyProgress = score / WIN_SCORE; // 0 = light sky, 1 = space
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
@@ -530,6 +547,13 @@ function draw() {
     particles.update();
     particles.draw();
     
+    ctx.restore();
+    
+    // Draw heart rain animation
+    if (gameAnimations.isAnimating()) {
+        gameAnimations.drawHeartRain();
+    }
+    
     // Draw start message
     if (!gameRunning) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
@@ -544,6 +568,10 @@ function draw() {
 function gameLoop() {
     if (!gameRunning) {
         draw();
+        // Continue loop if animations are active
+        if (gameAnimations.isAnimating()) {
+            requestAnimationFrame(gameLoop);
+        }
         return;
     }
     
@@ -561,17 +589,25 @@ function updateUI() {
 
 function gameOver() {
     gameRunning = false;
-    setPlayingMode(false);
-    document.getElementById('gameOverScreen').classList.add('show');
+    gameAnimations.startShake();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        document.getElementById('gameOverScreen').classList.add('show');
+    }, 800);
 }
 
 function winGame() {
     gameRunning = false;
-    setPlayingMode(false);
-    showWinScreen(
-        "Joe, you're on cloud wine! Cheers to you! 🍷☁️",
-        restartGame
-    );
+    gameAnimations.startHeartRain();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        showWinScreen(
+            "Joe, you're on cloud wine with me! 🍷☁️💕",
+            restartGame
+        );
+    }, 800);
 }
 
 function restartGame() {

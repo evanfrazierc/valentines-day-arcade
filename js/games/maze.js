@@ -184,6 +184,9 @@ function playSound(poolName) {
 // Particle system
 const particles = new ParticleSystem(canvas, ctx);
 
+// Game animations
+const gameAnimations = new GameAnimations(canvas, ctx);
+
 // Touch controls
 const controls = new TouchControls(canvas);
 
@@ -211,6 +214,11 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: false });
 
 controls.on('tap', (pos) => {
+    // Disable input during animations
+    if (gameAnimations.isAnimating()) {
+        return;
+    }
+    
     if (!audioContext) {
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
         if (audioContext.state === 'suspended') {
@@ -467,17 +475,9 @@ function update() {
 }
 
 function draw() {
-    // Apply screen shake
+    // Apply screen shake from game animations
     ctx.save();
-    if (shakeIntensity > 0) {
-        const elapsed = Date.now() - shakeTime;
-        const decay = Math.max(0, 1 - elapsed / 300); // Shake for 300ms
-        shakeIntensity = 10 * decay;
-        
-        const shakeX = (Math.random() - 0.5) * shakeIntensity * 2;
-        const shakeY = (Math.random() - 0.5) * shakeIntensity * 2;
-        ctx.translate(shakeX, shakeY);
-    }
+    gameAnimations.applyShake();
     
     // Clear canvas with dark club atmosphere (pre-created gradient for performance)
     ctx.fillStyle = backgroundGradient;
@@ -678,6 +678,10 @@ function draw() {
 function gameLoop() {
     if (!gameRunning) {
         draw();
+        // Continue loop if animations are active
+        if (gameAnimations.isAnimating()) {
+            requestAnimationFrame(gameLoop);
+        }
         return;
     }
     
@@ -707,14 +711,18 @@ function gameOver() {
 
 function winGame() {
     gameRunning = false;
-    setPlayingMode(false);
-    if (audioEnabled && backgroundMusic) {
-        backgroundMusic.pause();
-    }
-    showWinScreen(
-        "Harrison, you hit all the right notes in my heart! 🎵💕",
-        restartGame
-    );
+    gameAnimations.startHeartRain();
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        if (audioEnabled && backgroundMusic) {
+            backgroundMusic.pause();
+        }
+        showWinScreen(
+            "Harrison, you hit all the right notes in my heart! 🎵💕",
+            restartGame
+        );
+    }, 2000);
 }
 
 function restartGame() {
