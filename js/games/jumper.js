@@ -30,7 +30,10 @@ let cameraY = 0;
 let score = 0;
 let maxScore = 0;
 let gameRunning = false;
-let endlessMode = false;
+// Endless mode - check URL parameter or default to true
+const urlParams = new URLSearchParams(window.location.search);
+const endlessParam = urlParams.get('endless');
+let endlessMode = endlessParam !== null ? (endlessParam === 'true' || endlessParam === '1') : true;
 let highScore = 0;
 
 // Pre-create gradient for better performance
@@ -654,10 +657,20 @@ initGame();
 // Endless mode toggle
 const endlessToggle = document.getElementById('endlessToggle');
 if (endlessToggle) {
+    // Set initial checkbox state and display
+    endlessToggle.checked = endlessMode;
+    const highScoreLabel = document.getElementById('highScoreLabel');
+    const highScoreValue = document.getElementById('highScoreValue');
+    
+    if (endlessMode) {
+        highScore = loadHighScore();
+        updateHighScoreDisplay();
+        highScoreLabel.style.display = 'block';
+        highScoreValue.style.display = 'block';
+    }
+    
     endlessToggle.addEventListener('change', (e) => {
         endlessMode = e.target.checked;
-        const highScoreLabel = document.getElementById('highScoreLabel');
-        const highScoreValue = document.getElementById('highScoreValue');
         
         if (endlessMode) {
             highScore = loadHighScore();

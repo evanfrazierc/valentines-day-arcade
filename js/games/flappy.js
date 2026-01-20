@@ -43,8 +43,10 @@ let gameStarted = false;
 let pipeTimer = 0;
 let groundOffset = 0;
 
-// Endless mode
-let endlessMode = false;
+// Endless mode - check URL parameter or default to true
+const urlParams = new URLSearchParams(window.location.search);
+const endlessParam = urlParams.get('endless');
+let endlessMode = endlessParam !== null ? (endlessParam === 'true' || endlessParam === '1') : true;
 let highScore = 0;
 
 // Pre-create gradients for better performance
@@ -550,6 +552,13 @@ const highScoreDisplay = document.getElementById('highScore');
 
 highScore = loadHighScore();
 updateHighScoreDisplay();
+
+// Set initial checkbox state and display
+endlessModeToggle.checked = endlessMode;
+if (endlessMode) {
+    highScoreLabel.style.display = 'block';
+    highScoreDisplay.style.display = 'block';
+}
 
 endlessModeToggle.addEventListener('change', (e) => {
     endlessMode = e.target.checked;
