@@ -22,7 +22,8 @@ let player = {
     dy: 0,
     grounded: true,
     canDoubleJump: false,
-    rotation: 0
+    rotation: 0,
+    rotationSpeed: 0.15
 };
 
 let obstacles = [];
@@ -161,10 +162,11 @@ controls.on('touchstart', () => {
         return;
     }
     
-    // Double jump - available while rising and if not used yet
-    if (!player.grounded && player.dy < 0 && player.canDoubleJump) {
+    // Double jump - available while in air if not used yet
+    if (!player.grounded && player.canDoubleJump) {
         player.dy = JUMP_STRENGTH * 0.9;
         player.canDoubleJump = false;
+        player.rotationSpeed = -player.rotationSpeed; // Reverse spin direction
         playSound('jump');
         particles.createParticles(player.x + player.width / 2, player.y + player.height, 10, PALETTE.GREEN_LIGHT);
     }
@@ -203,7 +205,7 @@ window.addEventListener('keydown', (e) => {
         } else if (player.canDoubleJump) {
             player.dy = JUMP_STRENGTH * 0.9;
             player.canDoubleJump = false;
-            player.rotation = -0.5;
+            player.rotationSpeed = -player.rotationSpeed; // Reverse spin direction on double jump
             playSound('jump');
             particles.createParticles(player.x, player.y + PLAYER_SIZE, 12, PALETTE.PINK_PASTEL);
         }
@@ -305,10 +307,11 @@ function update() {
         player.grounded = true;
         player.canDoubleJump = false;
         player.rotation = 0; // Reset rotation on landing
+        player.rotationSpeed = 0.15; // Reset rotation speed
     } else {
         player.grounded = false;
         // Spin while in air
-        player.rotation += 0.15;
+        player.rotation += player.rotationSpeed;
     }
     
     // Spawn obstacles with random timing
@@ -337,27 +340,6 @@ function update() {
             bounceSpeed: bounceSpeed,
             bounceDirection: -1 // Start moving up
         });
-        
-        // Create cluster pattern at higher difficulty
-        if (endlessMode && difficultyLevel >= 2 && Math.random() < 0.25) {
-            // Add 1-2 more obstacles in a cluster
-            const clusterSize = Math.random() < 0.5 ? 1 : 2;
-            for (let i = 1; i <= clusterSize; i++) {
-                const clusterHeight = random(50, 90);
-                const clusterOffset = clusterHeight * 0.6;
-                const gap = random(60, 100); // Tight gap requiring precise timing
-                obstacles.push({
-                    x: canvas.logicalWidth + spawnOffset + (gap * i),
-                    y: canvas.logicalHeight - GROUND_HEIGHT - clusterHeight,
-                    width: OBSTACLE_WIDTH,
-                    height: clusterHeight,
-                    type: 'block',
-                    emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
-                    bounceSpeed: 0,
-                    bounceDirection: 0
-                });
-            }
-        }
         
         obstacleTimer = 0;
         // Fixed delay before next obstacle (not affected by speed)

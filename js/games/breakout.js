@@ -30,6 +30,8 @@ let gameRunning = false;
 let bricksRemaining = 0;
 let animationFrameId = null;
 let currentBallSpeed = 4;
+let basePaddleWidth = PADDLE_WIDTH; // Track current paddle width in endless mode
+let currentLevel = 1; // Track difficulty level for brick durability
 const BASE_BALL_SPEED = 4;
 const SPEED_INCREASE_PER_HIT = 0.25;
 const MAX_TRAIL_LENGTH = 8; // Constant for trail optimization
@@ -222,6 +224,9 @@ window.addEventListener('keyup', (e) => {
 function initGame() {
     // Reset paddle and ball
     paddle.x = canvas.logicalWidth / 2 - PADDLE_WIDTH / 2;
+    basePaddleWidth = PADDLE_WIDTH;
+    paddle.width = basePaddleWidth;
+    currentLevel = 1;
     ball.x = canvas.logicalWidth / 2;
     ball.y = canvas.logicalHeight - 60;
     currentBallSpeed = BASE_BALL_SPEED;
@@ -269,6 +274,8 @@ function initGame() {
         bricks[row] = [];
         for (let col = 0; col < BRICK_COLS; col++) {
             const hasCat = catIndices.includes(brickIndex);
+            // Durability: level 1-2 = 1 hit, level 3-4 = 2 hits, level 5+ = 3 hits
+            const durability = endlessMode ? Math.min(3, Math.max(1, Math.floor((currentLevel + 1) / 2))) : 1;
             bricks[row][col] = {
                 x: BRICK_OFFSET_LEFT + col * (BRICK_WIDTH + BRICK_PADDING),
                 y: BRICK_OFFSET_TOP + row * (BRICK_HEIGHT + BRICK_PADDING),
@@ -278,6 +285,8 @@ function initGame() {
                 visible: true,
                 hasCat: hasCat,
                 catEmoji: hasCat ? CAT_EMOJIS[Math.floor(Math.random() * CAT_EMOJIS.length)] : null,
+                durability: durability,
+                maxDurability: durability,
                 catAnimOffset: hasCat ? Math.random() * Math.PI * 2 : 0
             };
             brickIndex++;
@@ -317,7 +326,7 @@ function update() {
     }
     if (keysPressed['ArrowRight']) {
         paddle.x += PADDLE_SPEED;
-        paddle.x = Math.min(canvas.logicalWidth - PADDLE_WIDTH, paddle.x);
+        paddle.x = Math.min(canvas.logicalWidth - paddle.width, paddle.x);
     }
     
     // Add current ball position to trail
@@ -407,6 +416,21 @@ function update() {
             playSound('catchCat');
             fallingCats.splice(i, 1);
             particles.createParticles(cat.x + 15, cat.y + 10, 20, PALETTE.YELLOW_GOLD);
+            
+            // Progressive difficulty in endless mode
+            if (endlessMode) {
+                // Shrink paddle every 5 cats (minimum 40px)
+                if (catsRescued % 5 === 0) {
+                    basePaddleWidth = Math.max(40, basePaddleWidth - 8);
+                    paddle.width = basePaddleWidth;
+                }
+                
+                // Increase level every 5 cats for brick durability
+                if (catsRescued % 5 === 0) {
+                    currentLevel++;
+                }
+            }
+            
             updateUI();
             
             // Check win condition
@@ -432,18 +456,26 @@ function update() {
                 brick
             )) {
                 ball.dy = -ball.dy;
-                brick.visible = false;
-                playSound('brick');
-                bricksRemaining--;
                 
-                // If brick has a cat, make it fall
-                if (brick.hasCat) {
-                    fallingCats.push({
-                        x: brick.x + brick.width / 2 - 15,
-                        y: brick.y + brick.height,
-                        emoji: brick.catEmoji
-                    });
+                // Decrease brick durability
+                brick.durability--;
+                
+                // Only break brick when durability reaches 0
+                if (brick.durability <= 0) {
+                    brick.visible = false;
+                    bricksRemaining--;
+                    
+                    // If brick has a cat, make it fall
+                    if (brick.hasCat) {
+                        fallingCats.push({
+                            x: brick.x + brick.width / 2 - 15,
+                            y: brick.y + brick.height,
+                            emoji: brick.catEmoji
+                        });
+                    }
                 }
+                
+                playSound('brick');
                 
                 particles.createParticles(
                     brick.x + brick.width / 2,
@@ -527,11 +559,17 @@ function draw() {
     bricks.forEach(row => {
         row.forEach(brick => {
             if (brick.visible) {
-                // Main brick color
+                // Adjust brick opacity based on durability
+                const durabilityRatio = brick.durability / brick.maxDurability;
+                const alpha = 0.5 + (durabilityRatio * 0.5); // 0.5 to 1.0 opacity
+                
+                // Main brick color with durability-based opacity
                 ctx.fillStyle = brick.color;
+                ctx.globalAlpha = alpha;
                 ctx.beginPath();
                 ctx.roundRect(brick.x, brick.y, brick.width, brick.height, radius);
                 ctx.fill();
+                ctx.globalAlpha = 1.0;
                 
                 // Use pre-created gradient with transform for 3D effect
                 ctx.save();
@@ -541,6 +579,19 @@ function draw() {
                 ctx.roundRect(0, 0, brick.width, brick.height, radius);
                 ctx.fill();
                 ctx.restore();
+                
+                // Draw durability cracks for damaged bricks
+                if (brick.durability < brick.maxDurability) {
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+                    ctx.lineWidth = 1.5;
+                    const crackCount = brick.maxDurability - brick.durability;
+                    for (let i = 0; i < crackCount; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(brick.x + 10 + i * 12, brick.y + 5);
+                        ctx.lineTo(brick.x + 15 + i * 12, brick.y + brick.height - 5);
+                        ctx.stroke();
+                    }
+                }
                 
                 // Add subtle border (only for cat bricks to reduce draw calls)
                 if (brick.hasCat) {
@@ -658,6 +709,10 @@ function updateUI() {
         document.getElementById('cats').textContent = catsRescued;
         const catsOverlay = document.getElementById('cats-overlay');
         if (catsOverlay) catsOverlay.textContent = catsRescued;
+        
+        // Update level display
+        const levelElement = document.getElementById('level');
+        if (levelElement) levelElement.textContent = currentLevel;
     } else {
         document.getElementById('cats').textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
         const catsOverlay = document.getElementById('cats-overlay');
@@ -712,25 +767,31 @@ if (endlessToggle) {
     endlessToggle.checked = endlessMode;
     const highScoreLabel = document.getElementById('highScoreLabel');
     const highScoreValue = document.getElementById('highScoreValue');
+    const levelInfo = document.getElementById('levelInfo');
     
     if (endlessMode) {
         highScore = loadHighScore();
         updateHighScoreDisplay();
         highScoreLabel.style.display = 'block';
         highScoreValue.style.display = 'block';
+        if (levelInfo) levelInfo.style.display = 'flex';
     }
     
     endlessToggle.addEventListener('change', (e) => {
         endlessMode = e.target.checked;
+        
+        const levelInfo = document.getElementById('levelInfo');
         
         if (endlessMode) {
             highScore = loadHighScore();
             updateHighScoreDisplay();
             highScoreLabel.style.display = 'block';
             highScoreValue.style.display = 'block';
+            if (levelInfo) levelInfo.style.display = 'flex';
         } else {
             highScoreLabel.style.display = 'none';
             highScoreValue.style.display = 'none';
+            if (levelInfo) levelInfo.style.display = 'none';
         }
         
         updateUI();
