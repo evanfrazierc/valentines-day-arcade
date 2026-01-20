@@ -45,6 +45,7 @@ let snake = [];
 let direction = { x: 1, y: 0 };
 let nextDirection = { x: 1, y: 0 };
 let scrap = { x: 10, y: 10, targetY: 10, currentY: -2, emoji: '🍕', falling: false };
+let grapes = []; // Dangerous grapes that spawn in endless mode
 let scrapsCollected = 0;
 let gameRunning = false;
 let gameSpeed = 150;
@@ -228,7 +229,10 @@ function initGame() {
     direction = { x: 1, y: 0 };
     nextDirection = { x: 1, y: 0 };
     scrapsCollected = 0;
+    grapes = [];
     gameRunning = false;
+    gameSpeed = baseSpeed;
+    arenaShrinkage = 0;
     spawnScrap();
     updateUI();
     draw();
@@ -272,6 +276,38 @@ function spawnScrap() {
     scrap.falling = true;
 }
 
+function spawnGrape() {
+    let validPosition = false;
+    const minY = Math.floor(GRID_HEIGHT / 3); // Start from 1/3 down (top third excluded)
+    const maxY = GRID_HEIGHT - 1; // Leave room for 2x2 grape
+    const maxX = GRID_SIZE - 1; // Leave room for 2x2 grape
+    let grape = { x: 0, targetY: 0, currentY: -2, y: 0, falling: true };
+    
+    while (!validPosition) {
+        grape.x = Math.floor(Math.random() * maxX);
+        grape.targetY = Math.floor(Math.random() * (maxY - minY)) + minY; // Bottom 2/3 only
+        
+        // Check if any part of the 2x2 grape overlaps with snake or scrap
+        const overlapsSnake = snake.some(segment => 
+            (segment.x === grape.x || segment.x === grape.x + 1) &&
+            (segment.y === grape.targetY || segment.y === grape.targetY + 1)
+        );
+        
+        const overlapsScrap = (grape.x === scrap.x || grape.x === scrap.x + 1) &&
+            (grape.targetY === scrap.targetY || grape.targetY === scrap.targetY + 1);
+        
+        // Check if overlaps with other grapes
+        const overlapsGrape = grapes.some(g => 
+            Math.abs(g.x - grape.x) < 2 && Math.abs(g.targetY - grape.targetY) < 2
+        );
+        
+        validPosition = !overlapsSnake && !overlapsScrap && !overlapsGrape;
+    }
+    
+    grape.y = grape.targetY;
+    grapes.push(grape);
+}
+
 function update() {
     direction = nextDirection;
     
@@ -298,6 +334,16 @@ function update() {
         return;
     }
     
+    // Check grape collision (deadly!)
+    for (let grape of grapes) {
+        if (!grape.falling && (head.x === grape.x || head.x === grape.x + 1) &&
+            (head.y === grape.y || head.y === grape.y + 1)) {
+            playSound('crash');
+            gameOver();
+            return;
+        }
+    }
+    
     snake.unshift(head);
     
     // Check scrap collision (only when scrap has landed)
@@ -312,12 +358,31 @@ function update() {
             PALETTE.BROWN_CHOCOLATE
         );
         
+        // Progressive difficulty in endless mode
+        if (endlessMode && scrapsCollected > 0) {
+            // Increase speed every 10 scraps
+            if (scrapsCollected % 10 === 0) {
+                gameSpeed = Math.max(50, baseSpeed - (Math.floor(scrapsCollected / 10) * 15));
+            }
+        }
+        
+        // Clear all grapes when scrap is collected
+        grapes = [];
+        
         if (scrapsCollected >= WIN_SCRAPS && !endlessMode) {
             winGame();
             return;
         }
         
         spawnScrap();
+        
+        // Spawn grapes in endless mode after 10 scraps (1 grape per 10 scraps)
+        if (endlessMode && scrapsCollected >= 10) {
+            const grapeCount = Math.floor(scrapsCollected / 10);
+            for (let i = 0; i < grapeCount; i++) {
+                spawnGrape();
+            }
+        }
         updateUI();
     } else {
         snake.pop();
@@ -826,6 +891,15 @@ function draw() {
         scrap.currentY * TILE_SIZE + TILE_SIZE
     );
     
+    // Draw grapes (2x2 tiles) at animated positions - DANGER!
+    grapes.forEach(grape => {
+        ctx.fillText(
+            '🍇',
+            grape.x * TILE_SIZE + TILE_SIZE,
+            grape.currentY * TILE_SIZE + TILE_SIZE
+        );
+    });
+    
     // Draw particles
     particles.update();
     particles.draw();
@@ -864,6 +938,17 @@ function gameLoop() {
             scrap.falling = false;
         }
     }
+    
+    // Update grape falling animations
+    grapes.forEach(grape => {
+        if (grape.falling) {
+            grape.currentY += 0.5; // Smooth fall speed
+            if (grape.currentY >= grape.targetY) {
+                grape.currentY = grape.targetY;
+                grape.falling = false;
+            }
+        }
+    });
     
     const now = Date.now();
     if (now - lastUpdate >= gameSpeed) {
