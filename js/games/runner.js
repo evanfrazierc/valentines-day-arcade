@@ -276,8 +276,8 @@ function update() {
     if (endlessMode) {
         difficultyLevel = Math.floor(distance / 200); // Level up every 200 distance
         
-        // Update speed lines based on difficulty
-        if (difficultyLevel > 0 && Math.random() < 0.3) {
+        // Update speed lines based on difficulty (only after 20 veggies collected)
+        if (difficultyLevel > 0 && veggiesCollected >= 20 && Math.random() < 0.3) {
             speedLines.push({
                 x: canvas.logicalWidth,
                 y: random(0, canvas.logicalHeight - GROUND_HEIGHT),

@@ -50,6 +50,8 @@ let gameRunning = false;
 let gameSpeed = 150;
 let lastUpdate = 0;
 let tailWagTime = 0; // For tail wagging animation
+let arenaShrinkage = 0; // Track how much arena has shrunk
+let baseSpeed = 150; // Base game speed
 
 // Audio using Web Audio API
 let audioContext = null;
