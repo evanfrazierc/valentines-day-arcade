@@ -16,6 +16,7 @@ let notes = [];
 let score = 0;
 let combo = 0;
 let maxCombo = 0;
+let missedCount = 0;
 let gameRunning = false;
 let gameTime = 0;
 let notesSpawned = 0;
@@ -494,7 +495,7 @@ function tapLane(lane) {
             // Perfect hit
             score += 2;
             combo++;
-            feedbackText = 'Perfect!';
+            feedbackText = '🤘 Perfect! 🤘';
             feedbackColor = PALETTE.YELLOW_LIGHT;
             feedbackTime = Date.now();
             playSound('perfect');
@@ -514,7 +515,7 @@ function tapLane(lane) {
             // Good hit
             score++;
             combo++;
-            feedbackText = 'Nice!';
+            feedbackText = '👍 Nice! 👍';
             feedbackColor = PALETTE.PINK_PASTEL;
             feedbackTime = Date.now();
             playSound('good');
@@ -558,6 +559,7 @@ function initGame() {
     score = 0;
     combo = 0;
     maxCombo = 0;
+    missedCount = 0;
     gameRunning = false;
     gameTime = 0;
     beatIndex = 0;
@@ -646,14 +648,21 @@ function update() {
             // Check if note was missed
             if (notes[i].y > TARGET_Y + GOOD_WINDOW) {
                 notes[i].missed = true;
+                missedCount++;
                 combo = 0;
-                feedbackText = 'Missed';
+                feedbackText = '💔 Missed 💔';
                 feedbackColor = PALETTE.RED_PRIMARY;
                 feedbackTime = Date.now();
                 playSound('miss');
                 shakeIntensity = 10;
                 shakeTime = Date.now();
                 updateUI();
+                
+                // Check if player has missed too many notes
+                if (missedCount >= 20) {
+                    gameOver();
+                    return;
+                }
             }
         }
         
