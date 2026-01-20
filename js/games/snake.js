@@ -596,13 +596,65 @@ function draw() {
             ctx.fillStyle = PALETTE.BLACK; // Black for body
         }
         
-        // Draw main body
-        ctx.fillRect(
-            segment.x * TILE_SIZE,
-            segment.y * TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE
-        );
+        // Draw main body with rounded butt for tail segment
+        if (isTail) {
+            // Determine which side to round based on tail direction
+            let roundedSide = { x: 0, y: 0 };
+            if (index > 0) {
+                const prevSegment = snake[index - 1];
+                roundedSide.x = segment.x - prevSegment.x;
+                roundedSide.y = segment.y - prevSegment.y;
+            }
+            
+            // Draw rounded rectangle for butt
+            ctx.beginPath();
+            const x = segment.x * TILE_SIZE;
+            const y = segment.y * TILE_SIZE;
+            const radius = TILE_SIZE / 2;
+            
+            if (roundedSide.x > 0) { // Tail points right, round right side
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + TILE_SIZE - radius, y);
+                ctx.arcTo(x + TILE_SIZE, y, x + TILE_SIZE, y + radius, radius);
+                ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE - radius);
+                ctx.arcTo(x + TILE_SIZE, y + TILE_SIZE, x + TILE_SIZE - radius, y + TILE_SIZE, radius);
+                ctx.lineTo(x, y + TILE_SIZE);
+                ctx.closePath();
+            } else if (roundedSide.x < 0) { // Tail points left, round left side
+                ctx.moveTo(x + TILE_SIZE, y);
+                ctx.lineTo(x + radius, y);
+                ctx.arcTo(x, y, x, y + radius, radius);
+                ctx.lineTo(x, y + TILE_SIZE - radius);
+                ctx.arcTo(x, y + TILE_SIZE, x + radius, y + TILE_SIZE, radius);
+                ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
+                ctx.closePath();
+            } else if (roundedSide.y > 0) { // Tail points down, round bottom side
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + TILE_SIZE, y);
+                ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE - radius);
+                ctx.arcTo(x + TILE_SIZE, y + TILE_SIZE, x + TILE_SIZE - radius, y + TILE_SIZE, radius);
+                ctx.lineTo(x + radius, y + TILE_SIZE);
+                ctx.arcTo(x, y + TILE_SIZE, x, y + TILE_SIZE - radius, radius);
+                ctx.closePath();
+            } else if (roundedSide.y < 0) { // Tail points up, round top side
+                ctx.moveTo(x, y + TILE_SIZE);
+                ctx.lineTo(x, y + radius);
+                ctx.arcTo(x, y, x + radius, y, radius);
+                ctx.lineTo(x + TILE_SIZE - radius, y);
+                ctx.arcTo(x + TILE_SIZE, y, x + TILE_SIZE, y + radius, radius);
+                ctx.lineTo(x + TILE_SIZE, y + TILE_SIZE);
+                ctx.closePath();
+            }
+            ctx.fill();
+        } else {
+            // Normal rectangular body segment
+            ctx.fillRect(
+                segment.x * TILE_SIZE,
+                segment.y * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE
+            );
+        }
         
         // Draw wagging tail on last segment
         if (isTail) {
