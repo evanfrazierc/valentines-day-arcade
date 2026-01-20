@@ -184,6 +184,38 @@ controls.on('tap', () => {
 
 controls.init();
 
+// Keyboard controls
+window.addEventListener('keydown', (e) => {
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        
+        // Disable input during animations
+        if (gameAnimations.isAnimating()) {
+            return;
+        }
+        
+        if (!gameRunning) {
+            startGame();
+            return;
+        }
+        
+        switch(e.key) {
+            case 'ArrowUp':
+                if (direction.y === 0) nextDirection = { x: 0, y: -1 };
+                break;
+            case 'ArrowDown':
+                if (direction.y === 0) nextDirection = { x: 0, y: 1 };
+                break;
+            case 'ArrowLeft':
+                if (direction.x === 0) nextDirection = { x: -1, y: 0 };
+                break;
+            case 'ArrowRight':
+                if (direction.x === 0) nextDirection = { x: 1, y: 0 };
+                break;
+        }
+    }
+});
+
 // Initialize game
 function initGame() {
     snake = [

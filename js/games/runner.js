@@ -177,6 +177,37 @@ controls.on('touchstart', () => {
 
 controls.init();
 
+// Keyboard controls
+window.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        
+        if (gameAnimations.isAnimating()) {
+            return;
+        }
+        
+        if (!gameRunning) {
+            startGame();
+            return;
+        }
+        
+        if (player.grounded) {
+            player.dy = JUMP_STRENGTH;
+            player.grounded = false;
+            player.canDoubleJump = true;
+            player.rotation = -0.3;
+            playSound('jump');
+            particles.createParticles(player.x, player.y + PLAYER_SIZE, 8, PALETTE.PINK_HOT);
+        } else if (player.canDoubleJump) {
+            player.dy = JUMP_STRENGTH * 0.9;
+            player.canDoubleJump = false;
+            player.rotation = -0.5;
+            playSound('jump');
+            particles.createParticles(player.x, player.y + PLAYER_SIZE, 12, PALETTE.PINK_PASTEL);
+        }
+    }
+});
+
 // Initialize game
 function initGame() {
     player.y = canvas.logicalHeight - GROUND_HEIGHT - PLAYER_SIZE;

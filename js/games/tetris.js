@@ -177,6 +177,44 @@ controls.on('tap', () => {
 
 controls.init();
 
+// Keyboard controls
+window.addEventListener('keydown', (e) => {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowDown', 'ArrowUp', ' '].includes(e.key)) {
+        e.preventDefault();
+        
+        if (gameAnimations.isAnimating()) {
+            return;
+        }
+        
+        if (!gameRunning) {
+            startGame();
+            return;
+        }
+        
+        switch(e.key) {
+            case 'ArrowLeft':
+                movePiece(-1);
+                break;
+            case 'ArrowRight':
+                movePiece(1);
+                break;
+            case 'ArrowDown':
+                fastDrop = true;
+                break;
+            case 'ArrowUp':
+            case ' ':
+                rotatePiece();
+                break;
+        }
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowDown') {
+        fastDrop = false;
+    }
+});
+
 // Initialize game
 function initGame() {
     // Create empty board

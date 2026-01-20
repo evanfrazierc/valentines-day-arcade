@@ -486,6 +486,35 @@ controls.on('tap', (pos) => {
 
 controls.init();
 
+// Keyboard controls
+window.addEventListener('keydown', (e) => {
+    if (['ArrowLeft', 'ArrowDown', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        
+        if (!gameRunning) {
+            startGame();
+            return;
+        }
+        
+        let lane;
+        switch(e.key) {
+            case 'ArrowLeft':
+                lane = 0;
+                break;
+            case 'ArrowDown':
+                lane = 1;
+                break;
+            case 'ArrowRight':
+                lane = 2;
+                break;
+        }
+        
+        if (lane !== undefined) {
+            tapLane(lane);
+        }
+    }
+});
+
 // Perspective helpers
 function getLaneXAtY(lane, y) {
     // Create perspective: top is narrower (50% width), bottom is full width

@@ -198,6 +198,25 @@ controls.on('tap', () => {
 
 controls.init();
 
+// Keyboard controls
+let keysPressed = {};
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        keysPressed[e.key] = true;
+        
+        if (!gameRunning) {
+            startGame();
+        }
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        keysPressed[e.key] = false;
+    }
+});
+
 // Initialize game
 function initGame() {
     // Reset paddle and ball
@@ -290,6 +309,16 @@ function startGame() {
 }
 
 function update() {
+    // Handle keyboard input for paddle movement
+    if (keysPressed['ArrowLeft']) {
+        paddle.x -= PADDLE_SPEED;
+        paddle.x = Math.max(0, paddle.x);
+    }
+    if (keysPressed['ArrowRight']) {
+        paddle.x += PADDLE_SPEED;
+        paddle.x = Math.min(canvas.logicalWidth - PADDLE_WIDTH, paddle.x);
+    }
+    
     // Add current ball position to trail
     ballTrail.push({ x: ball.x, y: ball.y });
     if (ballTrail.length > MAX_TRAIL_LENGTH) {

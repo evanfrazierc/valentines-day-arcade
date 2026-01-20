@@ -168,6 +168,29 @@ controls.on('touchstart', async () => {
 
 controls.init();
 
+// Keyboard controls
+window.addEventListener('keydown', (e) => {
+    if (e.key === ' ' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        
+        if (gameAnimations.isAnimating()) {
+            return;
+        }
+        
+        if (!gameRunning) {
+            startGame();
+            return;
+        }
+        
+        if (gameStarted) {
+            bird.dy = JUMP_STRENGTH;
+            bird.rotation = -0.3;
+            playSound('flap');
+            particles.createParticles(bird.x, bird.y + bird.height / 2, 5, PALETTE.PINK_PASTEL);
+        }
+    }
+});
+
 // Initialize game
 function initGame() {
     bird.y = canvas.logicalHeight / 2;
