@@ -50,7 +50,8 @@ let audioContext = null;
 let audioBuffers = {
     eat: null,
     crash: null,
-    move: null
+    move: null,
+    bark: null
 };
 let audioEnabled = false;
 
@@ -65,6 +66,7 @@ async function loadAudio() {
         audioBuffers.eat = await loadSound('../audio/snake-eat.wav');
         audioBuffers.crash = await loadSound('../audio/snake-crash.wav');
         audioBuffers.move = await loadSound('../audio/snake-move.wav');
+        audioBuffers.bark = await loadSound('../audio/dog-bark.wav');
         
         audioEnabled = true;
     } catch (error) {
@@ -176,6 +178,12 @@ function startGame() {
     gameRunning = true;
     setPlayingMode(true);
     lastUpdate = Date.now();
+    
+    // Play three barks
+    playSound('bark');
+    setTimeout(() => playSound('bark'), 300);
+    setTimeout(() => playSound('bark'), 600);
+    
     gameLoop();
 }
 
