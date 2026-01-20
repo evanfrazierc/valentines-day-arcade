@@ -865,6 +865,9 @@ function draw() {
     particles.update();
     particles.draw();
     
+    // Draw heart rain animation (for win)
+    gameAnimations.drawHeartRain();
+    
     // Draw hit feedback
     if (feedbackText && gameRunning && Date.now() - feedbackTime < 500) {
         ctx.fillStyle = feedbackColor;
