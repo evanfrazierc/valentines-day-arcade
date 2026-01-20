@@ -926,6 +926,11 @@ function gameOver() {
 
 function winGame() {
     gameRunning = false;
+    
+    if (endlessMode) {
+        saveHighScore(score);
+    }
+    
     gameAnimations.startHeartRain();
     
     setTimeout(() => {
