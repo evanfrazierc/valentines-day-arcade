@@ -182,12 +182,14 @@ window.addEventListener('keydown', (e) => {
             return;
         }
         
-        if (gameStarted) {
-            bird.dy = JUMP_STRENGTH;
-            bird.rotation = -0.3;
-            playSound('flap');
-            particles.createParticles(bird.x, bird.y + bird.height / 2, 5, PALETTE.PINK_PASTEL);
+        if (!gameStarted) {
+            gameStarted = true;
         }
+        
+        bird.dy = JUMP_STRENGTH;
+        bird.rotation = -0.3;
+        playSound('flap');
+        particles.createParticles(bird.x, bird.y + bird.height / 2, 5, PALETTE.PINK_PASTEL);
     }
 });
 
