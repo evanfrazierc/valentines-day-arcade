@@ -942,6 +942,9 @@ function winGame() {
     
     gameAnimations.startHeartRain();
     
+    // Keep game loop running for animation
+    requestAnimationFrame(gameLoop);
+    
     setTimeout(() => {
         setPlayingMode(false);
         if (audioEnabled && backgroundMusic) {
