@@ -11,7 +11,7 @@ const PIPE_GAP = 180;
 const PIPE_SPEED = 3;
 const ITEM_SIZE = 30;
 const ITEM_SPEED = 3; // Match pipe speed
-const WIN_SCORE = 15;
+const WIN_SCORE = 10;
 const CLOUD_SPEED = 0.5;
 
 // Collectible items (jewelry and clothing emojis)

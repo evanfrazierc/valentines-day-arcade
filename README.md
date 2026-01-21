@@ -4,26 +4,63 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 
 ## 🎮 Games
 
-1. **Go Long, Gaston** (For Sarah) - Wiener dog collecting dinner scraps
-2. **Heartbreaker** (For Juliette) - Breakout with heart-shaped bricks
-3. **Super Veggie Bro** (For Ryan) - Endless runner collecting veggies while avoiding meat
-4. **Love Bounce** (For Joe) - Doodle Jump style bouncing game with tilt controls
-5. **Flappy Hearts** (For Karen) - Flappy Bird clone with hearts
-6. **Maze of Love** (For Harrison) - Navigate a maze collecting hearts
-7. **Love Blocks** (For Megan) - Tetris with heart-shaped pieces
+1. **Go Long, Gaston** (For Sarah) - Wiener dog collecting dinner scraps with endless mode and progressive difficulty
+2. **Kitty Catcher** (For Juliette) - Breakout-style game catching falling cats with progressive brick durability
+3. **Super Veggie Bro** (For Ryan) - Endless runner with double jump, bouncing obstacles, and speed lines
+4. **On Cloud Wine** (For Joe) - Vertical platformer with UFO platforms, comets, and moving clouds
+5. **Tap Hero** (For Karen) - Rhythm game with 205 beats and half-note timing
+6. **Maze of Love** (For Harrison) - Navigate dynamic mazes with endless mode
+7. **Love Blocks** (For Megan) - Tetris with endless mode and high score tracking
 
 ## 📱 Features
 
-- ✨ Fully mobile-optimized with touch controls
+### Core Features
+- ✨ Fully mobile-optimized with touch and keyboard controls
 - 🎨 Beautiful Valentine's Day theming with custom visuals
 - 💕 Personalized win messages for each person
 - 🎯 Simple, classic arcade gameplay
 - 📏 Responsive design for all screen sizes
-- ⚡ Fast loading with vanilla JavaScript
-- 🏆 Each game takes 2-5 minutes to complete
-- 🎮 iOS motion controls support (Love Bounce)
-- 🥦 Custom emoji-based graphics (Super Veggie Bro)
-- ☁️ Dynamic environmental effects (clouds, animated backgrounds)
+- ⚡ Fast loading with vanilla JavaScript (no dependencies!)
+- 🎮 Multiple control schemes:
+  - Touch/tap controls for mobile
+  - Arrow key controls for desktop
+  - Tilt controls (On Cloud Wine on iOS - requires permission)
+  - Swipe controls (Go Long Gaston, Maze of Love)
+
+### Endless Mode (Default ON)
+All 7 games feature **endless mode** that defaults to ON with toggleable option:
+- 🏆 **High Score Tracking**: Persistent localStorage high scores
+- 📊 **Progressive Difficulty**: Games get harder as you play
+- 🔄 **URL Parameter Control**: `?endless=true` or `?endless=false`
+- 🎮 **Toggle UI**: Switch between endless and classic modes anytime
+
+### Game-Specific Progressive Difficulty
+
+**Go Long, Gaston (Snake)**
+- Speed increases every 10 scraps collected
+- Grape hazards spawn (1 per 10 scraps collected)
+- Rounded tail animations
+
+**Super Veggie Bro (Runner)**
+- Speed lines visual effect at 20+ veggies
+- Bouncing obstacles (30% spawn rate at difficulty level 3+)
+- Double jump mechanic works anytime with reverse spin animation
+
+**Kitty Catcher (Breakout)**
+- Paddle shrinks every 5 cats caught (minimum 40px)
+- Brick durability increases with levels (1-3 hits required)
+- Ball speed increases with paddle hits, resets per level
+
+**On Cloud Wine (Jumper)**
+- Platform gaps increase every 5 bottles (80px → 120px max)
+- UFO platforms spawn after 15 bottles (circular motion, decay after jump)
+- Comets spawn after 15 bottles (frequency increases 1.5% + 1% per 10 bottles, max 8%)
+- Player and wine bottles 25% larger for visibility
+
+**Tap Hero (Rhythm)**
+- 205 notes total (175 quarter notes + 30 half notes at 75 BPM)
+- 20 miss limit before game over
+- Perfect timing challenge
 
 ## 🚀 Deployment
 
@@ -48,16 +85,50 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 
 ## 🎮 Controls
 
-All games use intuitive touch controls:
-- **Tap/Touch**: Select, action, jump, or double jump
-- **Swipe**: Directional movement (Snake, Maze)
-- **Drag**: Move paddle or character
-- **Tilt**: Device motion controls (Love Bounce on iOS - requires permission)
+All games support both touch and keyboard controls for maximum accessibility:
 
-### Super Veggie Bro Specific Controls
-- **Tap**: Jump (instant response)
-- **Tap while airborne**: Double jump (works during upward momentum)
-- Goal: Collect 30 veggies while avoiding meat obstacles
+### Universal Controls
+- **Arrow Keys** (←↑→↓): Directional movement
+- **Space**: Jump, action, or select
+- **Tap/Touch**: Primary action (jump, select, shoot)
+
+### Game-Specific Controls
+
+**Go Long, Gaston (Snake)**
+- Arrow keys or swipe to change direction
+- Collect 10 scraps to win (classic) or endless high score
+
+**Super Veggie Bro (Runner)**
+- Space or tap to jump
+- Space/tap while airborne for double jump (works anytime, spins backwards)
+- Arrow keys or tilt for left/right movement
+- Collect 30 veggies (classic) or endless high score
+
+**Kitty Catcher (Breakout)**
+- Arrow keys or drag to move paddle
+- Auto-launch ball after life lost
+- Catch 5 cats to win (classic) or endless with levels
+
+**On Cloud Wine (Jumper)**
+- Arrow keys or device tilt for horizontal movement
+- Auto-jumps on platform landing
+- Spins when collecting wine bottles
+- Reach 20 bottles (classic) or endless high score
+
+**Tap Hero (Rhythm)**
+- Space or tap on beat indicators
+- 75 BPM rhythm (800ms per beat, 400ms half-beats)
+- Hit 205 notes with max 20 misses
+
+**Maze of Love**
+- Arrow keys or swipe to navigate
+- Collect hearts while avoiding walls
+- Reach 20 hearts (classic) or endless mode
+
+**Love Blocks (Tetris)**
+- Arrow keys: ← → for movement, ↑ to rotate, ↓ to drop faster
+- Touch: Drag to move, tap to rotate
+- Clear 20 lines (classic) or endless high score
 
 ## 💻 Local Development
 
@@ -81,20 +152,45 @@ Then visit `http://localhost:8000`
 
 Each game can be customized by editing:
 - Person's name in the HTML file
-- Win message in the JavaScript file
+- Win message in the JavaScript file  
 - Difficulty by adjusting game parameters
+- Endless mode default via URL parameter (`?endless=false`)
 - Colors - **IMPORTANT**: See [COLOR_SYSTEM.md](COLOR_SYSTEM.md) for the 84-color palette system
   - All colors must come from `js/colors.js`
   - Use CSS variables in `css/style.css` for theme colors
   - Never hardcode colors outside the defined palette
 
+### Progressive Difficulty Tuning
+
+Each game's difficulty can be adjusted by modifying constants:
+
+**Go Long, Gaston**: `baseSpeed`, grape spawn rate, speed increase interval  
+**Super Veggie Bro**: `difficultyLevel` thresholds, obstacle spawn rates, speed line activation  
+**Kitty Catcher**: `basePaddleWidth`, shrink interval, brick durability formula  
+**On Cloud Wine**: `baseGap`, `currentGap` max, UFO/comet spawn rates and thresholds  
+**Tap Hero**: BPM (currently 75), note patterns, miss limit  
+**Maze of Love**: Maze generation algorithm, enemy patterns  
+**Love Blocks**: Drop speed, line clear goal
+
 ## 📦 Tech Stack
 
-- HTML5 Canvas for game rendering
-- Vanilla JavaScript (ES6+)
-- CSS3 with animations
-- Touch event API for mobile controls
-- No external dependencies!
+- **HTML5 Canvas** for game rendering with optimized drawing
+- **Vanilla JavaScript (ES6+)** - No frameworks or build tools
+- **CSS3** with animations and responsive design
+- **Touch Event API** for mobile controls
+- **Keyboard Event API** for desktop controls with preventDefault
+- **Device Orientation API** for tilt controls (On Cloud Wine)
+- **LocalStorage API** for high score persistence
+- **URL Search Params** for endless mode configuration
+- **RequestAnimationFrame** for smooth 60fps gameplay
+- **No external dependencies!** - Pure vanilla web technologies
+
+### Code Architecture
+- Modular game structure with shared utilities
+- `js/utils.js` - Canvas setup, touch controls, particle systems, animations
+- `js/colors.js` - Centralized 84-color palette
+- `css/style.css` - Shared UI components and theme variables
+- `css/games.css` - Game-specific styling
 
 ## 💝 Perfect For
 
@@ -102,6 +198,18 @@ Each game can be customized by editing:
 - Personalized gifts
 - Fun interactive greetings
 - Mobile gaming on the go
+- Showcasing progressive web game development
+- Learning canvas-based game programming
+- Retro arcade nostalgia with modern features
+
+## 🎯 Development Highlights
+
+- **Endless Mode System**: All 7 games support toggleable endless mode with high scores
+- **Progressive Difficulty**: Each game implements unique difficulty scaling mechanics
+- **Cross-Platform Controls**: Unified input system supporting touch, keyboard, and tilt
+- **Performance Optimized**: Pre-rendered gradients, object pooling, efficient collision detection
+- **Accessibility**: Multiple control schemes, visual feedback, clear win/loss states
+- **No Build Process**: Pure HTML/CSS/JS - just open and play
 
 ---
 

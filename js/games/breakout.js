@@ -319,6 +319,8 @@ function startGame() {
 }
 
 function update() {
+    if (!gameRunning) return;
+    
     // Handle keyboard input for paddle movement
     if (keysPressed['ArrowLeft']) {
         paddle.x -= PADDLE_SPEED;
@@ -424,11 +426,6 @@ function update() {
                     basePaddleWidth = Math.max(40, basePaddleWidth - 8);
                     paddle.width = basePaddleWidth;
                 }
-                
-                // Increase level every 5 cats for brick durability
-                if (catsRescued % 5 === 0) {
-                    currentLevel++;
-                }
             }
             
             updateUI();
@@ -492,9 +489,11 @@ function update() {
                         // In endless mode, regenerate level without resetting lives or score
                         const currentLives = lives;
                         const currentCatsRescued = catsRescued;
+                        const nextLevel = currentLevel + 1;
                         initGame();
                         lives = currentLives;
                         catsRescued = currentCatsRescued;
+                        currentLevel = nextLevel;
                         gameRunning = true;
                         updateUI();
                         playSound('brick');
@@ -709,10 +708,6 @@ function updateUI() {
         document.getElementById('cats').textContent = catsRescued;
         const catsOverlay = document.getElementById('cats-overlay');
         if (catsOverlay) catsOverlay.textContent = catsRescued;
-        
-        // Update level display
-        const levelElement = document.getElementById('level');
-        if (levelElement) levelElement.textContent = currentLevel;
     } else {
         document.getElementById('cats').textContent = `${catsRescued}/${CATS_TO_RESCUE}`;
         const catsOverlay = document.getElementById('cats-overlay');
@@ -767,31 +762,25 @@ if (endlessToggle) {
     endlessToggle.checked = endlessMode;
     const highScoreLabel = document.getElementById('highScoreLabel');
     const highScoreValue = document.getElementById('highScoreValue');
-    const levelInfo = document.getElementById('levelInfo');
     
     if (endlessMode) {
         highScore = loadHighScore();
         updateHighScoreDisplay();
         highScoreLabel.style.display = 'block';
         highScoreValue.style.display = 'block';
-        if (levelInfo) levelInfo.style.display = 'flex';
     }
     
     endlessToggle.addEventListener('change', (e) => {
         endlessMode = e.target.checked;
-        
-        const levelInfo = document.getElementById('levelInfo');
         
         if (endlessMode) {
             highScore = loadHighScore();
             updateHighScoreDisplay();
             highScoreLabel.style.display = 'block';
             highScoreValue.style.display = 'block';
-            if (levelInfo) levelInfo.style.display = 'flex';
         } else {
             highScoreLabel.style.display = 'none';
             highScoreValue.style.display = 'none';
-            if (levelInfo) levelInfo.style.display = 'none';
         }
         
         updateUI();

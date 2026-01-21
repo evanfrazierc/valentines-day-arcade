@@ -8,7 +8,7 @@ const PLAYER_SIZE = 50;
 const PLATFORM_WIDTH = 60;
 const PLATFORM_HEIGHT = 12;
 const JUMP_STRENGTH = -10;
-const WIN_SCORE = 20;
+const WIN_SCORE = 15;
 const WINE_SPAWN_CHANCE = 0.3; // 30% chance per platform
 
 // Game state
