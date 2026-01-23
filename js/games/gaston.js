@@ -41,7 +41,7 @@ const HEART_POSITIONS = [
 ];
 
 // Game state
-let snake = [];
+let dog = [];
 let direction = { x: 1, y: 0 };
 let nextDirection = { x: 1, y: 0 };
 let scrap = { x: 10, y: 10, targetY: 10, currentY: -2, emoji: '🍕', falling: false };
@@ -72,9 +72,9 @@ async function loadAudio() {
             return await audioContext.decodeAudioData(arrayBuffer);
         };
         
-        audioBuffers.eat = await loadSound('../audio/snake-eat.wav');
-        audioBuffers.crash = await loadSound('../audio/snake-crash.wav');
-        audioBuffers.move = await loadSound('../audio/snake-move.wav');
+        audioBuffers.eat = await loadSound('../audio/gaston-eat.wav');
+        audioBuffers.crash = await loadSound('../audio/gaston-crash.wav');
+        audioBuffers.move = await loadSound('../audio/gaston-move.wav');
         audioBuffers.bark = await loadSound('../audio/dog-bark.wav');
         
         audioEnabled = true;
@@ -84,13 +84,13 @@ async function loadAudio() {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('snakeHighScore') || '0');
+    return parseInt(localStorage.getItem('gastonHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('snakeHighScore', score.toString());
+        localStorage.setItem('gastonHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }
@@ -221,7 +221,7 @@ window.addEventListener('keydown', (e) => {
 
 // Initialize game
 function initGame() {
-    snake = [
+    dog = [
         { x: 5, y: 10 },
         { x: 4, y: 10 },
         { x: 3, y: 10 }
@@ -263,8 +263,8 @@ function spawnScrap() {
         scrap.targetY = Math.floor(Math.random() * (maxY - minY)) + minY; // Bottom 2/3 only
         scrap.emoji = randomEmoji;
         
-        // Check if any part of the 2x2 scrap overlaps with snake
-        validPosition = !snake.some(segment => 
+        // Check if any part of the 2x2 scrap overlaps with dog
+        validPosition = !dog.some(segment => 
             (segment.x === scrap.x || segment.x === scrap.x + 1) &&
             (segment.y === scrap.targetY || segment.y === scrap.targetY + 1)
         );
@@ -287,8 +287,8 @@ function spawnGrape() {
         grape.x = Math.floor(Math.random() * maxX);
         grape.targetY = Math.floor(Math.random() * (maxY - minY)) + minY; // Bottom 2/3 only
         
-        // Check if any part of the 2x2 grape overlaps with snake or scrap
-        const overlapsSnake = snake.some(segment => 
+        // Check if any part of the 2x2 grape overlaps with dog or scrap
+        const overlapsDog = dog.some(segment => 
             (segment.x === grape.x || segment.x === grape.x + 1) &&
             (segment.y === grape.targetY || segment.y === grape.targetY + 1)
         );
@@ -301,7 +301,7 @@ function spawnGrape() {
             Math.abs(g.x - grape.x) < 2 && Math.abs(g.targetY - grape.targetY) < 2
         );
         
-        validPosition = !overlapsSnake && !overlapsScrap && !overlapsGrape;
+        validPosition = !overlapsDog && !overlapsScrap && !overlapsGrape;
     }
     
     grape.y = grape.targetY;
@@ -313,8 +313,8 @@ function update() {
     
     // Calculate new head position
     const head = { 
-        x: snake[0].x + direction.x, 
-        y: snake[0].y + direction.y 
+        x: dog[0].x + direction.x, 
+        y: dog[0].y + direction.y 
     };
     
     // Play move sound
@@ -328,7 +328,7 @@ function update() {
     }
     
     // Check self collision
-    if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+    if (dog.some(segment => segment.x === head.x && segment.y === head.y)) {
         playSound('crash');
         gameOver();
         return;
@@ -344,7 +344,7 @@ function update() {
         }
     }
     
-    snake.unshift(head);
+    dog.unshift(head);
     
     // Check scrap collision (only when scrap has landed)
     if (!scrap.falling && (head.x === scrap.x || head.x === scrap.x + 1) &&
@@ -385,7 +385,7 @@ function update() {
         }
         updateUI();
     } else {
-        snake.pop();
+        dog.pop();
     }
 }
 
@@ -552,11 +552,11 @@ function draw() {
         ctx.stroke();
     }
     
-    // Draw wiener dog (snake) - draw legs first so body covers them when overlapping
+    // Draw wiener dog (dog) - draw legs first so body covers them when overlapping
     // First pass: Draw all legs
-    snake.forEach((segment, index) => {
+    dog.forEach((segment, index) => {
         const isFirstBody = index === 1;
-        const isTail = index === snake.length - 1;
+        const isTail = index === dog.length - 1;
         
         // Draw legs only on first body segment (index 1) and tail segment
         if (isFirstBody || isTail) {
@@ -583,10 +583,10 @@ function draw() {
     });
     
     // Second pass: Draw body segments (will cover legs naturally when overlapping)
-    snake.forEach((segment, index) => {
+    dog.forEach((segment, index) => {
         // Wiener dog brown/tan coloring
         const isHead = index === 0;
-        const isTail = index === snake.length - 1;
+        const isTail = index === dog.length - 1;
         const centerX = segment.x * TILE_SIZE + TILE_SIZE / 2;
         const centerY = segment.y * TILE_SIZE + TILE_SIZE / 2;
         
@@ -601,7 +601,7 @@ function draw() {
             // Determine which side to round based on tail direction
             let roundedSide = { x: 0, y: 0 };
             if (index > 0) {
-                const prevSegment = snake[index - 1];
+                const prevSegment = dog[index - 1];
                 roundedSide.x = segment.x - prevSegment.x;
                 roundedSide.y = segment.y - prevSegment.y;
             }
@@ -666,7 +666,7 @@ function draw() {
             // Determine tail direction (opposite of where next segment is)
             let tailDirection = { x: 0, y: 0 };
             if (index > 0) {
-                const prevSegment = snake[index - 1];
+                const prevSegment = dog[index - 1];
                 tailDirection.x = segment.x - prevSegment.x;
                 tailDirection.y = segment.y - prevSegment.y;
             } else {
@@ -1023,9 +1023,9 @@ function updateUI() {
         if (scrapsOverlay) scrapsOverlay.textContent = `${scrapsCollected}/${WIN_SCRAPS}`;
     }
     
-    document.getElementById('length').textContent = snake.length;
+    document.getElementById('length').textContent = dog.length;
     const lengthOverlay = document.getElementById('length-overlay');
-    if (lengthOverlay) lengthOverlay.textContent = snake.length;
+    if (lengthOverlay) lengthOverlay.textContent = dog.length;
 }
 
 function gameOver() {
@@ -1095,3 +1095,5 @@ endlessModeToggle.addEventListener('change', (e) => {
     // Update UI to reflect mode change
     updateUI();
 });
+
+

@@ -23,11 +23,11 @@ Place your audio files in this directory to add sound to the games.
 - `breakout-lose.wav` - Ball falls off bottom (descending tone)
 - `breakout-win.wav` - Level complete (triumphant fanfare)
 
-## Snake Audio Files
+## Gaston (Go Long, Gaston) Audio Files
 
-- `snake-eat.wav` - Eating food (munch, chomp, or gulp)
-- `snake-move.wav` - Optional: subtle movement sound (slither)
-- `snake-crash.wav` - Hitting wall or self (crash or game over tone)
+- `gaston-eat.wav` - Eating food (munch, chomp, or gulp)
+- `gaston-move.wav` - Optional: subtle movement sound (slither)
+- `gaston-crash.wav` - Hitting wall or self (crash or game over tone)
 
 ## Runner Audio Files
 

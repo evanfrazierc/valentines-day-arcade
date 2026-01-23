@@ -397,13 +397,13 @@ function playSound(poolName) {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('mazeHighScore') || '0');
+    return parseInt(localStorage.getItem('tapheroHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('mazeHighScore', score.toString());
+        localStorage.setItem('tapheroHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }

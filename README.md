@@ -8,8 +8,8 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 2. **Kitty Catcher** (For Juliette) - Breakout-style game catching falling cats with progressive brick durability
 3. **Super Veggie Bro** (For Ryan) - Endless runner with double jump, bouncing obstacles, and speed lines
 4. **On Cloud Wine** (For Joe) - Vertical platformer with UFO platforms, comets, and moving clouds
-5. **Tap Hero** (For Karen) - Rhythm game with 205 beats and half-note timing
-6. **Maze of Love** (For Harrison) - Navigate dynamic mazes with endless mode
+5. **Flappy Redbird** (For Karen) - Fly and collect vintage jewelry and clothing through obstacles
+6. **Tap Hero** (For Harrison) - Tap hearts to the rhythm with endless mode
 7. **Love Blocks** (For Megan) - Tetris with endless mode and high score tracking
 
 ## 📱 Features
@@ -25,7 +25,7 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
   - Touch/tap controls for mobile
   - Arrow key controls for desktop
   - Tilt controls (On Cloud Wine on iOS - requires permission)
-  - Swipe controls (Go Long Gaston, Maze of Love)
+  - Tap controls (Go Long Gaston, Tap Hero)
 
 ### Endless Mode (Default ON)
 All 7 games feature **endless mode** that defaults to ON with toggleable option:
@@ -36,7 +36,7 @@ All 7 games feature **endless mode** that defaults to ON with toggleable option:
 
 ### Game-Specific Progressive Difficulty
 
-**Go Long, Gaston (Snake)**
+**Go Long, Gaston**
 - Speed increases every 10 scraps collected
 - Grape hazards spawn (1 per 10 scraps collected)
 - Rounded tail animations
@@ -94,7 +94,7 @@ All games support both touch and keyboard controls for maximum accessibility:
 
 ### Game-Specific Controls
 
-**Go Long, Gaston (Snake)**
+**Go Long, Gaston**
 - Arrow keys or swipe to change direction
 - Collect 10 scraps to win (classic) or endless high score
 
@@ -120,9 +120,9 @@ All games support both touch and keyboard controls for maximum accessibility:
 - 75 BPM rhythm (800ms per beat, 400ms half-beats)
 - Hit 205 notes with max 20 misses
 
-**Maze of Love**
-- Arrow keys or swipe to navigate
-- Collect hearts while avoiding walls
+**Tap Hero**
+- Tap hearts when they reach the line
+- Hit music notes to win
 - Reach 20 hearts (classic) or endless mode
 
 **Love Blocks (Tetris)**
@@ -169,7 +169,7 @@ Each game's difficulty can be adjusted by modifying constants:
 **Kitty Catcher**: `basePaddleWidth`, shrink interval, brick durability formula  
 **On Cloud Wine**: `baseGap`, `currentGap` max, UFO/comet spawn rates and thresholds  
 **Tap Hero**: BPM (currently 75), note patterns, miss limit  
-**Maze of Love**: Maze generation algorithm, enemy patterns  
+**Tap Hero**: Rhythm timing mechanics, note patterns  
 **Love Blocks**: Drop speed, line clear goal
 
 ## 📦 Tech Stack
