@@ -1,6 +1,6 @@
 # 💕 Valentine's Day Arcade 💕
 
-A collection of 7 mobile-optimized arcade games, each personalized for someone special this Valentine's Day!
+A collection of 8 mobile-optimized arcade games, each personalized for someone special this Valentine's Day!
 
 ## 🎮 Games
 
@@ -11,6 +11,7 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 5. **Flappy Redbird** (For Karen) - Fly and collect vintage jewelry and clothing through obstacles
 6. **Tap Hero** (For Harrison) - Tap hearts to the rhythm with endless mode
 7. **Love Blocks** (For Megan) - Tetris with endless mode and high score tracking
+8. **Love Defender** (For You) - Top-down shooter defending against broken hearts with auto-shooting
 
 ## 📱 Features
 
@@ -28,7 +29,7 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
   - Tap controls (Go Long Gaston, Tap Hero)
 
 ### Endless Mode (Default ON)
-All 7 games feature **endless mode** that defaults to ON with toggleable option:
+All 8 games feature **endless mode** that defaults to ON with toggleable option:
 - 🏆 **High Score Tracking**: Persistent localStorage high scores
 - 📊 **Progressive Difficulty**: Games get harder as you play
 - 🔄 **URL Parameter Control**: `?endless=true` or `?endless=false`
@@ -61,6 +62,13 @@ All 7 games feature **endless mode** that defaults to ON with toggleable option:
 - 205 notes total (175 quarter notes + 30 half notes at 75 BPM)
 - 20 miss limit before game over
 - Perfect timing challenge
+
+**Love Defender (Shooter)**
+- Enemy spawn rate increases with score (every 10 points)
+- Enemy speed increases progressively
+- Auto-shoot hearts at 300ms intervals
+- Tap and drag to move player smoothly
+- 3 lives, 50 score to win (classic mode)
 
 ## 🚀 Deployment
 
@@ -122,6 +130,12 @@ All games support both touch and keyboard controls for maximum accessibility:
 
 **Tap Hero**
 - Tap hearts when they reach the line
+
+**Love Defender (Shooter)**
+- Touch: Tap and drag anywhere to move player
+- Arrow keys or A/D for movement
+- Auto-shoots continuously
+- Destroy 50 broken hearts (classic) or endless high score
 - Hit music notes to win
 - Reach 20 hearts (classic) or endless mode
 
@@ -157,7 +171,8 @@ Each game can be customized by editing:
 - Endless mode default via URL parameter (`?endless=false`)
 - Colors - **IMPORTANT**: See [COLOR_SYSTEM.md](COLOR_SYSTEM.md) for the 84-color palette system
   - All colors must come from `js/colors.js`
-  - Use CSS variables in `css/style.css` for theme colors
+**Love Blocks**: Drop speed, line clear goal  
+**Love Defender**: Enemy spawn rate, enemy speed progression, shoot interval, lives theme colors
   - Never hardcode colors outside the defined palette
 
 ### Progressive Difficulty Tuning
