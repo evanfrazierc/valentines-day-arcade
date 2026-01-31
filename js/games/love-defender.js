@@ -16,6 +16,16 @@ const SHOOT_INTERVAL = 300; // milliseconds
 const WIN_SCORE = 75;
 const STARTING_LIVES = 3;
 
+// Audio
+let audioContext = null;
+let shootSound = null;
+let explosionSound = null;
+let powerUpSound = null;
+let hitSound = null;
+let loseLifeSound = null;
+let meowSound = null;
+let audioEnabled = false;
+
 // Game state
 let player = {
     x: canvas.logicalWidth / 2 - PLAYER_WIDTH / 2,
@@ -177,6 +187,64 @@ document.getElementById('restartBtn').addEventListener('click', () => {
 document.getElementById('homeBtn').addEventListener('click', () => {
     window.location.href = '../index.html';
 });
+
+// Initialize audio on first user interaction
+function initAudio() {
+    if (audioContext) return; // Already initialized
+    
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        loadAudio();
+    } catch (error) {
+        console.log('Audio not supported');
+    }
+}
+
+// Load audio files
+async function loadAudio() {
+    if (!audioContext) return;
+    
+    const loadSound = async (url) => {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) return null;
+            const arrayBuffer = await response.arrayBuffer();
+            return await audioContext.decodeAudioData(arrayBuffer);
+        } catch (error) {
+            return null;
+        }
+    };
+    
+    // Load sound effects based on their names
+    hitSound = await loadSound('../audio/hit.wav'); // For bullet hits
+    explosionSound = await loadSound('../audio/breakout-brick.wav'); // For enemy explosions
+    powerUpSound = await loadSound('../audio/runner-collect.wav'); // For collecting power-ups
+    shootSound = await loadSound('../audio/flap.wav'); // For shooting (subtle sound)
+    loseLifeSound = await loadSound('../audio/gaston-crash.wav'); // For losing a life
+    meowSound = await loadSound('../audio/meow.wav'); // For cat meowing at game start
+    
+    audioEnabled = true;
+}
+
+// Play a sound effect
+function playSound(buffer, volume = 0.5) {
+    if (!audioEnabled || !audioContext || !buffer) return;
+    
+    try {
+        const source = audioContext.createBufferSource();
+        source.buffer = buffer;
+        
+        const gainNode = audioContext.createGain();
+        gainNode.gain.value = volume;
+        
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        source.start(0);
+    } catch (error) {
+        // Silently fail if audio doesn't work
+    }
+}
+
 // Initialize game state
 function initGame() {
     player.x = canvas.logicalWidth / 2 - PLAYER_WIDTH / 2;
@@ -211,9 +279,14 @@ function initGame() {
 }
 
 function startGame() {
+    initAudio(); // Initialize audio on first interaction
     gameRunning = true;
     setPlayingMode(true);
     lastShootTime = Date.now();
+    
+    // Play meow sound when game starts
+    setTimeout(() => playSound(meowSound, 0.5), 100);
+    
     requestAnimationFrame(gameLoop);
 }
 
@@ -443,6 +516,7 @@ function update(deltaTime) {
                 }
             } else {
                 lives--;
+                playSound(loseLifeSound, 0.7);
                 gameAnimations.startShake();
             }
             
@@ -478,6 +552,7 @@ function update(deltaTime) {
                 }
             } else {
                 lives--;
+                playSound(loseLifeSound, 0.7);
                 gameAnimations.startShake();
             }
             
@@ -510,6 +585,9 @@ function update(deltaTime) {
         
         // Check collision with player
         if (checkCollision(powerup, player)) {
+            // Play power-up collection sound
+            playSound(powerUpSound, 0.6);
+            
             // Apply power-up effect
             if (powerup.type === POWERUP_TYPES.SHIELD) {
                 shieldActive = true;
@@ -583,6 +661,10 @@ function update(deltaTime) {
             if (checkCollision(bullets[i], enemies[j])) {
                 // Hit!
                 enemies[j].hp--;
+                
+                // Play hit sound
+                playSound(hitSound, 0.4);
+                
                 // Only destroy bullet if not piercing
                 if (!pierceShotActive) {
                     bullets.splice(i, 1);
@@ -591,6 +673,9 @@ function update(deltaTime) {
                 if (enemies[j].hp <= 0) {
                     createExplosion(enemies[j].x + enemies[j].width / 2, enemies[j].y + enemies[j].height / 2, PALETTE.PINK_BRIGHT);
                     score += enemies[j].type.points;
+                    
+                    // Play explosion sound
+                    playSound(explosionSound, 0.5);
                     
                     // Black hearts (TANK enemies) always drop power-ups
                     if (enemies[j].type === ENEMY_TYPES.TANK) {
@@ -665,6 +750,9 @@ function shootBullet() {
     const rainbowHearts = ['❤️', '🧡', '💛', '💚', '💙', '💜', '💖'];
     const heartColor = rainbowHearts[rainbowIndex % rainbowHearts.length];
     rainbowIndex++;
+    
+    // Play shoot sound
+    playSound(shootSound, 0.1);
     
     // Homing missiles move slower for better tracking
     const bulletSpeed = homingMissilesActive ? BULLET_SPEED * 0.5 : BULLET_SPEED;
