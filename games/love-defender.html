@@ -6,19 +6,19 @@
     <meta name="theme-color" content="#fd3b54">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Super Veggie Bro - For Ryan 🥦</title>
+    <title>Love Defender 💘</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/games.css">
 </head>
 <body>
-    <div class="game-container runner-game">
+    <div class="game-container shooter-game">
         <div class="game-header">
-            <h1>🥦 Super Veggie Bro 🏃</h1>
+            <h1>💘 Love Defender 💘</h1>
             <div class="instructions">
                 <h3>How to Play:</h3>
-                <p>👆 Tap to jump</p>
-                <p>👆👆 Double tap for double jump</p>
-                <p>🥦 Collect veggies to win!</p>
+                <p>👆 Tap & drag to move</p>
+                <p>🎯 Auto-shoot hearts!</p>
+                <p>💔 Avoid broken hearts!</p>
             </div>
         </div>
 
@@ -35,12 +35,12 @@
 
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Veggies</div>
-                <div class="info-value" id="veggies">0/15</div>
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score">0</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Distance</div>
-                <div class="info-value" id="distance">0m</div>
+                <div class="info-label">Lives</div>
+                <div class="info-value" id="lives">❤️❤️❤️</div>
             </div>
         </div>
 
@@ -48,12 +48,12 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Veggies</div>
-                <div class="info-value" id="veggies-overlay">0/30</div>
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score-overlay">0</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Distance</div>
-                <div class="info-value" id="distance-overlay">0m</div>
+                <div class="info-label">Lives</div>
+                <div class="info-value" id="lives-overlay">❤️❤️❤️</div>
             </div>
         </div>
 
@@ -74,14 +74,14 @@
     <div id="gameOverScreen" class="game-over-screen">
         <div class="game-over-content">
             <h2>💔 Game Over</h2>
-            <p style="margin: 20px 0;">Keep running! Try again!</p>
+            <p style="margin: 20px 0;">Keep defending! Try again!</p>
             <button class="btn" onclick="restartGame()">Try Again</button>
             <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
         </div>
     </div>
 
     <script src="../js/colors.js"></script>
-    <script src="../js/utils.js?v=50"></script>
-    <script src="../js/games/runner.js?v=50"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/games/love-defender.js"></script>
 </body>
 </html>

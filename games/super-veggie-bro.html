@@ -6,47 +6,41 @@
     <meta name="theme-color" content="#fd3b54">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Kitty Catcher - For Juliette 🐱</title>
+    <title>Super Veggie Bro - For Ryan 🥦</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/games.css">
 </head>
 <body>
-    <div class="game-container breakout-game">
+    <div class="game-container runner-game">
         <div class="game-header">
-            <h1>🐱 Kitty Catcher 💕</h1>
+            <h1>🥦 Super Veggie Bro 🏃</h1>
             <div class="instructions">
                 <h3>How to Play:</h3>
-                <p>👆 Drag to move the paddle</p>
-                <p>🐱 Hit cat bricks & catch falling cats</p>
-                <p>🎯 Rescue cats to win!</p>
-                <p>⚠️ Don't let the ball or cats fall!</p>
+                <p>👆 Tap to jump</p>
+                <p>👆👆 Double tap for double jump</p>
+                <p>🥦 Collect veggies to win!</p>
             </div>
         </div>
 
-        <div class="endless-toggle">
+        <div class="endless-toggle" style="margin: 15px 0;">
             <label class="toggle-label">
                 <input type="checkbox" id="endlessToggle">
-                <span class="toggle-switch"></span>
-                <span class="toggle-text">Endless Mode</span>
+                <span>Endless Mode</span>
             </label>
-            <div id="highScoreLabel" class="info-label" style="display: none;">High Score</div>
-            <div id="highScoreValue" class="info-value" style="display: none;">
+            <div class="info-label" id="highScoreLabel" style="display: none; margin-top: 5px;">High Score</div>
+            <div class="info-value" id="highScoreValue" style="display: none;">
                 <span id="highScore">0</span>
             </div>
         </div>
 
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Cats Rescued</div>
-                <div class="info-value" id="cats">0/5</div>
+                <div class="info-label">Veggies</div>
+                <div class="info-value" id="veggies">0/15</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Lives</div>
-                <div class="info-value" id="lives">3</div>
-            </div>
-            <div class="info-item" id="levelInfo" style="display: none;">
-                <div class="info-label">Level</div>
-                <div class="info-value" id="level">1</div>
+                <div class="info-label">Distance</div>
+                <div class="info-value" id="distance">0m</div>
             </div>
         </div>
 
@@ -54,12 +48,12 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Cats</div>
-                <div class="info-value" id="cats-overlay">0/5</div>
+                <div class="info-label">Veggies</div>
+                <div class="info-value" id="veggies-overlay">0/30</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Lives</div>
-                <div class="info-value" id="lives-overlay">3</div>
+                <div class="info-label">Distance</div>
+                <div class="info-value" id="distance-overlay">0m</div>
             </div>
         </div>
 
@@ -80,14 +74,14 @@
     <div id="gameOverScreen" class="game-over-screen">
         <div class="game-over-content">
             <h2>💔 Game Over</h2>
-            <p style="margin: 20px 0;">Don't give up! Try again!</p>
+            <p style="margin: 20px 0;">Keep running! Try again!</p>
             <button class="btn" onclick="restartGame()">Try Again</button>
             <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
         </div>
     </div>
 
     <script src="../js/colors.js"></script>
-    <script src="../js/utils.js?v=26"></script>
-    <script src="../js/games/breakout.js?v=26"></script>
+    <script src="../js/utils.js?v=50"></script>
+    <script src="../js/games/super-veggie-bro.js?v=50"></script>
 </body>
 </html>

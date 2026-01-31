@@ -6,39 +6,47 @@
     <meta name="theme-color" content="#fd3b54">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Go Long, Gaston - For Sarah 💕</title>
+    <title>Kitty Catcher - For Juliette 🐱</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/games.css?v=2">
+    <link rel="stylesheet" href="../css/games.css">
 </head>
 <body>
-    <div class="game-container gaston-game">
+    <div class="game-container breakout-game">
         <div class="game-header">
-            <h1>🐕 Go Long, Gaston 💕</h1>
+            <h1>🐱 Kitty Catcher 💕</h1>
             <div class="instructions">
                 <h3>How to Play:</h3>
-                <p>🎯 Swipe to change direction</p>
-                <p>🍖 Collect 15 dinner scraps to win</p>
-                <p>⚠️ Don't hit walls or yourself!</p>
+                <p>👆 Drag to move the paddle</p>
+                <p>🐱 Hit cat bricks & catch falling cats</p>
+                <p>🎯 Rescue cats to win!</p>
+                <p>⚠️ Don't let the ball or cats fall!</p>
             </div>
         </div>
 
-        <div class="endless-toggle" style="margin: 15px 0;">
+        <div class="endless-toggle">
             <label class="toggle-label">
-                <input type="checkbox" id="endlessModeToggle">
-                <span>Endless Mode</span>
+                <input type="checkbox" id="endlessToggle">
+                <span class="toggle-switch"></span>
+                <span class="toggle-text">Endless Mode</span>
             </label>
-            <div class="info-label" id="highScoreLabel" style="display: none; margin-top: 5px;">High Score</div>
-            <div class="info-value" id="highScore" style="display: none;">0</div>
+            <div id="highScoreLabel" class="info-label" style="display: none;">High Score</div>
+            <div id="highScoreValue" class="info-value" style="display: none;">
+                <span id="highScore">0</span>
+            </div>
         </div>
 
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Scraps</div>
-                <div class="info-value" id="scraps">0/15</div>
+                <div class="info-label">Cats Rescued</div>
+                <div class="info-value" id="cats">0/5</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Length</div>
-                <div class="info-value" id="length">3</div>
+                <div class="info-label">Lives</div>
+                <div class="info-value" id="lives">3</div>
+            </div>
+            <div class="info-item" id="levelInfo" style="display: none;">
+                <div class="info-label">Level</div>
+                <div class="info-value" id="level">1</div>
             </div>
         </div>
 
@@ -46,12 +54,12 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Scraps</div>
-                <div class="info-value" id="scraps-overlay">0/15</div>
+                <div class="info-label">Cats</div>
+                <div class="info-value" id="cats-overlay">0/5</div>
             </div>
             <div class="info-item">
-                <div class="info-label">Length</div>
-                <div class="info-value" id="length-overlay">3</div>
+                <div class="info-label">Lives</div>
+                <div class="info-value" id="lives-overlay">3</div>
             </div>
         </div>
 
@@ -79,7 +87,7 @@
     </div>
 
     <script src="../js/colors.js"></script>
-    <script src="../js/utils.js?v=40"></script>
-    <script src="../js/games/gaston.js?v=13"></script>
+    <script src="../js/utils.js?v=26"></script>
+    <script src="../js/games/kitty-catcher.js?v=26"></script>
 </body>
 </html>

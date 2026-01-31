@@ -6,42 +6,35 @@
     <meta name="theme-color" content="#fd3b54">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Tap Hero - For Harrison 🎵</title>
+    <title>Flappy Redbird - For Karen 🐦</title>
     <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/games.css">
+    <link rel="stylesheet" href="../css/games.css?v=2">
 </head>
 <body>
-    <div class="game-container taphero-game">
+    <div class="game-container flappy-game">
         <div class="game-header">
-            <h1>🎵 Tap Hero 💕</h1>
+            <h1>🐦 Flappy Redbird 💕</h1>
             <div class="instructions">
                 <h3>How to Play:</h3>
-                <p>👆 Tap hearts when they reach the line</p>
-                <p>🎯 Hit music notes to win</p>
-                <p>💕 Feel the rhythm of love!</p>
+                <p>👆 Tap to flap and stay in the air</p>
+                <p>👛 Collect vintage items</p>
+                <p>⚠️ Don't hit the ground or obstacles!</p>
             </div>
         </div>
 
-        <div class="endless-toggle">
+        <div class="endless-toggle" style="margin: 15px 0;">
             <label class="toggle-label">
-                <input type="checkbox" id="endlessToggle">
-                <span class="toggle-switch"></span>
-                <span class="toggle-text">Endless Mode</span>
+                <input type="checkbox" id="endlessModeToggle">
+                <span>Endless Mode</span>
             </label>
-            <div id="highScoreLabel" class="info-label" style="display: none;">High Score</div>
-            <div id="highScoreValue" class="info-value" style="display: none;">
-                <span id="highScore">0</span>
-            </div>
+            <div class="info-label" id="highScoreLabel" style="display: none; margin-top: 5px;">High Score</div>
+            <div class="info-value" id="highScore" style="display: none;">0</div>
         </div>
 
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Score</div>
-                <div class="info-value" id="score">0/30</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Combo</div>
-                <div class="info-value" id="combo">0</div>
+                <div class="info-label">Collectibles</div>
+                <div class="info-value" id="score">0/20</div>
             </div>
         </div>
 
@@ -49,12 +42,8 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Score</div>
-                <div class="info-value" id="score-overlay">0/30</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Combo</div>
-                <div class="info-value" id="combo-overlay">0</div>
+                <div class="info-label">Collectibles</div>
+                <div class="info-value" id="score-overlay">0/10</div>
             </div>
         </div>
 
@@ -74,15 +63,15 @@
 
     <div id="gameOverScreen" class="game-over-screen">
         <div class="game-over-content">
-            <h2>💔 Song Ended</h2>
-            <p style="margin: 20px 0;">Keep practicing the rhythm of love!</p>
+            <h2>💔 Game Over</h2>
+            <p style="margin: 20px 0;">Keep flying! Try again!</p>
             <button class="btn" onclick="restartGame()">Try Again</button>
             <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
         </div>
     </div>
 
-    <script src="../js/colors.js"></script>
+    <script src="../js/colors.js?v=4"></script>
     <script src="../js/utils.js?v=34"></script>
-    <script src="../js/games/taphero.js?v=32"></script>
+    <script src="../js/games/flappy-redbird.js?v=35"></script>
 </body>
 </html>

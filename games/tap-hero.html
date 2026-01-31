@@ -6,19 +6,19 @@
     <meta name="theme-color" content="#fd3b54">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>On Cloud Wine - For Joe 🍷</title>
+    <title>Tap Hero - For Harrison 🎵</title>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/games.css">
 </head>
 <body>
-    <div class="game-container jumper-game">
+    <div class="game-container taphero-game">
         <div class="game-header">
-            <h1>☁️ On Cloud Wine 🍷</h1>
+            <h1>🎵 Tap Hero 💕</h1>
             <div class="instructions">
                 <h3>How to Play:</h3>
-                <p>👆 Tap or tilt left/right to move</p>
-                <p>☁️ Bounce on clouds to go higher</p>
-                <p>🍷 Collect wine glasses to win!</p>
+                <p>👆 Tap hearts when they reach the line</p>
+                <p>🎯 Hit music notes to win</p>
+                <p>💕 Feel the rhythm of love!</p>
             </div>
         </div>
 
@@ -36,8 +36,12 @@
 
         <div class="game-info">
             <div class="info-item">
-                <div class="info-label">Wine Glasses</div>
-                <div class="info-value" id="score">0/15</div>
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score">0/30</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Combo</div>
+                <div class="info-value" id="combo">0</div>
             </div>
         </div>
 
@@ -45,8 +49,12 @@
 
         <div class="game-stats-overlay">
             <div class="info-item">
-                <div class="info-label">Wine Glasses</div>
-                <div class="info-value" id="score-overlay">0/20</div>
+                <div class="info-label">Score</div>
+                <div class="info-value" id="score-overlay">0/30</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Combo</div>
+                <div class="info-value" id="combo-overlay">0</div>
             </div>
         </div>
 
@@ -66,15 +74,15 @@
 
     <div id="gameOverScreen" class="game-over-screen">
         <div class="game-over-content">
-            <h2>💔 Game Over</h2>
-            <p style="margin: 20px 0;">Keep bouncing! Try again!</p>
+            <h2>💔 Song Ended</h2>
+            <p style="margin: 20px 0;">Keep practicing the rhythm of love!</p>
             <button class="btn" onclick="restartGame()">Try Again</button>
             <button class="btn btn-home" onclick="window.location.href='../index.html'">Back to Menu</button>
         </div>
     </div>
 
     <script src="../js/colors.js"></script>
-    <script src="../js/utils.js?v=25"></script>
-    <script src="../js/games/jumper.js?v=25"></script>
+    <script src="../js/utils.js?v=34"></script>
+    <script src="../js/games/tap-hero.js?v=32"></script>
 </body>
 </html>
