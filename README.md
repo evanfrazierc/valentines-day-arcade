@@ -1,6 +1,6 @@
 # 💕 Valentine's Day Arcade 💕
 
-A collection of 8 mobile-optimized arcade games, each personalized for someone special this Valentine's Day!
+A collection of 7 mobile-optimized arcade games, each personalized for someone special this Valentine's Day!
 
 ## 🎮 Games
 
@@ -10,8 +10,7 @@ A collection of 8 mobile-optimized arcade games, each personalized for someone s
 4. **On Cloud Wine** (For Joe) - Vertical platformer with UFO platforms, comets, and moving clouds
 5. **Flappy Redbird** (For Karen) - Fly and collect vintage jewelry and clothing through obstacles
 6. **Tap Hero** (For Harrison) - Tap hearts to the rhythm with endless mode
-7. **Love Blocks** (For Megan) - Tetris with endless mode and high score tracking
-8. **Love Defender** (For You) - Top-down shooter defending against broken hearts with auto-shooting
+7. **Love Defender** (For You) - Top-down shooter defending against broken hearts with auto-shooting
 
 ## 📱 Features
 
@@ -138,11 +137,6 @@ All games support both touch and keyboard controls for maximum accessibility:
 - Destroy 50 broken hearts (classic) or endless high score
 - Hit music notes to win
 - Reach 20 hearts (classic) or endless mode
-
-**Love Blocks (Tetris)**
-- Arrow keys: ← → for movement, ↑ to rotate, ↓ to drop faster
-- Touch: Drag to move, tap to rotate
-- Clear 20 lines (classic) or endless high score
 
 ## 💻 Local Development
 
