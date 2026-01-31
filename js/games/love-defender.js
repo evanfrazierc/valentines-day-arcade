@@ -110,7 +110,7 @@ createGradients();
 createStars();
 
 // Load high score from localStorage
-const savedHighScore = localStorage.getItem('shooterHighScore');
+const savedHighScore = localStorage.getItem('loveDefenderHighScore');
 if (savedHighScore) {
     highScore = parseInt(savedHighScore);
     document.getElementById('highScore').textContent = highScore;
@@ -520,7 +520,7 @@ function update(deltaTime) {
     // Save high score
     if (endlessMode && score > highScore) {
         highScore = score;
-        localStorage.setItem('shooterHighScore', highScore.toString());
+        localStorage.setItem('loveDefenderHighScore', highScore.toString());
         document.getElementById('highScore').textContent = highScore;
     }
 }

@@ -102,13 +102,13 @@ function playSound(soundName) {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('flappyHighScore') || '0');
+    return parseInt(localStorage.getItem('flappyRedbirdHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('flappyHighScore', score.toString());
+        localStorage.setItem('flappyRedbirdHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }

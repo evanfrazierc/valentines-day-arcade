@@ -108,13 +108,13 @@ function playSound(soundName) {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('runnerHighScore') || '0');
+    return parseInt(localStorage.getItem('superVeggieBroHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('runnerHighScore', score.toString());
+        localStorage.setItem('superVeggieBroHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }

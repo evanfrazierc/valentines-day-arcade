@@ -102,13 +102,13 @@ function playSound(soundName) {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('jumperHighScore') || '0');
+    return parseInt(localStorage.getItem('onCloudWineHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('jumperHighScore', score.toString());
+        localStorage.setItem('onCloudWineHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }

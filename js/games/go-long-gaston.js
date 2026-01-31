@@ -84,13 +84,13 @@ async function loadAudio() {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('gastonHighScore') || '0');
+    return parseInt(localStorage.getItem('goLongGastonHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('gastonHighScore', score.toString());
+        localStorage.setItem('goLongGastonHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }

@@ -121,13 +121,13 @@ function playSound(soundName) {
 }
 
 function loadHighScore() {
-    return parseInt(localStorage.getItem('breakoutHighScore') || '0');
+    return parseInt(localStorage.getItem('kittyCatcherHighScore') || '0');
 }
 
 function saveHighScore(score) {
     const currentHigh = loadHighScore();
     if (score > currentHigh) {
-        localStorage.setItem('breakoutHighScore', score.toString());
+        localStorage.setItem('kittyCatcherHighScore', score.toString());
         highScore = score;
         updateHighScoreDisplay();
     }

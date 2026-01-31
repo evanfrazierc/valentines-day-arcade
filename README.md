@@ -10,7 +10,7 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
 4. **On Cloud Wine** (For Joe) - Vertical platformer with UFO platforms, comets, and moving clouds
 5. **Flappy Redbird** (For Karen) - Fly and collect vintage jewelry and clothing through obstacles
 6. **Tap Hero** (For Harrison) - Tap hearts to the rhythm with endless mode
-7. **Love Defender** (For You) - Top-down shooter defending against broken hearts with auto-shooting
+7. **Love Defender** (For Megan) - Top-down shooter defending against broken hearts with auto-shooting
 
 ## 📱 Features
 
@@ -28,7 +28,7 @@ A collection of 7 mobile-optimized arcade games, each personalized for someone s
   - Tap controls (Go Long Gaston, Tap Hero)
 
 ### Endless Mode (Default ON)
-All 8 games feature **endless mode** that defaults to ON with toggleable option:
+All 7 games feature **endless mode** that defaults to ON with toggleable option:
 - 🏆 **High Score Tracking**: Persistent localStorage high scores
 - 📊 **Progressive Difficulty**: Games get harder as you play
 - 🔄 **URL Parameter Control**: `?endless=true` or `?endless=false`
