@@ -13,7 +13,7 @@ const ENEMY_WIDTH = 55;
 const ENEMY_HEIGHT = 55;
 const ENEMY_SPEED = 2;
 const SHOOT_INTERVAL = 300; // milliseconds
-const WIN_SCORE = 50;
+const WIN_SCORE = 75;
 const STARTING_LIVES = 3;
 
 // Game state
@@ -45,21 +45,34 @@ let shieldActive = false;
 let shieldHits = 0;
 let rapidFireActive = false;
 let rapidFireEndTime = 0;
+let spreadShotActive = false;
+let spreadShotEndTime = 0;
+let pierceShotActive = false;
+let pierceShotEndTime = 0;
+let homingMissilesActive = false;
+let homingMissilesEndTime = 0;
+let flashActive = false;
+let flashStartTime = 0;
 let rainbowIndex = 0; // For cycling through rainbow hearts
 
 // Enemy types
 const ENEMY_TYPES = {
     BASIC: { emoji: '💔', speed: 1, hp: 1, shootChance: 0, size: 42, points: 1 },
     FAST: { emoji: '🔥', speed: 2.5, hp: 1, shootChance: 0, size: 35, points: 2 },
-    TANK: { emoji: '🖤', speed: 0.8, hp: 3, shootChance: 0, size: 50, points: 3 },
-    SHOOTER: { emoji: '😈', speed: 1.2, hp: 2, shootChance: 0.015, size: 42, points: 3 }
+    TANK: { emoji: '🖤', speed: 0.8, hp: 5, shootChance: 0, size: 50, points: 5 },
+    SHOOTER: { emoji: '😈', speed: 1.2, hp: 2, shootChance: 0.015, size: 42, points: 3 },
+    STALKER: { emoji: '👻', speed: 1.2, hp: 3, shootChance: 0, size: 45, points: 4 }
 };
 
 // Power-up types
 const POWERUP_TYPES = {
     SHIELD: { emoji: '🛡️', duration: 0, effect: 'shield' },
     RAPID_FIRE: { emoji: '⚡', duration: 8000, effect: 'rapidFire' },
-    EXTRA_LIFE: { emoji: '❤️', duration: 0, effect: 'extraLife' }
+    EXTRA_LIFE: { emoji: '❤️', duration: 0, effect: 'extraLife' },
+    SPREAD_SHOT: { emoji: '💥', duration: 10000, effect: 'spreadShot' },
+    BOMB: { emoji: '💣', duration: 0, effect: 'bomb' },
+    PIERCE_SHOT: { emoji: '🗡️', duration: 8000, effect: 'pierceShot' },
+    HOMING_MISSILES: { emoji: '🎯', duration: 10000, effect: 'homingMissiles' }
 };
 
 // Endless mode - check URL parameter or default to true
@@ -184,6 +197,9 @@ function initGame() {
     shieldHits = 0;
     rapidFireActive = false;
     rapidFireEndTime = 0;
+    spreadShotActive = false;
+    pierceShotActive = false;
+    homingMissilesActive = false;
     gameRunning = false;
     lastShootTime = Date.now();
     enemySpawnTimer = 0;
@@ -264,8 +280,8 @@ function handleKeyUp(e) {
 function update(deltaTime) {
     if (!gameRunning) return;
     
-    // Update difficulty
-    difficultyLevel = Math.floor(score / 10);
+    // Update difficulty - cap at level 20 (score 200) for maximum speed
+    difficultyLevel = Math.min(20, Math.floor(score / 10));
     
     // Move player
     if (player.isDragging) {
@@ -291,6 +307,15 @@ function update(deltaTime) {
     if (rapidFireActive && Date.now() > rapidFireEndTime) {
         rapidFireActive = false;
     }
+    if (spreadShotActive && Date.now() > spreadShotEndTime) {
+        spreadShotActive = false;
+    }
+    if (pierceShotActive && Date.now() > pierceShotEndTime) {
+        pierceShotActive = false;
+    }
+    if (homingMissilesActive && Date.now() > homingMissilesEndTime) {
+        homingMissilesActive = false;
+    }
     
     // Auto-shoot
     const now = Date.now();
@@ -302,10 +327,53 @@ function update(deltaTime) {
     
     // Update bullets
     for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].y -= bullets[i].speed;
+        // Homing missiles logic - overrides normal movement
+        if (homingMissilesActive && enemies.length > 0) {
+            // Find nearest enemy
+            let nearestEnemy = null;
+            let minDist = Infinity;
+            for (let enemy of enemies) {
+                const dx = (enemy.x + enemy.width / 2) - (bullets[i].x + bullets[i].width / 2);
+                const dy = (enemy.y + enemy.height / 2) - (bullets[i].y + bullets[i].height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestEnemy = enemy;
+                }
+            }
+            
+            // Home towards nearest enemy - full tracking
+            if (nearestEnemy) {
+                const dx = (nearestEnemy.x + nearestEnemy.width / 2) - (bullets[i].x + bullets[i].width / 2);
+                const dy = (nearestEnemy.y + nearestEnemy.height / 2) - (bullets[i].y + bullets[i].height / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    // Accelerate as they get closer - speed multiplier based on distance
+                    // Closer = faster (max 2.5x speed at very close range)
+                    const speedMultiplier = Math.min(2.5, 1 + (200 / Math.max(dist, 50)));
+                    const currentSpeed = bullets[i].speed * speedMultiplier;
+                    
+                    // Move directly toward target
+                    bullets[i].x += (dx / dist) * currentSpeed;
+                    bullets[i].y += (dy / dist) * currentSpeed;
+                }
+            } else {
+                // No enemies, move up
+                bullets[i].y -= bullets[i].speed;
+            }
+        } else if (bullets[i].vx !== undefined && bullets[i].vy !== undefined) {
+            // Spread shot bullet with directional velocity
+            bullets[i].x += bullets[i].vx;
+            bullets[i].y += bullets[i].vy;
+        } else {
+            // Normal bullet
+            bullets[i].y -= bullets[i].speed;
+        }
         
         // Remove off-screen bullets
-        if (bullets[i].y + bullets[i].height < 0) {
+        if (bullets[i].y + bullets[i].height < 0 || 
+            bullets[i].x + bullets[i].width < 0 || 
+            bullets[i].x > canvas.logicalWidth) {
             bullets.splice(i, 1);
         }
     }
@@ -321,7 +389,35 @@ function update(deltaTime) {
     // Update enemies
     for (let i = enemies.length - 1; i >= 0; i--) {
         const enemy = enemies[i];
-        enemy.y += enemy.type.speed * (1 + difficultyLevel * 0.15);
+        
+        // Stalker enemies follow the player
+        if (enemy.type === ENEMY_TYPES.STALKER) {
+            const playerCenterX = player.x + player.width / 2;
+            const enemyCenterX = enemy.x + enemy.width / 2;
+            const dx = playerCenterX - enemyCenterX;
+            const dy = (player.y - enemy.y);
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+                // Move towards player
+                enemy.x += (dx / distance) * enemy.type.speed;
+                enemy.y += (dy / distance) * enemy.type.speed;
+            }
+        } else {
+            // Normal downward movement
+            enemy.y += enemy.type.speed * (1 + difficultyLevel * 0.15);
+        }
+        
+        // Horizontal movement for shooter and fast enemies
+        if (enemy.horizontalSpeed !== 0) {
+            enemy.x += enemy.horizontalSpeed;
+            
+            // Bounce off walls
+            if (enemy.x <= 0 || enemy.x + enemy.width >= canvas.logicalWidth) {
+                enemy.horizontalSpeed *= -1;
+                enemy.horizontalDirection *= -1;
+            }
+        }
         
         // Enemy shooting with cooldown
         if (enemy.type.shootChance > 0) {
@@ -366,7 +462,9 @@ function update(deltaTime) {
     
     // Update enemy bullets
     for (let i = enemyBullets.length - 1; i >= 0; i--) {
-        enemyBullets[i].y += enemyBullets[i].speed;
+        // Move with directional velocity
+        enemyBullets[i].x += enemyBullets[i].vx;
+        enemyBullets[i].y += enemyBullets[i].vy;
         
         // Check collision with player (using smaller hitbox)
         if (checkCollision(enemyBullets[i], getPlayerHitbox())) {
@@ -419,9 +517,33 @@ function update(deltaTime) {
             } else if (powerup.type === POWERUP_TYPES.RAPID_FIRE) {
                 rapidFireActive = true;
                 rapidFireEndTime = Date.now() + 8000; // 8 seconds
-            } else if (powerup.type === POWERUP_TYPES.EXTRA_LIFE) {
-                lives++;
+            } else if (powerup.type === POWERUP_TYPES.SPREAD_SHOT) {
+                spreadShotActive = true;
+                spreadShotEndTime = Date.now() + 10000; // 10 seconds
+            } else if (powerup.type === POWERUP_TYPES.PIERCE_SHOT) {
+                pierceShotActive = true;
+                pierceShotEndTime = Date.now() + 8000; // 8 seconds
+            } else if (powerup.type === POWERUP_TYPES.HOMING_MISSILES) {
+                homingMissilesActive = true;
+                homingMissilesEndTime = Date.now() + 10000; // 10 seconds
+            } else if (powerup.type === POWERUP_TYPES.BOMB) {
+                // Destroy all enemies instantly
+                flashActive = true;
+                flashStartTime = Date.now();
+                gameAnimations.startShake();
+                
+                // Add score for all enemies and create explosions
+                for (let enemy of enemies) {
+                    score += enemy.type.points;
+                    createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, PALETTE.ORANGE_BRIGHT);
+                }
+                enemies = [];
                 updateUI();
+            } else if (powerup.type === POWERUP_TYPES.EXTRA_LIFE) {
+                if (lives < 4) {
+                    lives++;
+                    updateUI();
+                }
             }
             
             createExplosion(powerup.x + powerup.width / 2, powerup.y + powerup.height / 2, PALETTE.YELLOW_BRIGHT);
@@ -461,7 +583,10 @@ function update(deltaTime) {
             if (checkCollision(bullets[i], enemies[j])) {
                 // Hit!
                 enemies[j].hp--;
-                bullets.splice(i, 1);
+                // Only destroy bullet if not piercing
+                if (!pierceShotActive) {
+                    bullets.splice(i, 1);
+                }
                 
                 if (enemies[j].hp <= 0) {
                     createExplosion(enemies[j].x + enemies[j].width / 2, enemies[j].y + enemies[j].height / 2, PALETTE.PINK_BRIGHT);
@@ -469,7 +594,17 @@ function update(deltaTime) {
                     
                     // Black hearts (TANK enemies) always drop power-ups
                     if (enemies[j].type === ENEMY_TYPES.TANK) {
-                        const powerupTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.RAPID_FIRE, POWERUP_TYPES.EXTRA_LIFE];
+                        // Don't drop extra life power-ups if player already has 4 hearts
+                        let powerupTypes = [POWERUP_TYPES.SHIELD, POWERUP_TYPES.RAPID_FIRE, POWERUP_TYPES.SPREAD_SHOT, POWERUP_TYPES.PIERCE_SHOT, POWERUP_TYPES.HOMING_MISSILES];
+                        if (lives < 4) {
+                            powerupTypes.push(POWERUP_TYPES.EXTRA_LIFE);
+                        }
+                        
+                        // Bomb is rare - 15% chance to add it to the pool
+                        if (Math.random() < 0.15) {
+                            powerupTypes = [POWERUP_TYPES.BOMB];
+                        }
+                        
                         const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
                         powerups.push({
                             x: enemies[j].x + enemies[j].width / 2 - 15,
@@ -530,30 +665,60 @@ function shootBullet() {
     const rainbowHearts = ['❤️', '🧡', '💛', '💚', '💙', '💜', '💖'];
     const heartColor = rainbowHearts[rainbowIndex % rainbowHearts.length];
     rainbowIndex++;
-    bullets.push({
-        x: player.x + player.width / 2 - BULLET_WIDTH / 2,
-        y: player.y,
-        width: BULLET_WIDTH,
-        height: BULLET_HEIGHT,
-        speed: BULLET_SPEED,
-        heart: heartColor
-    });
+    
+    // Homing missiles move slower for better tracking
+    const bulletSpeed = homingMissilesActive ? BULLET_SPEED * 0.5 : BULLET_SPEED;
+    
+    if (spreadShotActive) {
+        // Shoot 3 bullets in a spread pattern
+        const angles = [-0.3, 0, 0.3]; // Left, center, right (in radians)
+        angles.forEach(angle => {
+            bullets.push({
+                x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+                y: player.y,
+                width: BULLET_WIDTH,
+                height: BULLET_HEIGHT,
+                speed: bulletSpeed,
+                heart: heartColor,
+                vx: Math.sin(angle) * bulletSpeed * 0.5, // Horizontal velocity
+                vy: -bulletSpeed // Vertical velocity
+            });
+        });
+    } else {
+        // Normal single bullet
+        bullets.push({
+            x: player.x + player.width / 2 - BULLET_WIDTH / 2,
+            y: player.y,
+            width: BULLET_WIDTH,
+            height: BULLET_HEIGHT,
+            speed: bulletSpeed,
+            heart: heartColor
+        });
+    }
 }
 
 // Shoot enemy bullet
 function shootEnemyBullet(enemy) {
     const bulletSpeed = 4 + (difficultyLevel * 0.3); // Speed increases with difficulty
+    
     enemyBullets.push({
         x: enemy.x + enemy.width / 2 - 10,
         y: enemy.y + enemy.height,
         width: 20,
         height: 20,
-        speed: bulletSpeed
+        speed: bulletSpeed,
+        vx: 0,
+        vy: bulletSpeed
     });
 }
 
 // Spawn an enemy
 function spawnEnemy() {
+    // Check if there's already a Tank enemy on screen
+    const hasTank = enemies.some(e => e.type === ENEMY_TYPES.TANK);
+    // Check stalker count (max 2 on screen)
+    const stalkerCount = enemies.filter(e => e.type === ENEMY_TYPES.STALKER).length;
+    
     // Determine enemy type based on difficulty and randomness
     let type;
     const rand = Math.random();
@@ -567,18 +732,20 @@ function spawnEnemy() {
         // Introduce tank and shooter enemies
         if (rand < 0.5) type = ENEMY_TYPES.BASIC;
         else if (rand < 0.75) type = ENEMY_TYPES.FAST;
-        else if (rand < 0.9) type = ENEMY_TYPES.TANK;
+        else if (rand < 0.9 && !hasTank) type = ENEMY_TYPES.TANK;
         else type = ENEMY_TYPES.SHOOTER;
     } else {
         // Full variety at high difficulty
-        if (rand < 0.3) type = ENEMY_TYPES.BASIC;
-        else if (rand < 0.5) type = ENEMY_TYPES.FAST;
-        else if (rand < 0.7) type = ENEMY_TYPES.TANK;
-        else type = ENEMY_TYPES.SHOOTER;
+        if (rand < 0.25) type = ENEMY_TYPES.BASIC;
+        else if (rand < 0.4) type = ENEMY_TYPES.FAST;
+        else if (rand < 0.55 && !hasTank) type = ENEMY_TYPES.TANK;
+        else if (rand < 0.75) type = ENEMY_TYPES.SHOOTER;
+        else if (stalkerCount < 2) type = ENEMY_TYPES.STALKER;
+        else type = ENEMY_TYPES.SHOOTER; // Fallback to shooter if stalker limit reached
     }
     
     const x = Math.random() * (canvas.logicalWidth - type.size);
-    enemies.push({
+    const enemy = {
         x: x,
         y: -type.size,
         width: type.size,
@@ -588,7 +755,21 @@ function spawnEnemy() {
         maxHp: type.hp,
         shootCooldown: 0,
         shotsFired: 0
-    });
+    };
+    
+    // All shooter enemies move horizontally
+    if (type === ENEMY_TYPES.SHOOTER) {
+        enemy.horizontalSpeed = (Math.random() < 0.5 ? -1 : 1) * 1.5; // Move left or right
+        enemy.horizontalDirection = enemy.horizontalSpeed > 0 ? 1 : -1;
+    } else if (type === ENEMY_TYPES.FAST) {
+        // Fast enemies fall at an angle
+        enemy.horizontalSpeed = (Math.random() < 0.5 ? -1 : 1) * 0.8; // Move diagonally (slower horizontal)
+        enemy.horizontalDirection = enemy.horizontalSpeed > 0 ? 1 : -1;
+    } else {
+        enemy.horizontalSpeed = 0;
+    }
+    
+    enemies.push(enemy);
 }
 
 // Check collision between two rectangles
@@ -657,21 +838,22 @@ function draw() {
     } else if (lives === 2) {
         catEmoji = '😿'; // Crying cat - low health
     }
-    ctx.font = `${player.width}px Arial`;
+    ctx.font = `${player.width}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(catEmoji, player.x + player.width / 2, player.y + player.height / 2);
     
-    // Draw bullets (heart emoji)
-    ctx.font = '20px Arial';
+    // Draw bullets (heart emoji or knife for pierce shot)
+    ctx.font = '20px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let bullet of bullets) {
-        ctx.fillText(bullet.heart, bullet.x + bullet.width / 2, bullet.y + bullet.height / 2);
+        const bulletEmoji = pierceShotActive ? '🗡️' : bullet.heart;
+        ctx.fillText(bulletEmoji, bullet.x + bullet.width / 2, bullet.y + bullet.height / 2);
     }
     
     // Draw enemy bullets (red circle emoji)
-    ctx.font = '20px Arial';
+    ctx.font = '20px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let bullet of enemyBullets) {
@@ -682,7 +864,7 @@ function draw() {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (let enemy of enemies) {
-        ctx.font = `${enemy.width}px Arial`;
+        ctx.font = `${enemy.width}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
         ctx.fillText(enemy.type.emoji, enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
         
         // Draw HP bar for enemies with multiple HP
@@ -736,8 +918,10 @@ function draw() {
         
         // Draw emoji
         ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
         ctx.globalAlpha = 1;
-        ctx.font = `${size}px Arial`;
+        ctx.fillStyle = '#FFFFFF'; // Set white color for emoji visibility
+        ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(powerup.type.emoji, 0, 0);
@@ -812,12 +996,85 @@ function draw() {
         ctx.restore();
     }
     
+    // Draw spread shot effect if active
+    if (spreadShotActive) {
+        ctx.save();
+        ctx.globalAlpha = 0.2;
+        ctx.fillStyle = PALETTE.ORANGE_BRIGHT;
+        const pulse = Math.sin(Date.now() / 150) * 5;
+        // Draw three small circles in spread pattern
+        const angles = [-0.3, 0, 0.3];
+        angles.forEach(angle => {
+            const offsetX = Math.sin(angle) * 15;
+            const offsetY = -Math.cos(angle) * 10;
+            ctx.beginPath();
+            ctx.arc(player.x + player.width / 2 + offsetX, player.y + player.height / 2 + offsetY, player.width * 0.3 + pulse, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.restore();
+    }
+    
+    // Draw pierce shot effect if active
+    if (pierceShotActive) {
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.strokeStyle = PALETTE.RED_VIBRANT;
+        ctx.lineWidth = 3;
+        const pulse = Math.sin(Date.now() / 100) * 3;
+        // Draw glowing line above player
+        ctx.shadowColor = PALETTE.RED_VIBRANT;
+        ctx.shadowBlur = 10 + pulse;
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y - 5);
+        ctx.lineTo(player.x + player.width, player.y - 5);
+        ctx.stroke();
+        ctx.restore();
+    }
+    
+    // Draw homing missiles effect if active
+    if (homingMissilesActive) {
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        ctx.fillStyle = PALETTE.GREEN_BRIGHT;
+        const pulse = Math.sin(Date.now() / 120) * 4;
+        // Draw targeting reticle
+        for (let i = 0; i < 4; i++) {
+            const angle = (i * Math.PI / 2) + (Date.now() / 1000);
+            const x = player.x + player.width / 2 + Math.cos(angle) * (player.width * 0.5 + pulse);
+            const y = player.y + player.height / 2 + Math.sin(angle) * (player.width * 0.5 + pulse);
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+    
     // Draw particles
     for (let particle of particles) {
         ctx.fillStyle = particle.color;
         ctx.globalAlpha = particle.life;
         ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
         ctx.globalAlpha = 1;
+    }
+    
+    // Draw flash effect for bomb
+    if (flashActive) {
+        const elapsed = Date.now() - flashStartTime;
+        if (elapsed < 300) { // Flash for 300ms
+            ctx.save();
+            const alpha = 1 - (elapsed / 300); // Fade out
+            ctx.globalAlpha = alpha * 0.8;
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.logicalWidth, canvas.logicalHeight);
+            ctx.restore();
+        } else {
+            flashActive = false;
+        }
+    }
+    
+    // Draw heart rain animation (for win)
+    if (gameAnimations.animating) {
+        gameAnimations.drawHeartRain();
     }
     
     ctx.restore();
@@ -897,17 +1154,41 @@ function updateUI() {
 // Game over
 function gameOver() {
     gameRunning = false;
-    setPlayingMode(false);
-    document.getElementById('gameOverScreen').style.display = 'flex';
+    
+    gameAnimations.startShake();
+    
+    // Keep game loop running for shake animation
+    requestAnimationFrame(gameLoop);
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        document.getElementById('gameOverScreen').style.display = 'flex';
+    }, 1000);
 }
 
 // Game won
 function gameWon() {
     gameRunning = false;
-    setPlayingMode(false);
-    const winMessage = `🎉 Purrfect! You defended love and destroyed ${score} broken hearts! 💖\n\nYou're a true Love Defender! May your heart always be as fierce and protective. Happy Valentine's Day! 🐱💕`;
-    document.getElementById('winMessage').textContent = winMessage;
-    document.getElementById('winScreen').style.display = 'flex';
+    
+    // Explode all enemies on screen
+    for (let enemy of enemies) {
+        createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, PALETTE.YELLOW_LIGHT);
+    }
+    enemies = [];
+    
+    // Start heart rain after explosions
+    setTimeout(() => {
+        gameAnimations.startHeartRain();
+        // Make sure game loop continues for animation
+        requestAnimationFrame(gameLoop);
+    }, 300);
+    
+    setTimeout(() => {
+        setPlayingMode(false);
+        const winMessage = `🎉 Purrfect! You defended love and destroyed ${score} broken hearts! 💖\n\nYou're a true Love Defender! May your heart always be as fierce and protective. Happy Valentine's Day! 🐱💕`;
+        document.getElementById('winMessage').textContent = winMessage;
+        document.getElementById('winScreen').style.display = 'flex';
+    }, 2000);
 }
 
 // Game loop
@@ -920,7 +1201,7 @@ function gameLoop() {
     update(deltaTime);
     draw();
     
-    if (gameRunning) {
+    if (gameRunning || gameAnimations.isAnimating()) {
         requestAnimationFrame(gameLoop);
     }
 }
