@@ -27,10 +27,15 @@ let player = {
 let platforms = [];
 let wines = [];
 let comets = [];
+let enemies = [];
+let playerTrail = [];
 let cameraY = 0;
 let score = 0;
 let maxScore = 0;
 let gameRunning = false;
+let powerupActive = false;
+let powerupEndTime = 0;
+let spawnedGuaranteedStar = false;
 let baseGap = 80; // Base vertical gap between platforms
 let currentGap = 80; // Current gap (increases with difficulty)
 // Endless mode - check URL parameter or default to true
@@ -324,7 +329,12 @@ function initGame() {
     baseGap = 80;
     currentGap = 80;
     comets = [];
+    enemies = [];
+    playerTrail = [];
     gameRunning = false;
+    powerupActive = false;
+    powerupEndTime = 0;
+    spawnedGuaranteedStar = false;
     
     generatePlatforms();
     
@@ -363,6 +373,13 @@ function update() {
     // Handle accelerometer controls
     if (Math.abs(tiltX) > 0.1) {
         player.dx = tiltX * 6;
+    }
+    
+    // Check powerup timer - only deactivate when timer is up AND player is falling/landing
+    // This prevents powerup from ending mid-jump
+    if (powerupActive && Date.now() > powerupEndTime && player.dy > 0) {
+        powerupActive = false;
+        playerTrail = []; // Clear trail when powerup ends
     }
     
     // Apply gravity
@@ -414,6 +431,11 @@ function update() {
             comet.y += diff;
         });
         
+        // Move enemies down with camera
+        enemies.forEach(enemy => {
+            enemy.y += diff;
+        });
+        
         // Update score (height-based)
         const heightScore = Math.floor(cameraY / 10);
         if (heightScore > maxScore) {
@@ -435,6 +457,21 @@ function update() {
                 player.willSpinNextJump = true; // Spin on next jump
                 particles.createParticles(wine.x + 10, wine.y + 10, 15, PALETTE.PURPLE_DARK);
                 
+                // Spawn guaranteed star at 20 wine glasses
+                if (score === 20 && !spawnedGuaranteedStar && endlessMode) {
+                    spawnedGuaranteedStar = true;
+                    comets.push({
+                        x: Math.random() * (canvas.logicalWidth - 30),
+                        y: player.y - 400, // Spawn near player so it's immediately visible
+                        size: 30,
+                        speed: 2 + Math.random() * 2,
+                        rotation: Math.random() * Math.PI * 2,
+                        rotationSpeed: 0.1,
+                        trail: [],
+                        type: 'powerup'
+                    });
+                }
+                
                 if (score >= WIN_SCORE && !endlessMode) {
                     winGame();
                     return;
@@ -454,7 +491,8 @@ function update() {
                 player.y + player.height < platform.y + platform.height + 10 &&
                 player.dy > 0) {
                 
-                player.dy = JUMP_STRENGTH;
+                const jumpMultiplier = powerupActive ? 2 : 1;
+                player.dy = JUMP_STRENGTH * jumpMultiplier;
                 playSound('jump');
                 
                 // Start decay timer for UFO platforms
@@ -527,21 +565,53 @@ function update() {
         }
     });
     
-    // Check comet collision with player
-    comets.forEach(comet => {
+    // Check power-up collision with player (stars give invincibility and double jump)
+    comets.forEach((comet, index) => {
         const dist = Math.sqrt(
             Math.pow(player.x + player.width / 2 - (comet.x + comet.size / 2), 2) +
             Math.pow(player.y + player.height / 2 - (comet.y + comet.size / 2), 2)
         );
         if (dist < player.width / 2 + comet.size / 2) {
-            playSound('fall');
-            gameOver();
-            return;
+            // Activate power-up: invincibility and double jump for 10 seconds
+            powerupActive = true;
+            powerupEndTime = Date.now() + 10000;
+            playSound('score');
+            particles.createParticles(comet.x + comet.size / 2, comet.y + comet.size / 2, 15, PALETTE.YELLOW);
+            comets.splice(index, 1);
+            // Remove all remaining stars when powerup is collected
+            comets = [];
         }
     });
     
-    // Remove comets that are off screen
+    // Update enemies (fall down and move left/right)
+    enemies.forEach(enemy => {
+        enemy.y += enemy.speed;
+        enemy.x += enemy.horizontalSpeed * enemy.direction;
+        
+        // Bounce off walls
+        if (enemy.x <= 0 || enemy.x >= canvas.logicalWidth - enemy.size) {
+            enemy.direction *= -1;
+        }
+    });
+    
+    // Check enemy collision with player
+    if (!powerupActive) {
+        enemies.forEach(enemy => {
+            const dist = Math.sqrt(
+                Math.pow(player.x + player.width / 2 - (enemy.x + enemy.size / 2), 2) +
+                Math.pow(player.y + player.height / 2 - (enemy.y + enemy.size / 2), 2)
+            );
+            if (dist < player.width / 2 + enemy.size / 2) {
+                playSound('fall');
+                gameOver();
+                return;
+            }
+        });
+    }
+    
+    // Remove comets and enemies that are off screen
     comets = comets.filter(comet => comet.y < canvas.logicalHeight + 50);
+    enemies = enemies.filter(enemy => enemy.y < canvas.logicalHeight + 50);
     
     // Remove platforms that are off screen (bottom)
     platforms = platforms.filter(platform => platform.y < canvas.logicalHeight + 50);
@@ -611,22 +681,42 @@ function update() {
         platforms.unshift(ufoPlatform);
     }
     
-    // Spawn comets (hazards that fall down)
+    // Spawn power-ups (hearts that fall down)
     // Start after 15 bottles, frequency increases with score
-    if (endlessMode && score >= 15) {
+    // Don't spawn if powerup is already active
+    if (endlessMode && score >= 15 && !powerupActive) {
         const baseSpawnRate = 0.001; // Base 0.1% chance per frame
         const scoreMultiplier = Math.floor((score - 20) / 10) * 0.01; // +1% per 10 bottles
-        const cometSpawnRate = Math.min(0.08, baseSpawnRate + scoreMultiplier); // Max 8%
+        const powerupSpawnRate = Math.min(0.08, baseSpawnRate + scoreMultiplier); // Max 8%
         
-        if (Math.random() < cometSpawnRate) {
+        if (Math.random() < powerupSpawnRate) {
             comets.push({
                 x: Math.random() * (canvas.logicalWidth - 30),
                 y: -cameraY - 50, // Spawn above visible area
                 size: 30,
                 speed: 2 + Math.random() * 2, // 2-4 pixels per frame
                 rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: 0.2,
-                trail: [] // Trail positions for blur effect
+                rotationSpeed: 0.1,
+                trail: [], // Trail positions for blur effect
+                type: 'powerup' // hearts
+            });
+        }
+    }
+    
+    // Spawn space invader enemies (rare, move left and right)
+    if (endlessMode && score >= 15) {
+        const baseSpawnRate = 0.001; // Base 0.1% chance per frame
+        const scoreMultiplier = Math.floor((score - 20) / 10) * 0.01; // +1% per 10 bottles
+        const enemySpawnRate = Math.min(0.08, baseSpawnRate + scoreMultiplier); // Max 8%
+        
+        if (Math.random() < enemySpawnRate) {
+            enemies.push({
+                x: Math.random() * (canvas.logicalWidth - 40),
+                y: -cameraY - 50, // Spawn above visible area
+                size: 35,
+                speed: 1.5, // Vertical fall speed
+                horizontalSpeed: 2, // Left/right movement speed
+                direction: Math.random() < 0.5 ? -1 : 1 // Start moving left or right
             });
         }
     }
@@ -647,7 +737,7 @@ function draw() {
     gameAnimations.applyShake();
     
     // Sky gradient that gets darker with each wine collected
-    const skyProgress = score / WIN_SCORE; // 0 = light sky, 1 = space
+    const skyProgress = Math.min(1, score / 30); // 0 = light sky, 1 = space at 30 wines
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.logicalHeight);
     
     // Interpolate from light sky blue to dark space
@@ -711,7 +801,7 @@ function draw() {
         }
     });
     
-    // Draw comets as spinning stars with trail
+    // Draw power-ups as spinning stars with trail
     comets.forEach(comet => {
         // Draw trail (blur effect)
         comet.trail.forEach((pos, index) => {
@@ -736,10 +826,34 @@ function draw() {
         ctx.restore();
     });
     
+    // Draw space invader enemies
+    enemies.forEach(enemy => {
+        ctx.font = `${enemy.size}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('👾', enemy.x + enemy.size / 2, enemy.y + enemy.size / 2);
+    });
+    
     // Draw player as dancing man emoji
     ctx.save();
     ctx.translate(player.x + player.width / 2, player.y + player.height / 2);
     ctx.rotate(player.rotation);
+    
+    // Draw glowing aura when powerup is active
+    if (powerupActive) {
+        const pulse = Math.sin(Date.now() / 100) * 0.3 + 0.7; // Pulsing effect
+        ctx.shadowColor = '#FFD700';
+        ctx.shadowBlur = 20 * pulse;
+        
+        // Draw multiple glow layers
+        ctx.globalAlpha = 0.3 * pulse;
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(0, 0, PLAYER_SIZE * 0.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+    }
+    
     ctx.fillStyle = '#FFD700';
     ctx.font = `${PLAYER_SIZE}px Arial`;
     ctx.textAlign = 'center';
@@ -756,6 +870,36 @@ function draw() {
     // Draw heart rain animation
     if (gameAnimations.isAnimating()) {
         gameAnimations.drawHeartRain();
+    }
+    
+    // Draw powerup timer when active
+    if (powerupActive) {
+        const timeLeft = Math.max(0, (powerupEndTime - Date.now()) / 1000);
+        const barWidth = 150;
+        const barHeight = 20;
+        const barX = (canvas.logicalWidth - barWidth) / 2;
+        const barY = 10;
+        
+        // Draw background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(barX - 5, barY - 5, barWidth + 10, barHeight + 10);
+        
+        // Draw timer bar
+        const fillWidth = (timeLeft / 10) * barWidth;
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(barX, barY, fillWidth, barHeight);
+        
+        // Draw border
+        ctx.strokeStyle = '#FFF';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(barX, barY, barWidth, barHeight);
+        
+        // Draw text
+        ctx.fillStyle = '#FFF';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`⭐ Star Power: ${timeLeft.toFixed(1)}s`, canvas.logicalWidth / 2, barY + barHeight + 15);
     }
     
     // Draw start message
