@@ -145,13 +145,16 @@ endlessToggle.checked = endlessMode;
 
 const highScoreLabel = document.getElementById('highScoreLabel');
 const highScoreValue = document.getElementById('highScoreValue');
+const valentineMessage = document.getElementById('valentineMessage');
 
 if (endlessMode) {
     highScoreLabel.style.display = 'block';
     highScoreValue.style.display = 'block';
+    if (valentineMessage) valentineMessage.style.display = 'none';
 } else {
     highScoreLabel.style.display = 'none';
     highScoreValue.style.display = 'none';
+    if (valentineMessage) valentineMessage.style.display = 'block';
 }
 
 endlessToggle.addEventListener('change', (e) => {
@@ -160,9 +163,11 @@ endlessToggle.addEventListener('change', (e) => {
     if (endlessMode) {
         highScoreLabel.style.display = 'block';
         highScoreValue.style.display = 'block';
+        if (valentineMessage) valentineMessage.style.display = 'none';
     } else {
         highScoreLabel.style.display = 'none';
         highScoreValue.style.display = 'none';
+        if (valentineMessage) valentineMessage.style.display = 'block';
     }
     
     restartGame();
@@ -1273,8 +1278,11 @@ function gameWon() {
     
     setTimeout(() => {
         setPlayingMode(false);
-        const winMessage = `🎉 Purrfect! You defended love and destroyed ${score} broken hearts! 💖\n\nYou're a true Love Defender! May your heart always be as fierce and protective. Happy Valentine's Day! 🐱💕`;
-        document.getElementById('winMessage').textContent = winMessage;
+        const winMessage = `Megan, you craft your Valentines with glitter and grace,
+While I'm knee-deep in code, trying to keep pace.
+Through every small chaos, every project we start,
+You're still my favorite crafting partner, and you have all of my heart ❤️💖`;
+        document.getElementById('winMessage').innerHTML = winMessage.replace(/\n/g, '<br>');
         document.getElementById('winScreen').style.display = 'flex';
     }, 2000);
 }

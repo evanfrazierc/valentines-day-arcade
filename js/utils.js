@@ -193,7 +193,8 @@ function showWinScreen(message, onRestart, onHome) {
     const winScreen = document.getElementById('winScreen');
     const winMessage = document.getElementById('winMessage');
     
-    winMessage.textContent = message;
+    // Convert newlines to <br> tags for proper formatting
+    winMessage.innerHTML = message.replace(/\n/g, '<br>');
     winScreen.classList.add('show');
     
     createConfetti();

@@ -741,7 +741,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "You rescued all 5 cats! You're purr-fect! 🐱💕",
+            "Juliette, this Valenti...MEOW! THUD! OH NO!\nThe cat's in the cupboard, the yarn's on the stove.\nIt sprinted, it vanished, it's now on your head.\nThe cat says, \"Happy Valentine's,\" then goes back to bed 🐱💕",
             restartGame
         );
     }, 2000);
@@ -762,12 +762,16 @@ if (endlessToggle) {
     endlessToggle.checked = endlessMode;
     const highScoreLabel = document.getElementById('highScoreLabel');
     const highScoreValue = document.getElementById('highScoreValue');
+    const valentineMessage = document.getElementById('valentineMessage');
     
     if (endlessMode) {
         highScore = loadHighScore();
         updateHighScoreDisplay();
         highScoreLabel.style.display = 'block';
         highScoreValue.style.display = 'block';
+        if (valentineMessage) valentineMessage.style.display = 'none';
+    } else {
+        if (valentineMessage) valentineMessage.style.display = 'block';
     }
     
     endlessToggle.addEventListener('change', (e) => {
@@ -778,9 +782,11 @@ if (endlessToggle) {
             updateHighScoreDisplay();
             highScoreLabel.style.display = 'block';
             highScoreValue.style.display = 'block';
+            if (valentineMessage) valentineMessage.style.display = 'none';
         } else {
             highScoreLabel.style.display = 'none';
             highScoreValue.style.display = 'none';
+            if (valentineMessage) valentineMessage.style.display = 'block';
         }
         
         updateUI();

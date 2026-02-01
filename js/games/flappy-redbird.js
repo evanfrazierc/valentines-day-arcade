@@ -556,7 +556,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Karen, you're as beautiful as a cardinal in flight! 🐦💕",
+            "Karen, this Valentine is for someone stylish and rare.\nLike Redbird finds with excellent flair.\nWith Joe, Angus, and good taste always in view.\nHappy Valentine's Day to vintage love, tried and true 👗❤️",
             restartGame
         );
     }, 2000);
@@ -579,10 +579,14 @@ highScore = loadHighScore();
 updateHighScoreDisplay();
 
 // Set initial checkbox state and display
+const valentineMessage = document.getElementById('valentineMessage');
 endlessModeToggle.checked = endlessMode;
 if (endlessMode) {
     highScoreLabel.style.display = 'block';
     highScoreDisplay.style.display = 'block';
+    if (valentineMessage) valentineMessage.style.display = 'none';
+} else {
+    if (valentineMessage) valentineMessage.style.display = 'block';
 }
 
 endlessModeToggle.addEventListener('change', (e) => {
@@ -592,9 +596,11 @@ endlessModeToggle.addEventListener('change', (e) => {
         highScoreLabel.style.display = 'block';
         highScoreDisplay.style.display = 'block';
         updateHighScoreDisplay();
+        if (valentineMessage) valentineMessage.style.display = 'none';
     } else {
         highScoreLabel.style.display = 'none';
         highScoreDisplay.style.display = 'none';
+        if (valentineMessage) valentineMessage.style.display = 'block';
     }
     
     // Update UI to reflect mode change

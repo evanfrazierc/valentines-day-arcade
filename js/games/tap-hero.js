@@ -1017,7 +1017,7 @@ function winGame() {
             backgroundMusic.pause();
         }
         showWinScreen(
-            "Harrison, you hit all the right notes in my heart! 🎵💕",
+            "Harrison, this Valentine's, dream big and loud.\nI'll be front row while you headline the crowd.\nBetween film edits, fishing tales, and playing guitar chords\nIt is only a matter of time before you collect all the awards 🎸🎬💕",
             restartGame
         );
     }, 2000);
@@ -1038,12 +1038,16 @@ if (endlessToggle) {
     endlessToggle.checked = endlessMode;
     const highScoreLabel = document.getElementById('highScoreLabel');
     const highScoreValue = document.getElementById('highScoreValue');
+    const valentineMessage = document.getElementById('valentineMessage');
     
     if (endlessMode) {
         highScore = loadHighScore();
         updateHighScoreDisplay();
         highScoreLabel.style.display = 'block';
         highScoreValue.style.display = 'block';
+        if (valentineMessage) valentineMessage.style.display = 'none';
+    } else {
+        if (valentineMessage) valentineMessage.style.display = 'block';
     }
     
     endlessToggle.addEventListener('change', (e) => {
@@ -1054,9 +1058,11 @@ if (endlessToggle) {
             updateHighScoreDisplay();
             highScoreLabel.style.display = 'block';
             highScoreValue.style.display = 'block';
+            if (valentineMessage) valentineMessage.style.display = 'none';
         } else {
             highScoreLabel.style.display = 'none';
             highScoreValue.style.display = 'none';
+            if (valentineMessage) valentineMessage.style.display = 'block';
         }
         
         updateUI();

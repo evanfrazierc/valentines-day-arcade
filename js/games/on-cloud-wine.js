@@ -819,7 +819,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Joe, you're on cloud wine with me! 🍷☁️💕",
+            "Joe, this Valentine pairs wine with a song.\nYou sell it by day, then sing all night long.\nAngus provides backup, howling on cue.\nHappy Valentine's Day, now give the dog a treat or two 🍷🐕💕",
             restartGame
         );
     }, 800);
@@ -840,12 +840,16 @@ if (endlessToggle) {
     endlessToggle.checked = endlessMode;
     const highScoreLabel = document.getElementById('highScoreLabel');
     const highScoreValue = document.getElementById('highScoreValue');
+    const valentineMessage = document.getElementById('valentineMessage');
     
     if (endlessMode) {
         highScore = loadHighScore();
         updateHighScoreDisplay();
         highScoreLabel.style.display = 'block';
         highScoreValue.style.display = 'block';
+        if (valentineMessage) valentineMessage.style.display = 'none';
+    } else {
+        if (valentineMessage) valentineMessage.style.display = 'block';
     }
     
     endlessToggle.addEventListener('change', (e) => {
@@ -856,9 +860,11 @@ if (endlessToggle) {
             updateHighScoreDisplay();
             highScoreLabel.style.display = 'block';
             highScoreValue.style.display = 'block';
+            if (valentineMessage) valentineMessage.style.display = 'none';
         } else {
             highScoreLabel.style.display = 'none';
             highScoreValue.style.display = 'none';
+            if (valentineMessage) valentineMessage.style.display = 'block';
         }
         
         updateUI();

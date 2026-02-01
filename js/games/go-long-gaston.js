@@ -6,7 +6,7 @@ const ctx = setupCanvas(canvas, 350, 600);
 const GRID_SIZE = 20;
 const GRID_HEIGHT = Math.floor(canvas.logicalHeight / (canvas.logicalWidth / GRID_SIZE));
 const TILE_SIZE = canvas.logicalWidth / GRID_SIZE;
-const WIN_SCRAPS = 15;
+const WIN_SCRAPS = 10;
 const DINNER_SCRAPS = ['🍕', '🌭', '🍔'];
 
 // Endless mode - check URL parameter or default to true
@@ -1051,7 +1051,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Sarah, Gaston fetched all the scraps just for you! 🐕💕",
+            "Sarah, this Valentine is barking with cheer.\nGaston, Greta, Chloe, and Arnold all near.\nThe last guinea pig squeaks, joining the fun too.\nHappy Valentine's Day, now give Chloe a rock to chew 🐕❤️",
             restartGame
         );
     }, 2000);
@@ -1074,22 +1074,29 @@ highScore = loadHighScore();
 updateHighScoreDisplay();
 
 // Set initial checkbox state and display
+const valentineMessage = document.getElementById('valentineMessage');
 endlessModeToggle.checked = endlessMode;
 if (endlessMode) {
     highScoreLabel.style.display = 'block';
     highScoreDisplay.style.display = 'block';
+    if (valentineMessage) valentineMessage.style.display = 'none';
+} else {
+    if (valentineMessage) valentineMessage.style.display = 'block';
 }
 
 endlessModeToggle.addEventListener('change', (e) => {
     endlessMode = e.target.checked;
+    const valentineMessage = document.getElementById('valentineMessage');
     
     if (endlessMode) {
         highScoreLabel.style.display = 'block';
         highScoreDisplay.style.display = 'block';
         updateHighScoreDisplay();
+        if (valentineMessage) valentineMessage.style.display = 'none';
     } else {
         highScoreLabel.style.display = 'none';
         highScoreDisplay.style.display = 'none';
+        if (valentineMessage) valentineMessage.style.display = 'block';
     }
     
     // Update UI to reflect mode change
