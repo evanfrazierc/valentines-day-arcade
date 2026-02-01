@@ -334,37 +334,55 @@ function update() {
             bounceSpeed = random(2, 4);
         }
         
-        obstacles.push({
-            x: canvas.logicalWidth + spawnOffset,
-            y: canvas.logicalHeight - GROUND_HEIGHT - height,
-            width: OBSTACLE_WIDTH,
-            height: height,
-            type: obstacleType,
-            emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
-            rotation: Math.random() * Math.PI * 2, // Random starting rotation
-            rotationSpeed: (Math.random() * 0.1 + 0.05) * (Math.random() < 0.5 ? 1 : -1) // Random spin direction and speed
-        });
+        // After 40 veggies, sometimes spawn in clumps of two
+        const spawnClump = veggiesCollected >= 40 && Math.random() < 0.35;
+        const numToSpawn = spawnClump ? 2 : 1;
+        
+        for (let i = 0; i < numToSpawn; i++) {
+            const offsetX = i === 0 ? 0 : random(60, 100);
+            
+            obstacles.push({
+                x: canvas.logicalWidth + spawnOffset + offsetX,
+                y: canvas.logicalHeight - GROUND_HEIGHT - height,
+                width: OBSTACLE_WIDTH,
+                height: height,
+                type: obstacleType,
+                emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
+                rotation: Math.random() * Math.PI * 2, // Random starting rotation
+                rotationSpeed: (Math.random() * 0.1 + 0.05) * (Math.random() < 0.5 ? 1 : -1) // Random spin direction and speed
+            });
+        }
         
         obstacleTimer = 0;
         // Fixed delay before next obstacle (not affected by speed)
         nextObstacleTime = random(120, 180);
     }
     
-    // Spawn flying obstacles after 50 veggies collected
-    if (veggiesCollected >= 50) {
+    // Spawn flying obstacles after 30 veggies collected
+    if (veggiesCollected >= 30) {
         flyingObstacleTimer++;
         if (flyingObstacleTimer >= nextFlyingObstacleTime) {
-            const flyingHeight = random(canvas.logicalHeight - GROUND_HEIGHT - 280, canvas.logicalHeight - GROUND_HEIGHT - 80);
-            flyingObstacles.push({
-                x: canvas.logicalWidth,
-                y: flyingHeight,
-                width: 40,
-                height: 40,
-                emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
-                speed: random(6, 9),
-                rotation: Math.random() * Math.PI * 2,
-                rotationSpeed: (Math.random() * 0.15 + 0.1) * (Math.random() < 0.5 ? 1 : -1)
-            });
+            const flyingHeight = random(canvas.logicalHeight - GROUND_HEIGHT - 400, canvas.logicalHeight - GROUND_HEIGHT - 300);
+            
+            // After 50 veggies, sometimes spawn in clumps of two
+            const spawnClump = veggiesCollected >= 50 && Math.random() < 0.4;
+            const numToSpawn = spawnClump ? 2 : 1;
+            
+            for (let i = 0; i < numToSpawn; i++) {
+                const offsetY = i === 0 ? 0 : random(-50, 50);
+                const offsetX = i === 0 ? 0 : random(40, 80);
+                
+                flyingObstacles.push({
+                    x: canvas.logicalWidth + offsetX,
+                    y: flyingHeight + offsetY,
+                    width: 40,
+                    height: 40,
+                    emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
+                    speed: random(3, 5),
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() * 0.15 + 0.1) * (Math.random() < 0.5 ? 1 : -1)
+                });
+            }
             
             flyingObstacleTimer = 0;
             nextFlyingObstacleTime = random(180, 300);
