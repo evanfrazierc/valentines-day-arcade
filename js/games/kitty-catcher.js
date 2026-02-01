@@ -1011,7 +1011,13 @@ function draw() {
             
             // Draw heart emoji on heart blocks
             if (brick.visible && brick.isHeart) {
-                ctx.fillStyle = '#FFFFFF';
+                // White background circle for better visibility
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.beginPath();
+                ctx.arc(brick.x + brick.width / 2, brick.y + brick.height / 2, 12, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#000000';
                 ctx.font = '24px Arial';
                 ctx.fillText('💖', brick.x + brick.width / 2, brick.y + brick.height / 2);
             }
