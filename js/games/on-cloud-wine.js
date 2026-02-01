@@ -819,7 +819,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Joe, this Valentine pairs wine with a song.\nYou sell it by day, then sing all night long.\nAngus provides backup, howling on cue.\nHappy Valentine's Day, now give the dog a treat or two 🍷🐕💕",
+            "Joe, this Valentine pairs wine with a song.\n\nYou sell it by day, then sing all night long.\n\nAngus provides backup, howling on cue.\n\nHappy Valentine's Day, now give the dog a treat or two 🍷🐕💕",
             restartGame
         );
     }, 800);

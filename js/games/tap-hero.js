@@ -1017,7 +1017,7 @@ function winGame() {
             backgroundMusic.pause();
         }
         showWinScreen(
-            "Harrison, this Valentine's, dream big and loud.\nI'll be front row while you headline the crowd.\nBetween film edits, fishing tales, and playing guitar chords\nIt is only a matter of time before you collect all the awards 🎸🎬💕",
+            "Harrison, this Valentine's, dream big and loud.\n\nI'll be front row while you headline the crowd.\n\nBetween film edits, fishing tales, and playing guitar chords\n\nIt is only a matter of time before you collect all the awards 🎸🎬💕",
             restartGame
         );
     }, 2000);

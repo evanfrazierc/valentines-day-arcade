@@ -1051,7 +1051,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Sarah, this Valentine is barking with cheer.\nGaston, Greta, Chloe, and Arnold all near.\nThe last guinea pig squeaks, joining the fun too.\nHappy Valentine's Day, now give Chloe a rock to chew 🐕❤️",
+            "Sarah, this Valentine is barking with cheer.\n\nGaston, Greta, Chloe, and Arnold all near.\n\nThe last guinea pig squeaks, joining the fun too.\n\nHappy Valentine's Day, now give Chloe a rock to chew 🐕❤️",
             restartGame
         );
     }, 2000);

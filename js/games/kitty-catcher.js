@@ -741,7 +741,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Juliette, this Valenti...MEOW! THUD! OH NO!\nThe cat's in the cupboard, the yarn's on the stove.\nIt sprinted, it vanished, it's now on your head.\nThe cat says, \"Happy Valentine's,\" then goes back to bed 🐱💕",
+            "Juliette, this Valenti...MEOW! THUD! OH NO!\n\nThe cat's in the cupboard, the yarn's on the stove.\n\nIt sprinted, it vanished, it's now on your head.\n\nThe cat says, \"Happy Valentine's,\" then goes back to bed 🐱💕",
             restartGame
         );
     }, 2000);

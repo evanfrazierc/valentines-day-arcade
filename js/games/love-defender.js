@@ -1279,8 +1279,11 @@ function gameWon() {
     setTimeout(() => {
         setPlayingMode(false);
         const winMessage = `Megan, you craft your Valentines with glitter and grace,
+
 While I'm knee-deep in code, trying to keep pace.
+
 Through every small chaos, every project we start,
+
 You're still my favorite crafting partner, and you have all of my heart ❤️💖`;
         document.getElementById('winMessage').innerHTML = winMessage.replace(/\n/g, '<br>');
         document.getElementById('winScreen').style.display = 'flex';

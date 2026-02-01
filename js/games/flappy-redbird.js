@@ -556,7 +556,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Karen, this Valentine is for someone stylish and rare.\nLike Redbird finds with excellent flair.\nWith Joe, Angus, and good taste always in view.\nHappy Valentine's Day to vintage love, tried and true 👗❤️",
+            "Karen, this Valentine is for someone stylish and rare.\n\nLike Redbird finds with excellent flair.\n\nWith Joe, Angus, and good taste always in view.\n\nHappy Valentine's Day to vintage love, tried and true 👗❤️",
             restartGame
         );
     }, 2000);

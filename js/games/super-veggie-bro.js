@@ -27,6 +27,7 @@ let player = {
 };
 
 let obstacles = [];
+let flyingObstacles = [];
 let veggies = [];
 let clouds = [];
 let dog = null;
@@ -37,6 +38,8 @@ let gameSpeed = 5;
 let obstacleTimer = 0;
 let nextObstacleTime = 0;
 let veggieTimer = 0;
+let flyingObstacleTimer = 0;
+let nextFlyingObstacleTime = 0;
 let speedLines = []; // For visual effect
 let difficultyLevel = 0; // Track difficulty progression
 
@@ -221,6 +224,7 @@ function initGame() {
     player.rotation = 0;
     
     obstacles = [];
+    flyingObstacles = [];
     veggies = [];
     clouds = [];
     dog = null;
@@ -337,13 +341,34 @@ function update() {
             height: height,
             type: obstacleType,
             emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
-            bounceSpeed: bounceSpeed,
-            bounceDirection: -1 // Start moving up
+            rotation: Math.random() * Math.PI * 2, // Random starting rotation
+            rotationSpeed: (Math.random() * 0.1 + 0.05) * (Math.random() < 0.5 ? 1 : -1) // Random spin direction and speed
         });
         
         obstacleTimer = 0;
         // Fixed delay before next obstacle (not affected by speed)
         nextObstacleTime = random(120, 180);
+    }
+    
+    // Spawn flying obstacles after 50 veggies collected
+    if (veggiesCollected >= 50) {
+        flyingObstacleTimer++;
+        if (flyingObstacleTimer >= nextFlyingObstacleTime) {
+            const flyingHeight = random(canvas.logicalHeight - GROUND_HEIGHT - 280, canvas.logicalHeight - GROUND_HEIGHT - 80);
+            flyingObstacles.push({
+                x: canvas.logicalWidth,
+                y: flyingHeight,
+                width: 40,
+                height: 40,
+                emoji: MEAT_EMOJIS[Math.floor(Math.random() * MEAT_EMOJIS.length)],
+                speed: random(6, 9),
+                rotation: Math.random() * Math.PI * 2,
+                rotationSpeed: (Math.random() * 0.15 + 0.1) * (Math.random() < 0.5 ? 1 : -1)
+            });
+            
+            flyingObstacleTimer = 0;
+            nextFlyingObstacleTime = random(180, 300);
+        }
     }
     
     // Spawn veggies
@@ -397,21 +422,9 @@ function update() {
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= gameSpeed;
         
-        // Handle bouncing obstacles
-        if (obstacles[i].type === 'bouncing') {
-            obstacles[i].y += obstacles[i].bounceSpeed * obstacles[i].bounceDirection;
-            
-            // Bounce off ground and top bounds
-            const maxY = canvas.logicalHeight - GROUND_HEIGHT - obstacles[i].height;
-            const minY = 50;
-            
-            if (obstacles[i].y >= maxY) {
-                obstacles[i].y = maxY;
-                obstacles[i].bounceDirection = -1;
-            } else if (obstacles[i].y <= minY) {
-                obstacles[i].y = minY;
-                obstacles[i].bounceDirection = 1;
-            }
+        // Make obstacles tumble/rotate only when wind is blowing (speed lines present)
+        if (speedLines.length > 0) {
+            obstacles[i].rotation += obstacles[i].rotationSpeed;
         }
         
         // Remove off-screen obstacles - account for emoji size extending beyond width
@@ -428,6 +441,56 @@ function update() {
             y: obstacles[i].y + hitboxMargin,
             width: obstacles[i].width - hitboxMargin * 2,
             height: obstacles[i].height - hitboxMargin * 2
+        })) {
+            playSound('hit');
+            gameOver();
+            return;
+        }
+    }
+    
+    // Update flying obstacles
+    for (let i = flyingObstacles.length - 1; i >= 0; i--) {
+        flyingObstacles[i].x -= flyingObstacles[i].speed;
+        flyingObstacles[i].rotation += flyingObstacles[i].rotationSpeed;
+        
+        // Remove off-screen flying obstacles
+        if (flyingObstacles[i].x + flyingObstacles[i].width < 0) {
+            flyingObstacles.splice(i, 1);
+            continue;
+        }
+        
+        // Check collision with flying obstacle
+        const hitboxMargin = 8;
+        if (checkCollision(player, {
+            x: flyingObstacles[i].x + hitboxMargin,
+            y: flyingObstacles[i].y + hitboxMargin,
+            width: flyingObstacles[i].width - hitboxMargin * 2,
+            height: flyingObstacles[i].height - hitboxMargin * 2
+        })) {
+            playSound('hit');
+            gameOver();
+            return;
+        }
+    }
+    
+    // Update flying obstacles
+    for (let i = flyingObstacles.length - 1; i >= 0; i--) {
+        flyingObstacles[i].x -= flyingObstacles[i].speed;
+        flyingObstacles[i].rotation += flyingObstacles[i].rotationSpeed;
+        
+        // Remove off-screen flying obstacles
+        if (flyingObstacles[i].x + flyingObstacles[i].width < 0) {
+            flyingObstacles.splice(i, 1);
+            continue;
+        }
+        
+        // Check collision with flying obstacle
+        const hitboxMargin = 8;
+        if (checkCollision(player, {
+            x: flyingObstacles[i].x + hitboxMargin,
+            y: flyingObstacles[i].y + hitboxMargin,
+            width: flyingObstacles[i].width - hitboxMargin * 2,
+            height: flyingObstacles[i].height - hitboxMargin * 2
         })) {
             playSound('hit');
             gameOver();
@@ -613,17 +676,44 @@ function draw() {
         ctx.fillText(dog.emoji, dog.x, dog.y + dog.size / 2);
     }
     
-    // Draw obstacles as varied meat emojis
+    // Draw obstacles as varied meat emojis with tumbling rotation
     obstacles.forEach(obstacle => {
         // Only draw if on screen (with margin for emoji size)
         const emojiExtension = obstacle.height * 0.6;
         if (obstacle.x + obstacle.width + emojiExtension >= 0 && obstacle.x - emojiExtension <= canvas.logicalWidth) {
+            ctx.save();
+            const centerX = obstacle.x + obstacle.width / 2;
+            const centerY = obstacle.y + obstacle.height / 2;
+            
+            ctx.translate(centerX, centerY);
+            ctx.rotate(obstacle.rotation);
+            
             ctx.font = `${obstacle.height * 1.2}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillStyle = PALETTE.BLACK;
-            ctx.fillText(obstacle.emoji, obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2);
+            ctx.fillText(obstacle.emoji, 0, 0);
+            
+            ctx.restore();
         }
+    });
+    
+    // Draw flying obstacles with tumbling rotation
+    flyingObstacles.forEach(obstacle => {
+        ctx.save();
+        const centerX = obstacle.x + obstacle.width / 2;
+        const centerY = obstacle.y + obstacle.height / 2;
+        
+        ctx.translate(centerX, centerY);
+        ctx.rotate(obstacle.rotation);
+        
+        ctx.font = `${obstacle.height * 1.2}px Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = PALETTE.BLACK;
+        ctx.fillText(obstacle.emoji, 0, 0);
+        
+        ctx.restore();
     });
     
     // Draw veggie emojis
@@ -711,7 +801,7 @@ function winGame() {
     setTimeout(() => {
         setPlayingMode(false);
         showWinScreen(
-            "Ryan, this Valentine is veggie-approved,\nPowered by lentils, granola, and a very good mood.\nNo steaks on this plate, just plants stealing the show.\nHappy Valentine's Day, now let your green power flow 🥬💚",
+            "Ryan, this Valentine is veggie-approved,\n\nPowered by lentils, granola, and a very good mood.\n\nNo steaks on this plate, just plants stealing the show.\n\nHappy Valentine's Day, now let your green power flow 🥬💚",
             restartGame
         );
     }, 2000);
