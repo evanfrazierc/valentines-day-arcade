@@ -99,6 +99,11 @@ let stars = [];
 // Touch controls
 let touchControls = new TouchControls(canvas);
 
+// Tilt controls
+let tiltControlsEnabled = false;
+let tiltControlsAvailable = false;
+let tiltCalibration = 0; // Store initial tilt angle
+
 // Game animations for screen shake
 let gameAnimations = new GameAnimations(canvas, ctx);
 
@@ -184,6 +189,112 @@ touchControls.init();
 // Keyboard controls
 document.addEventListener('keydown', handleKeyDown);
 document.addEventListener('keyup', handleKeyUp);
+
+// Tilt controls setup
+function handleOrientation(event) {
+    if (!tiltControlsEnabled || !gameRunning) return;
+    
+    // Use gamma (left-right tilt) for horizontal movement
+    // gamma ranges from -90 to 90 degrees
+    const gamma = event.gamma;
+    if (gamma === null) return;
+    
+    // Calculate relative tilt from calibration
+    const relativeTilt = gamma - tiltCalibration;
+    
+    // Map tilt angle to player position
+    // Sensitivity: ~30 degrees of tilt covers the full screen
+    const sensitivity = 30;
+    const normalizedTilt = Math.max(-1, Math.min(1, relativeTilt / sensitivity));
+    
+    // Update player target position based on tilt
+    const centerX = canvas.logicalWidth / 2;
+    const range = canvas.logicalWidth / 2 - player.width / 2;
+    player.targetX = centerX + (normalizedTilt * range) - player.width / 2;
+    player.targetX = Math.max(0, Math.min(canvas.logicalWidth - player.width, player.targetX));
+}
+
+async function requestTiltPermission() {
+    // Check if device orientation is available
+    if (!window.DeviceOrientationEvent) {
+        alert('Device orientation is not supported on this device.');
+        return false;
+    }
+    
+    // iOS 13+ requires permission
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission === 'granted') {
+                return true;
+            } else {
+                alert('Permission to access device orientation was denied.');
+                return false;
+            }
+        } catch (error) {
+            console.error('Error requesting device orientation permission:', error);
+            alert('Could not request device orientation permission.');
+            return false;
+        }
+    }
+    
+    // Non-iOS or older iOS, permission not required
+    return true;
+}
+
+function calibrateTilt() {
+    // Capture current device orientation as the "center" position
+    const handleCalibration = (event) => {
+        tiltCalibration = event.gamma || 0;
+        window.removeEventListener('deviceorientation', handleCalibration);
+    };
+    window.addEventListener('deviceorientation', handleCalibration);
+}
+
+function enableTiltControls() {
+    window.addEventListener('deviceorientation', handleOrientation);
+    calibrateTilt();
+    tiltControlsEnabled = true;
+}
+
+function disableTiltControls() {
+    window.removeEventListener('deviceorientation', handleOrientation);
+    tiltControlsEnabled = false;
+}
+
+// Check if tilt controls are available on this device
+if (window.DeviceOrientationEvent) {
+    tiltControlsAvailable = true;
+    
+    // Add tilt toggle button if on mobile
+    if ('ontouchstart' in window) {
+        const gameControls = document.querySelector('.game-controls');
+        if (gameControls) {
+            const tiltToggle = document.createElement('button');
+            tiltToggle.id = 'tiltToggle';
+            tiltToggle.className = 'btn';
+            tiltToggle.textContent = '📱 Enable Tilt Controls';
+            tiltToggle.style.marginTop = '10px';
+            
+            tiltToggle.addEventListener('click', async () => {
+                if (!tiltControlsEnabled) {
+                    const granted = await requestTiltPermission();
+                    if (granted) {
+                        enableTiltControls();
+                        tiltToggle.textContent = '📱 Disable Tilt Controls';
+                        tiltToggle.classList.add('active');
+                    }
+                } else {
+                    disableTiltControls();
+                    tiltToggle.textContent = '📱 Enable Tilt Controls';
+                    tiltToggle.classList.remove('active');
+                }
+            });
+            
+            gameControls.appendChild(tiltToggle);
+        }
+    }
+}
 
 // Restart button
 document.getElementById('restartBtn').addEventListener('click', () => {
