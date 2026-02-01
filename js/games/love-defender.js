@@ -64,6 +64,8 @@ let homingMissilesEndTime = 0;
 let flashActive = false;
 let flashStartTime = 0;
 let rainbowIndex = 0; // For cycling through rainbow hearts
+let invincible = false;
+let invincibilityEndTime = 0;
 
 // Enemy types
 const ENEMY_TYPES = {
@@ -394,6 +396,9 @@ function update(deltaTime) {
     if (homingMissilesActive && Date.now() > homingMissilesEndTime) {
         homingMissilesActive = false;
     }
+    if (invincible && Date.now() > invincibilityEndTime) {
+        invincible = false;
+    }
     
     // Auto-shoot
     const now = Date.now();
@@ -519,10 +524,12 @@ function update(deltaTime) {
                 if (shieldHits >= 2) {
                     shieldActive = false;
                 }
-            } else {
+            } else if (!invincible) {
                 lives--;
                 playSound(loseLifeSound, 0.7);
                 gameAnimations.startShake();
+                invincible = true;
+                invincibilityEndTime = Date.now() + 2000; // 2 seconds of invincibility
             }
             
             updateUI();
@@ -555,10 +562,12 @@ function update(deltaTime) {
                 if (shieldHits >= 2) {
                     shieldActive = false;
                 }
-            } else {
+            } else if (!invincible) {
                 lives--;
                 playSound(loseLifeSound, 0.7);
                 gameAnimations.startShake();
+                invincible = true;
+                invincibilityEndTime = Date.now() + 2000; // 2 seconds of invincibility
             }
             
             updateUI();
@@ -931,10 +940,21 @@ function draw() {
     } else if (lives === 2) {
         catEmoji = '😿'; // Crying cat - low health
     }
+    
+    // Flash when invincible
+    ctx.save();
+    if (invincible) {
+        const flashInterval = Math.floor(Date.now() / 100) % 2; // Flash every 100ms
+        if (flashInterval === 0) {
+            ctx.globalAlpha = 0.5;
+        }
+    }
+    
     ctx.font = `${player.width}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(catEmoji, player.x + player.width / 2, player.y + player.height / 2);
+    ctx.restore();
     
     // Draw bullets (heart emoji or knife for pierce shot)
     ctx.font = '20px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
@@ -1144,10 +1164,11 @@ function draw() {
     
     // Draw particles
     for (let particle of particles) {
+        ctx.save();
         ctx.fillStyle = particle.color;
         ctx.globalAlpha = particle.life;
         ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
-        ctx.globalAlpha = 1;
+        ctx.restore();
     }
     
     // Draw flash effect for bomb

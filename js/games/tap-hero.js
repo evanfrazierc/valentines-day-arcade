@@ -51,22 +51,17 @@ const BEAT_MS = 60000 / BPM; // 800ms per beat
 const HALF_BEAT = BEAT_MS / 2; // 400ms
 
 const beatPattern = [
-    // Intro - warm up
-    { time: BEAT_MS * 1, lane: 1 },
-    { time: BEAT_MS * 2, lane: 2 },
-    { time: BEAT_MS * 3, lane: 0 },
-    { time: BEAT_MS * 4, lane: 1 },
-    { time: BEAT_MS * 4, lane: 2 }, // Double note
+    // Intro - warm up (starting at beat 3 to allow proper note spawning)
+    { time: BEAT_MS * 3, lane: 1 },
+    { time: BEAT_MS * 4, lane: 2 },
     { time: BEAT_MS * 5, lane: 0 },
     { time: BEAT_MS * 6, lane: 2 },
     { time: BEAT_MS * 7, lane: 1 },
     { time: BEAT_MS * 8, lane: 0 },
-    { time: BEAT_MS * 8, lane: 2 }, // Double note
     { time: BEAT_MS * 9, lane: 1 },
     { time: BEAT_MS * 10, lane: 0 },
     { time: BEAT_MS * 11, lane: 2 },
     { time: BEAT_MS * 12, lane: 1 },
-    { time: BEAT_MS * 12, lane: 0 }, // Double note
     { time: BEAT_MS * 13, lane: 2 },
     { time: BEAT_MS * 14, lane: 0 },
     { time: BEAT_MS * 15, lane: 1 },
@@ -717,8 +712,7 @@ function update() {
                 feedbackColor = PALETTE.RED_PRIMARY;
                 feedbackTime = Date.now();
                 playSound('miss');
-                shakeIntensity = 10;
-                shakeTime = Date.now();
+                gameAnimations.startShake();
                 updateUI();
                 
                 // Check if player has missed too many notes
